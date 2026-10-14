@@ -2,15 +2,26 @@
 
 Each worker keeps many games in flight and batches NN inference across them.
 Every seat of a game is controlled by either the learner (latest weights), a
-past snapshot from the opponent pool, or a scripted bot (heuristic / solver /
-random). Only decisions of learner seats with more than one legal action are
-recorded. Per-seat terminal rewards come from ``game.returns()``; advantages
-use GAE (gamma = 1) over that seat's own decisions.
+past snapshot from the league pool, or a scripted bot (heuristic / random).
+Only decisions of learner seats with more than one legal action are recorded.
+
+League (PFSP): snapshot opponents are sampled with weight
+``hardness ** pfsp_power`` where hardness = (learner durak rate vs that
+snapshot) / (baseline 1/N), smoothed; the learner aggregates the per-snapshot
+results reported by the workers into ``league.json``. So the opponents we do
+badly against are played more.
+
+Per-seat terminal rewards come from ``game.returns()``; advantages use GAE
+(gamma = 1) over that seat's own decisions. Games reaching a small 2-player
+perfect-information endgame are (with prob. ``solve_frac``) ended with the
+exact solver result. Belief-head targets (where each unseen card really is)
+are recorded for free.
 """
 
 from __future__ import annotations
 
 import glob
+import json
 import os
 import random
 import time
@@ -20,13 +31,12 @@ import numpy as np
 import torch
 
 from ..engine import DurakGame
-from .encoding import NUM_PLANES, PublicTracker, build_batch, encode_parts, inverse_perm
+from .encoding import PublicTracker, belief_targets, build_batch, encode_parts, inverse_perm
 from .model import load_model
 
 LEARNER = "L"
-MAX_GAME_STEPS = 2000  # games can cycle; truncate (value bootstrap)
+MAX_GAME_STEPS = 2000  # safety cap (the engine's stall rule ends most cycles); value bootstrap
 DEFAULT_N_MIX = {2: 0.30, 3: 0.15, 4: 0.25, 5: 0.20, 6: 0.10}
-
 
 _SOLVER = False
 
@@ -41,6 +51,27 @@ def _solver():
         except ImportError:
             _SOLVER = None
     return _SOLVER
+
+
+def solve_small(g: DurakGame, max_cards: int, nodes: int):
+    """Exact (returns, loser) of a small 2-player perfect-information endgame, or None."""
+    if g.talon or g.num_players - len(g.finished) != 2:
+        return None
+    cards = sum(h.bit_count() for h in g.hands) + len(g.attack_cards) + len(g.defense_cards)
+    if cards > max_cards:
+        return None
+    sv = _solver()
+    if sv is None or not sv.applicable(g):
+        return None
+    a = g.active_players[0]
+    res = sv.solve(g, a, time_limit=None, node_limit=nodes)
+    if res is None:
+        return None
+    n = g.num_players
+    if res[0] == 0:
+        return (0.0,) * n, None
+    loser = a if res[0] < 0 else g.active_players[1]
+    return tuple(-1.0 if q == loser else 1.0 / (n - 1) for q in range(n)), loser
 
 
 def sample_n(rng: random.Random, mix: dict[int, float]) -> int:
@@ -67,7 +98,7 @@ def nn_policy(model, parts, greedy: bool, gen: torch.Generator | None = None):
     """Run the model on encoded parts. Returns (canon actions, logp, value, durak_logit) numpy."""
     obs, mask = build_batch(parts)
     with torch.inference_mode():
-        logits, v, d = model(torch.from_numpy(obs), torch.from_numpy(mask))
+        logits, v, d, _ = model(torch.from_numpy(obs), torch.from_numpy(mask))
         logp_all = torch.log_softmax(logits, -1)
         if greedy:
             a = logits.argmax(-1)
@@ -75,6 +106,23 @@ def nn_policy(model, parts, greedy: bool, gen: torch.Generator | None = None):
             a = torch.multinomial(logp_all.exp(), 1, generator=gen).squeeze(-1)
         lp = logp_all.gather(1, a[:, None]).squeeze(1)
     return a.numpy(), lp.numpy(), v.numpy(), d.numpy()
+
+
+def pfsp_weight(st: dict | None, power: float) -> float:
+    """Hardness of an opponent from league stats {games, durak, base}: our
+    durak rate relative to the 1/N baseline (1 = par), with a par prior."""
+    if not st:
+        return 1.0
+    h = (st.get("durak", 0.0) + 2.0) / (st.get("base", 0.0) + 2.0)
+    return max(min(h, 3.0), 0.05) ** power
+
+
+def read_league(path: str) -> dict:
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
 
 
 class Slot:
@@ -97,6 +145,11 @@ def gae(values: list[float], reward: float, lam: float) -> tuple[np.ndarray, np.
     return adv, adv + v
 
 
+def _new_stats():
+    return {"games": 0, "learner_steps": 0, "forced": 0, "total_steps": 0, "ret_vs": {}, "league": {},
+            "solved": 0, "truncated": 0, "draws": 0}
+
+
 class RolloutWorker:
     def __init__(self, cfg: dict, worker_id: int):
         self.cfg = cfg
@@ -107,11 +160,12 @@ class RolloutWorker:
         self.model = None
         self.version = -1
         self.snapshots: dict[str, torch.nn.Module] = {}
+        self.snap_w: dict[str, float] = {}
         self.bots: dict[str, object] = {}
         self.last_bot_probe = 0.0
         self.out: list[dict] = []
         self.out_steps = 0
-        self.stats = {"games": 0, "learner_steps": 0, "forced": 0, "total_steps": 0, "ret_vs": {}}
+        self.stats = _new_stats()
 
     # ----------------------------------------------------------- weights
     def maybe_reload(self) -> None:
@@ -130,18 +184,21 @@ class RolloutWorker:
                     time.sleep(0.2)
 
     def refresh_pool(self) -> None:
+        """Load ``snapshots_per_worker`` league members sampled by PFSP weight."""
         files = sorted(glob.glob(os.path.join(self.cfg["pool_dir"], "*.pt")))
-        k = self.cfg.get("snapshots_per_worker", 2)
         if not files:
-            self.snapshots = {}
+            self.snapshots, self.snap_w = {}, {}
             return
-        # bias towards recent snapshots: half from the last 5, half uniform
-        chosen = set()
+        league = read_league(self.cfg.get("league_path", "")).get("snapshots", {})
+        power = self.cfg.get("pfsp_power", 2.0)
+        w = {f: pfsp_weight(league.get(os.path.basename(f)), power) for f in files}
+        k = min(self.cfg.get("snapshots_per_worker", 3), len(files))
+        chosen = []
+        cand = list(files)
         for _ in range(k):
-            if self.rng.random() < 0.5:
-                chosen.add(self.rng.choice(files[-5:]))
-            else:
-                chosen.add(self.rng.choice(files))
+            f = self.rng.choices(cand, [w[c] for c in cand])[0]
+            chosen.append(f)
+            cand.remove(f)
         new = {}
         for f in chosen:
             if f in self.snapshots:
@@ -152,12 +209,13 @@ class RolloutWorker:
                 except Exception:
                     pass
         self.snapshots = new
+        self.snap_w = {f: w[f] for f in new}
 
     def probe_bots(self) -> None:
         if time.time() - self.last_bot_probe < 300:
             return
         self.last_bot_probe = time.time()
-        for name in self.cfg.get("bot_names", ["heuristic", "solver"]):
+        for name in self.cfg.get("bot_names", ["heuristic"]):
             if name not in self.bots:
                 f = bot_factory(name)
                 if f is not None:
@@ -173,19 +231,20 @@ class RolloutWorker:
         slot.tracker = PublicTracker(n, g.trump, g.attacker)
         ctrl = [LEARNER] * n
         slot.agents = {}
-        if rng.random() >= self.cfg.get("selfplay_frac", 0.6):
+        if rng.random() >= self.cfg.get("selfplay_frac", 0.5):
             choices, weights = [], []
             if self.snapshots:
-                choices.append("snap"); weights.append(self.cfg.get("w_snap", 0.6))
+                choices.append("snap"); weights.append(self.cfg.get("w_snap", 0.5))
             heur = [b for b in self.bots]
             if heur:
-                choices.append("bot"); weights.append(self.cfg.get("w_bot", 0.3))
-            choices.append("random"); weights.append(self.cfg.get("w_random", 0.05))
+                choices.append("bot"); weights.append(self.cfg.get("w_bot", 0.5))
+            choices.append("random"); weights.append(self.cfg.get("w_random", 0.02))
             kind = rng.choices(choices, weights)[0]
             k = 1 if n == 2 else rng.randint(1, n - 1)
             seats = rng.sample(range(n), k)
             if kind == "snap":
-                key = rng.choice(list(self.snapshots))
+                snaps = list(self.snapshots)
+                key = rng.choices(snaps, [self.snap_w.get(f, 1.0) for f in snaps])[0]
             elif kind == "bot":
                 key = "bot:" + rng.choice(heur)
             else:
@@ -203,7 +262,8 @@ class RolloutWorker:
                     ag.reset()
                     slot.agents[s] = ag
         slot.ctrl = ctrl
-        slot.traj = {p: ([], [], [], [], []) for p in range(n) if ctrl[p] == LEARNER}
+        # per learner seat: planes, scal, legal, act, (logp, val), belief targets
+        slot.traj = {p: ([], [], [], [], [], []) for p in range(n) if ctrl[p] == LEARNER}
         slot.solved = None
         slot.solve_cards = -1
         slot.solve_ok = rng.random() < self.cfg.get("solve_frac", 0.7)
@@ -211,14 +271,16 @@ class RolloutWorker:
     def finish_game(self, slot: Slot) -> None:
         g = slot.game
         if slot.solved is not None:  # exact endgame result
-            rets, loser, truncated = slot.solved
+            rets, loser = slot.solved
+            truncated = False
         else:
             truncated = not g.done  # step cap hit: bootstrap from the value estimate
             rets, loser = g.returns(), g.loser
         lam = self.cfg.get("gae_lambda", 0.95)
-        opp = next((c for c in slot.ctrl if c != LEARNER), "self")
-        opp = "snap" if opp not in ("self",) and not opp.startswith("bot:") else opp
-        for p, (planes, scal, legal, acts, extra) in slot.traj.items():
+        opp_key = next((c for c in slot.ctrl if c != LEARNER), "self")
+        opp = "snap" if opp_key != "self" and not opp_key.startswith("bot:") else opp_key
+        n = slot.n
+        for p, (planes, scal, legal, acts, extra, bel) in slot.traj.items():
             if not acts:
                 continue
             logp = [e[0] for e in extra]
@@ -236,47 +298,43 @@ class RolloutWorker:
                     "adv": adv,
                     "ret": ret,
                     "durak": np.full(T, 1.0 if loser == p else 0.0, dtype=np.float32),
-                    "n": np.full(T, slot.n, dtype=np.int8),
+                    "n": np.full(T, n, dtype=np.int8),
+                    "bel": np.array(bel, dtype=np.uint64),
                 }
             )
             self.out_steps += T
             if truncated:
                 continue
-            key = (slot.n, opp)
+            key = (n, opp)
             s = self.stats["ret_vs"].setdefault(key, [0, 0.0, 0])
             s[0] += 1
             s[1] += rets[p]
             s[2] += 1 if loser == p else 0
+            if opp == "snap" or opp_key.startswith("bot:"):
+                name = os.path.basename(opp_key) if opp == "snap" else opp_key
+                ls = self.stats["league"].setdefault(name, [0, 0.0, 0.0])
+                ls[0] += 1
+                ls[1] += 1.0 if loser == p else 0.0
+                ls[2] += 1.0 / n
         self.stats["games"] += 1
-        self.stats["solved"] = self.stats.get("solved", 0) + int(slot.solved is not None)
-        self.stats["truncated"] = self.stats.get("truncated", 0) + int(truncated)
+        self.stats["solved"] += int(slot.solved is not None)
+        self.stats["truncated"] += int(truncated)
+        self.stats["draws"] += int(loser is None and not truncated)
 
     def try_solve(self, slot: Slot) -> None:
         """End the game early with the exact solver result once a small
-        2-player perfect-information endgame is reached (as the champion
-        plays it with the solver anyway). Retried only when the card count
-        changes."""
+        2-player perfect-information endgame is reached (as the champion plays
+        it with the solver anyway). Retried only when the card count changes."""
         g = slot.game
         if g.talon or g.num_players - len(g.finished) != 2:
             return
         cards = sum(h.bit_count() for h in g.hands) + len(g.attack_cards) + len(g.defense_cards)
-        if cards > self.cfg.get("solve_max_cards", 10) or cards == slot.solve_cards:
+        if cards > self.cfg.get("solve_max_cards", 12) or cards == slot.solve_cards:
             return
         slot.solve_cards = cards
-        sv = _solver()
-        if sv is None or not sv.applicable(g):
-            return
-        a = g.active_players[0]
-        res = sv.solve(g, a, time_limit=None, node_limit=self.cfg.get("solve_nodes", 30000))
-        if res is None:
-            return
-        v = res[0]
-        n = g.num_players
-        if v == 0:
-            slot.solved = ((0.0,) * n, None, False)
-        else:
-            loser = a if v < 0 else g.active_players[1]
-            slot.solved = (tuple(-1.0 if q == loser else 1.0 / (n - 1) for q in range(n)), loser, False)
+        r = solve_small(g, 99, self.cfg.get("solve_nodes", 30000))
+        if r is not None:
+            slot.solved = r
 
     def advance(self, slot: Slot):
         """Play forced / scripted moves until a NN decision is needed.
@@ -336,6 +394,7 @@ class RolloutWorker:
                         tr[2].append(pr[2])
                         tr[3].append(ca)
                         tr[4].append((float(lps[j]), float(vals[j])))
+                        tr[5].append(belief_targets(slot.game, p, canon))
                         self.stats["learner_steps"] += 1
                     slot.game.step(a)
                     slot.tracker.event(p, a)
@@ -372,6 +431,6 @@ def worker_main(cfg: dict, worker_id: int, queue, credits, stop_event) -> None:
             traceback.print_exc()
             raise
         stats = w.stats
-        w.stats = {"games": 0, "learner_steps": 0, "forced": 0, "total_steps": 0, "ret_vs": {}}
+        w.stats = _new_stats()
         queue.put({"data": data, "version": w.version, "stats": stats, "time": time.time() - t0, "wid": worker_id})
         n_chunks += 1

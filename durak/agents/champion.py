@@ -5,9 +5,10 @@
   move; in a proven loss (all moves lose vs perfect play) or on timeout it
   keeps the policy's move, which gives the best practical chances.
 * Otherwise the policy network (greedy) from ``checkpoints/champion.pt``,
-  refined by PIMC search (``durak.rl.search``) when two players are active
-  (``search=True`` by default; total budget ~0.85 s per move). The agent
-  ``"champion_fast"`` is policy + solver only.
+  refined by PIMC search (``durak.rl.search``): with 2 active players full
+  policy rollouts, with 3+ active players value-cutoff rollouts; determinizations
+  are belief-weighted when the network has a belief head. Total budget ~0.95 s
+  per move. ``"champion_fast"`` is policy + solver only.
 
 Uses only the acting player's information: the observation is built from the
 player's own hand, public state, ``game.known`` and the public action log; the
@@ -53,7 +54,12 @@ def _load(path: str):
         mtime = os.path.getmtime(path)
         if cached is not None and cached[0] == mtime:
             return cached[1]
-        model, _ = load_model(path)
+        try:
+            model, _ = load_model(path)
+        except Exception:
+            if cached is not None:  # e.g. file mid-write: keep the previous model
+                return cached[1]
+            raise
         _MODELS[path] = (mtime, model)
         return model
 
@@ -63,8 +69,9 @@ class ChampionAgent(Agent):
 
     def __init__(self, path: str | None = None, use_solver: bool = True, solver_time: float = 0.6,
                  temperature: float = 0.0, seed: int | None = None, threads: int | None = 1,
-                 search: bool = True, search_dets: int = 16, search_time: float = 0.5,
-                 move_budget: float = 0.85):
+                 search: bool = True, search_dets: int = 32, search_time: float = 0.8,
+                 move_budget: float = 0.95, search_multi: bool = True, belief_dets: bool = True,
+                 multi_depth: int = 2, multi_dets: int = 12):
         self.path = path or DEFAULT_PATH
         self.use_solver = use_solver
         self.solver_time = solver_time
@@ -74,6 +81,10 @@ class ChampionAgent(Agent):
         self.search_dets = search_dets
         self.search_time = search_time
         self.move_budget = move_budget
+        self.search_multi = search_multi
+        self.belief_dets = belief_dets
+        self.multi_depth = multi_depth
+        self.multi_dets = multi_dets
         self._prng = random.Random(seed)
         if threads:
             torch.set_num_threads(threads)
@@ -111,8 +122,19 @@ class ChampionAgent(Agent):
         parts = encode_parts(game, player, self._tracker_for(game))
         obs, mask = build_batch([parts])
         with torch.inference_mode():
-            logits, v, d = model(torch.from_numpy(obs), torch.from_numpy(mask))
+            logits, v, d, bel = model(torch.from_numpy(obs), torch.from_numpy(mask))
+        self._last_belief = None
+        if bel is not None:  # canonical [36,6] -> real card order
+            pc = torch.softmax(bel[0], -1).numpy()
+            canon = parts[3]
+            idx = [canon[c // 9] * 9 + c % 9 for c in range(36)]
+            self._last_belief = pc[idx]
         return logits[0].numpy(), float(v[0]), float(d[0]), parts[3]
+
+    def belief(self, game: DurakGame, player: int):
+        """[36 real cards, 6 locations (opp rel seat 1..5, talon)] probabilities, or None."""
+        self._forward(game, player)
+        return self._last_belief
 
     def policy(self, game: DurakGame, player: int) -> dict[int, float]:
         """Policy distribution over real legal actions."""
@@ -138,11 +160,17 @@ class ChampionAgent(Agent):
         probs = self.policy(game, player)
         # PIMC within a total per-move budget of ~0.9 s (solver time included)
         budget = min(self.search_time, self.move_budget - (time.perf_counter() - t0))
-        if self.search and budget > 0.15 and game.num_players - len(game.finished) == 2:
+        n_active = game.num_players - len(game.finished)
+        if self.search and budget > 0.15 and (n_active == 2 or self.search_multi):
             from ..rl.search import pimc_action
 
+            bel = self._last_belief if self.belief_dets else None
+            if n_active == 2:
+                kw = dict(n_det=self.search_dets, mode="rollout")
+            else:
+                kw = dict(n_det=self.multi_dets, mode="value", depth=self.multi_depth)
             r = pimc_action(_load(self.path), game, player, self._tracker_for(game), probs,
-                            n_det=self.search_dets, time_budget=budget, rng=self._prng)
+                            time_budget=budget, rng=self._prng, belief=bel, **kw)
             if r is not None:
                 return r[0]
         if self.temperature > 0:

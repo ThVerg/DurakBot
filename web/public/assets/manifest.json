@@ -1,0 +1,749 @@
+{
+  "name": "DurakBot premium casino art set",
+  "generated": "2026-10-14",
+  "base": "/assets/",
+  "generator": "web/tools/art/build_all.py",
+  "cards": {
+    "size": [
+      512,
+      716
+    ],
+    "thumbSize": [
+      256,
+      358
+    ],
+    "cornerRadius": 26,
+    "aspect": "2.5:3.5 (poker)",
+    "ranks": [
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "J",
+      "Q",
+      "K",
+      "A"
+    ],
+    "suits": [
+      "S",
+      "C",
+      "D",
+      "H"
+    ],
+    "codeFormat": "{rank}{suit}, e.g. 6S, 10H, QD, AC",
+    "variants": {
+      "classic": "cards/",
+      "fourColour": "cards4/ (clubs green, diamonds blue)",
+      "thumbs": "cards_sm/"
+    },
+    "inkColours": {
+      "black": "#17171b",
+      "red": "#b3162c",
+      "fourColourClubs": "#0e6a3c",
+      "fourColourDiamonds": "#1b4fa6"
+    },
+    "stock": "#faf6ec",
+    "faces": {
+      "6S": {
+        "rank": "6",
+        "suit": "S",
+        "en": "Six of Spades",
+        "ru": "Шестёрка пик",
+        "webp": "cards/6S.webp",
+        "png": "cards/6S.png",
+        "thumb": "cards_sm/6S.webp",
+        "fourColour": "cards4/6S.webp"
+      },
+      "7S": {
+        "rank": "7",
+        "suit": "S",
+        "en": "Seven of Spades",
+        "ru": "Семёрка пик",
+        "webp": "cards/7S.webp",
+        "png": "cards/7S.png",
+        "thumb": "cards_sm/7S.webp",
+        "fourColour": "cards4/7S.webp"
+      },
+      "8S": {
+        "rank": "8",
+        "suit": "S",
+        "en": "Eight of Spades",
+        "ru": "Восьмёрка пик",
+        "webp": "cards/8S.webp",
+        "png": "cards/8S.png",
+        "thumb": "cards_sm/8S.webp",
+        "fourColour": "cards4/8S.webp"
+      },
+      "9S": {
+        "rank": "9",
+        "suit": "S",
+        "en": "Nine of Spades",
+        "ru": "Девятка пик",
+        "webp": "cards/9S.webp",
+        "png": "cards/9S.png",
+        "thumb": "cards_sm/9S.webp",
+        "fourColour": "cards4/9S.webp"
+      },
+      "10S": {
+        "rank": "10",
+        "suit": "S",
+        "en": "Ten of Spades",
+        "ru": "Десятка пик",
+        "webp": "cards/10S.webp",
+        "png": "cards/10S.png",
+        "thumb": "cards_sm/10S.webp",
+        "fourColour": "cards4/10S.webp"
+      },
+      "JS": {
+        "rank": "J",
+        "suit": "S",
+        "en": "Jack of Spades",
+        "ru": "Валет пик",
+        "webp": "cards/JS.webp",
+        "png": "cards/JS.png",
+        "thumb": "cards_sm/JS.webp",
+        "fourColour": "cards4/JS.webp"
+      },
+      "QS": {
+        "rank": "Q",
+        "suit": "S",
+        "en": "Queen of Spades",
+        "ru": "Дама пик",
+        "webp": "cards/QS.webp",
+        "png": "cards/QS.png",
+        "thumb": "cards_sm/QS.webp",
+        "fourColour": "cards4/QS.webp"
+      },
+      "KS": {
+        "rank": "K",
+        "suit": "S",
+        "en": "King of Spades",
+        "ru": "Король пик",
+        "webp": "cards/KS.webp",
+        "png": "cards/KS.png",
+        "thumb": "cards_sm/KS.webp",
+        "fourColour": "cards4/KS.webp"
+      },
+      "AS": {
+        "rank": "A",
+        "suit": "S",
+        "en": "Ace of Spades",
+        "ru": "Туз пик",
+        "webp": "cards/AS.webp",
+        "png": "cards/AS.png",
+        "thumb": "cards_sm/AS.webp",
+        "fourColour": "cards4/AS.webp"
+      },
+      "6C": {
+        "rank": "6",
+        "suit": "C",
+        "en": "Six of Clubs",
+        "ru": "Шестёрка треф",
+        "webp": "cards/6C.webp",
+        "png": "cards/6C.png",
+        "thumb": "cards_sm/6C.webp",
+        "fourColour": "cards4/6C.webp"
+      },
+      "7C": {
+        "rank": "7",
+        "suit": "C",
+        "en": "Seven of Clubs",
+        "ru": "Семёрка треф",
+        "webp": "cards/7C.webp",
+        "png": "cards/7C.png",
+        "thumb": "cards_sm/7C.webp",
+        "fourColour": "cards4/7C.webp"
+      },
+      "8C": {
+        "rank": "8",
+        "suit": "C",
+        "en": "Eight of Clubs",
+        "ru": "Восьмёрка треф",
+        "webp": "cards/8C.webp",
+        "png": "cards/8C.png",
+        "thumb": "cards_sm/8C.webp",
+        "fourColour": "cards4/8C.webp"
+      },
+      "9C": {
+        "rank": "9",
+        "suit": "C",
+        "en": "Nine of Clubs",
+        "ru": "Девятка треф",
+        "webp": "cards/9C.webp",
+        "png": "cards/9C.png",
+        "thumb": "cards_sm/9C.webp",
+        "fourColour": "cards4/9C.webp"
+      },
+      "10C": {
+        "rank": "10",
+        "suit": "C",
+        "en": "Ten of Clubs",
+        "ru": "Десятка треф",
+        "webp": "cards/10C.webp",
+        "png": "cards/10C.png",
+        "thumb": "cards_sm/10C.webp",
+        "fourColour": "cards4/10C.webp"
+      },
+      "JC": {
+        "rank": "J",
+        "suit": "C",
+        "en": "Jack of Clubs",
+        "ru": "Валет треф",
+        "webp": "cards/JC.webp",
+        "png": "cards/JC.png",
+        "thumb": "cards_sm/JC.webp",
+        "fourColour": "cards4/JC.webp"
+      },
+      "QC": {
+        "rank": "Q",
+        "suit": "C",
+        "en": "Queen of Clubs",
+        "ru": "Дама треф",
+        "webp": "cards/QC.webp",
+        "png": "cards/QC.png",
+        "thumb": "cards_sm/QC.webp",
+        "fourColour": "cards4/QC.webp"
+      },
+      "KC": {
+        "rank": "K",
+        "suit": "C",
+        "en": "King of Clubs",
+        "ru": "Король треф",
+        "webp": "cards/KC.webp",
+        "png": "cards/KC.png",
+        "thumb": "cards_sm/KC.webp",
+        "fourColour": "cards4/KC.webp"
+      },
+      "AC": {
+        "rank": "A",
+        "suit": "C",
+        "en": "Ace of Clubs",
+        "ru": "Туз треф",
+        "webp": "cards/AC.webp",
+        "png": "cards/AC.png",
+        "thumb": "cards_sm/AC.webp",
+        "fourColour": "cards4/AC.webp"
+      },
+      "6D": {
+        "rank": "6",
+        "suit": "D",
+        "en": "Six of Diamonds",
+        "ru": "Шестёрка бубен",
+        "webp": "cards/6D.webp",
+        "png": "cards/6D.png",
+        "thumb": "cards_sm/6D.webp",
+        "fourColour": "cards4/6D.webp"
+      },
+      "7D": {
+        "rank": "7",
+        "suit": "D",
+        "en": "Seven of Diamonds",
+        "ru": "Семёрка бубен",
+        "webp": "cards/7D.webp",
+        "png": "cards/7D.png",
+        "thumb": "cards_sm/7D.webp",
+        "fourColour": "cards4/7D.webp"
+      },
+      "8D": {
+        "rank": "8",
+        "suit": "D",
+        "en": "Eight of Diamonds",
+        "ru": "Восьмёрка бубен",
+        "webp": "cards/8D.webp",
+        "png": "cards/8D.png",
+        "thumb": "cards_sm/8D.webp",
+        "fourColour": "cards4/8D.webp"
+      },
+      "9D": {
+        "rank": "9",
+        "suit": "D",
+        "en": "Nine of Diamonds",
+        "ru": "Девятка бубен",
+        "webp": "cards/9D.webp",
+        "png": "cards/9D.png",
+        "thumb": "cards_sm/9D.webp",
+        "fourColour": "cards4/9D.webp"
+      },
+      "10D": {
+        "rank": "10",
+        "suit": "D",
+        "en": "Ten of Diamonds",
+        "ru": "Десятка бубен",
+        "webp": "cards/10D.webp",
+        "png": "cards/10D.png",
+        "thumb": "cards_sm/10D.webp",
+        "fourColour": "cards4/10D.webp"
+      },
+      "JD": {
+        "rank": "J",
+        "suit": "D",
+        "en": "Jack of Diamonds",
+        "ru": "Валет бубен",
+        "webp": "cards/JD.webp",
+        "png": "cards/JD.png",
+        "thumb": "cards_sm/JD.webp",
+        "fourColour": "cards4/JD.webp"
+      },
+      "QD": {
+        "rank": "Q",
+        "suit": "D",
+        "en": "Queen of Diamonds",
+        "ru": "Дама бубен",
+        "webp": "cards/QD.webp",
+        "png": "cards/QD.png",
+        "thumb": "cards_sm/QD.webp",
+        "fourColour": "cards4/QD.webp"
+      },
+      "KD": {
+        "rank": "K",
+        "suit": "D",
+        "en": "King of Diamonds",
+        "ru": "Король бубен",
+        "webp": "cards/KD.webp",
+        "png": "cards/KD.png",
+        "thumb": "cards_sm/KD.webp",
+        "fourColour": "cards4/KD.webp"
+      },
+      "AD": {
+        "rank": "A",
+        "suit": "D",
+        "en": "Ace of Diamonds",
+        "ru": "Туз бубен",
+        "webp": "cards/AD.webp",
+        "png": "cards/AD.png",
+        "thumb": "cards_sm/AD.webp",
+        "fourColour": "cards4/AD.webp"
+      },
+      "6H": {
+        "rank": "6",
+        "suit": "H",
+        "en": "Six of Hearts",
+        "ru": "Шестёрка червей",
+        "webp": "cards/6H.webp",
+        "png": "cards/6H.png",
+        "thumb": "cards_sm/6H.webp",
+        "fourColour": "cards4/6H.webp"
+      },
+      "7H": {
+        "rank": "7",
+        "suit": "H",
+        "en": "Seven of Hearts",
+        "ru": "Семёрка червей",
+        "webp": "cards/7H.webp",
+        "png": "cards/7H.png",
+        "thumb": "cards_sm/7H.webp",
+        "fourColour": "cards4/7H.webp"
+      },
+      "8H": {
+        "rank": "8",
+        "suit": "H",
+        "en": "Eight of Hearts",
+        "ru": "Восьмёрка червей",
+        "webp": "cards/8H.webp",
+        "png": "cards/8H.png",
+        "thumb": "cards_sm/8H.webp",
+        "fourColour": "cards4/8H.webp"
+      },
+      "9H": {
+        "rank": "9",
+        "suit": "H",
+        "en": "Nine of Hearts",
+        "ru": "Девятка червей",
+        "webp": "cards/9H.webp",
+        "png": "cards/9H.png",
+        "thumb": "cards_sm/9H.webp",
+        "fourColour": "cards4/9H.webp"
+      },
+      "10H": {
+        "rank": "10",
+        "suit": "H",
+        "en": "Ten of Hearts",
+        "ru": "Десятка червей",
+        "webp": "cards/10H.webp",
+        "png": "cards/10H.png",
+        "thumb": "cards_sm/10H.webp",
+        "fourColour": "cards4/10H.webp"
+      },
+      "JH": {
+        "rank": "J",
+        "suit": "H",
+        "en": "Jack of Hearts",
+        "ru": "Валет червей",
+        "webp": "cards/JH.webp",
+        "png": "cards/JH.png",
+        "thumb": "cards_sm/JH.webp",
+        "fourColour": "cards4/JH.webp"
+      },
+      "QH": {
+        "rank": "Q",
+        "suit": "H",
+        "en": "Queen of Hearts",
+        "ru": "Дама червей",
+        "webp": "cards/QH.webp",
+        "png": "cards/QH.png",
+        "thumb": "cards_sm/QH.webp",
+        "fourColour": "cards4/QH.webp"
+      },
+      "KH": {
+        "rank": "K",
+        "suit": "H",
+        "en": "King of Hearts",
+        "ru": "Король червей",
+        "webp": "cards/KH.webp",
+        "png": "cards/KH.png",
+        "thumb": "cards_sm/KH.webp",
+        "fourColour": "cards4/KH.webp"
+      },
+      "AH": {
+        "rank": "A",
+        "suit": "H",
+        "en": "Ace of Hearts",
+        "ru": "Туз червей",
+        "webp": "cards/AH.webp",
+        "png": "cards/AH.png",
+        "thumb": "cards_sm/AH.webp",
+        "fourColour": "cards4/AH.webp"
+      }
+    }
+  },
+  "backs": [
+    {
+      "id": "red",
+      "en": "Crimson Guilloche",
+      "ru": "Багровая гильоширь",
+      "webp": "backs/red.webp",
+      "png": "backs/red.png",
+      "thumb": "backs_sm/red.webp",
+      "size": [
+        512,
+        716
+      ]
+    },
+    {
+      "id": "navy",
+      "en": "Midnight Filigree",
+      "ru": "Полночная филигрань",
+      "webp": "backs/navy.webp",
+      "png": "backs/navy.png",
+      "thumb": "backs_sm/navy.webp",
+      "size": [
+        512,
+        716
+      ]
+    },
+    {
+      "id": "khokhloma",
+      "en": "Khokhloma",
+      "ru": "Хохлома",
+      "webp": "backs/khokhloma.webp",
+      "png": "backs/khokhloma.png",
+      "thumb": "backs_sm/khokhloma.webp",
+      "size": [
+        512,
+        716
+      ]
+    },
+    {
+      "id": "gzhel",
+      "en": "Gzhel",
+      "ru": "Гжель",
+      "webp": "backs/gzhel.webp",
+      "png": "backs/gzhel.png",
+      "thumb": "backs_sm/gzhel.webp",
+      "size": [
+        512,
+        716
+      ]
+    }
+  ],
+  "table": {
+    "tileable": true,
+    "size": [
+      1024,
+      1024
+    ],
+    "normalConvention": "OpenGL (+Y up), as three.js expects",
+    "felts": [
+      {
+        "id": "emerald",
+        "en": "Emerald",
+        "ru": "Изумрудный",
+        "color": "table/felt_emerald.webp",
+        "hex": "#0f5a3c"
+      },
+      {
+        "id": "royal",
+        "en": "Royal blue",
+        "ru": "Королевский синий",
+        "color": "table/felt_royal.webp",
+        "hex": "#173f86"
+      },
+      {
+        "id": "burgundy",
+        "en": "Burgundy",
+        "ru": "Бордовый",
+        "color": "table/felt_burgundy.webp",
+        "hex": "#6a1626"
+      },
+      {
+        "id": "charcoal",
+        "en": "Charcoal",
+        "ru": "Графит",
+        "color": "table/felt_charcoal.webp",
+        "hex": "#2a2d31"
+      }
+    ],
+    "feltNormal": "table/felt_normal.webp",
+    "feltRoughness": "table/felt_roughness.webp",
+    "walnut": {
+      "color": "table/walnut_color.webp",
+      "normal": "table/walnut_normal.webp",
+      "roughness": "table/walnut_roughness.webp",
+      "grain": "along U (x)",
+      "en": "Polished walnut",
+      "ru": "Полированный орех"
+    },
+    "leather": {
+      "color": "table/leather_color.webp",
+      "normal": "table/leather_normal.webp",
+      "roughness": "table/leather_roughness.webp",
+      "en": "Black-brown leather",
+      "ru": "Тёмно-коричневая кожа"
+    },
+    "brass": {
+      "color": "table/brass_color.webp",
+      "normal": "table/brass_normal.webp",
+      "roughness": "table/brass_roughness.webp",
+      "brushed": "along U (x)",
+      "en": "Brushed brass",
+      "ru": "Шлифованная латунь"
+    },
+    "logos": {
+      "en": {
+        "webp": "table/logo_en.webp",
+        "png": "table/logo_en.png",
+        "text": "DURAK"
+      },
+      "ru": {
+        "webp": "table/logo_ru.webp",
+        "png": "table/logo_ru.png",
+        "text": "ДУРАК"
+      },
+      "size": [
+        1024,
+        512
+      ],
+      "note": "transparent gold foil, print at low opacity on the felt centre"
+    }
+  },
+  "avatars": [
+    {
+      "id": "zina",
+      "en": "Babushka Zina",
+      "ru": "Бабушка Зина",
+      "image": "avatars/zina.webp",
+      "ring": "avatars/zina_ring.webp",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "id": "misha",
+      "en": "Uncle Misha",
+      "ru": "Дядя Миша",
+      "image": "avatars/misha.webp",
+      "ring": "avatars/misha_ring.webp",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "id": "sveta",
+      "en": "Sveta",
+      "ru": "Света",
+      "image": "avatars/sveta.webp",
+      "ring": "avatars/sveta_ring.webp",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "id": "kostya",
+      "en": "Kostya",
+      "ru": "Костя",
+      "image": "avatars/kostya.webp",
+      "ring": "avatars/kostya_ring.webp",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "id": "lev",
+      "en": "Professor Lev",
+      "ru": "Профессор Лев",
+      "image": "avatars/lev.webp",
+      "ring": "avatars/lev_ring.webp",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "id": "dasha",
+      "en": "Dasha",
+      "ru": "Даша",
+      "image": "avatars/dasha.webp",
+      "ring": "avatars/dasha_ring.webp",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "id": "grisha",
+      "en": "Grisha",
+      "ru": "Гриша",
+      "image": "avatars/grisha.webp",
+      "ring": "avatars/grisha_ring.webp",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "id": "you",
+      "en": "You",
+      "ru": "Вы",
+      "image": "avatars/you.webp",
+      "ring": "avatars/you_ring.webp",
+      "size": [
+        256,
+        256
+      ]
+    }
+  ],
+  "env": {
+    "room": "env/room.webp",
+    "roomBlur": "env/room_blur.webp",
+    "size": [
+      1024,
+      512
+    ],
+    "projection": "equirectangular",
+    "dynamicRange": "LDR (sRGB)"
+  },
+  "ui": {
+    "suits": [
+      {
+        "id": "S",
+        "file": "ui/suit_S.svg",
+        "en": "Spades",
+        "ru": "Пики"
+      },
+      {
+        "id": "C",
+        "file": "ui/suit_C.svg",
+        "en": "Clubs",
+        "ru": "Трефы"
+      },
+      {
+        "id": "D",
+        "file": "ui/suit_D.svg",
+        "en": "Diamonds",
+        "ru": "Бубны"
+      },
+      {
+        "id": "H",
+        "file": "ui/suit_H.svg",
+        "en": "Hearts",
+        "ru": "Червы"
+      }
+    ],
+    "logo": "ui/logo.svg",
+    "logoPng": "ui/logo_512.png",
+    "favicon": "ui/favicon.svg",
+    "appleTouchIcon": "ui/apple-touch-icon.png",
+    "chips": [
+      {
+        "id": "red",
+        "en": "Red chip",
+        "ru": "Красная фишка",
+        "webp": "ui/chip_red.webp"
+      },
+      {
+        "id": "blue",
+        "en": "Blue chip",
+        "ru": "Синяя фишка",
+        "webp": "ui/chip_blue.webp"
+      },
+      {
+        "id": "green",
+        "en": "Green chip",
+        "ru": "Зелёная фишка",
+        "webp": "ui/chip_green.webp"
+      },
+      {
+        "id": "black",
+        "en": "Black chip",
+        "ru": "Чёрная фишка",
+        "webp": "ui/chip_black.webp"
+      },
+      {
+        "id": "purple",
+        "en": "Purple chip",
+        "ru": "Фиолетовая фишка",
+        "webp": "ui/chip_purple.webp"
+      }
+    ]
+  },
+  "preview": "preview.png",
+  "licenses": [
+    {
+      "assets": [
+        "cards/*",
+        "cards4/*",
+        "cards_sm/*",
+        "ui/suit_*.svg",
+        "ui/chip_*"
+      ],
+      "source": "English pattern playing cards (SVG)",
+      "author": "Dmitry Fomin (User:Dmitry_Fomin, Wikimedia Commons)",
+      "url": "https://commons.wikimedia.org/wiki/Category:SVG_English_pattern_playing_cards",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "notes": "Court figures and pips from Dmitry Fomin's CC0 SVG deck. Recoloured, re-indexed, re-laid-out on 2.5:3.5 stock; the ace of spades ornament is original. Attribution not required; given as a courtesy."
+    },
+    {
+      "assets": [
+        "backs/*",
+        "backs_sm/*",
+        "table/*",
+        "avatars/*",
+        "env/*",
+        "ui/logo*",
+        "ui/favicon.svg",
+        "ui/apple-touch-icon.png",
+        "cards/AS (ornament)"
+      ],
+      "source": "Procedurally generated by web/tools/art (DurakBot project)",
+      "author": "DurakBot project",
+      "license": "Project-owned (same terms as the DurakBot repository)"
+    },
+    {
+      "assets": [
+        "card indices",
+        "ui/logo*",
+        "table/logo_*",
+        "backs/navy (monogram)",
+        "cards/AS (lettering)"
+      ],
+      "source": "Glyph outlines / renderings from fonts: EB Garamond (Georg Duffner, Octavio Pardo) and URW P052",
+      "license": "EB Garamond: SIL Open Font License 1.1; P052: URW base35 (AGPL-3.0 with font exception). Only rasterised renderings or glyph outlines in artwork are distributed, not the font files."
+    }
+  ]
+}

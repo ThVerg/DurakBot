@@ -1,0 +1,227 @@
+{
+ "deck": {
+  "name": "English pattern playing cards (SVG)",
+  "author": "Dmitry Fomin (User:Dmitry_Fomin, Wikimedia Commons)",
+  "license": "CC0 1.0 Universal (Public Domain Dedication)",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "retrieved": "2026-10-14"
+ },
+ "files": {
+  "English pattern 10 of clubs.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/4/48/English_pattern_10_of_clubs.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_10_of_clubs.svg",
+   "license": "CC0",
+   "sha256": "b01fcc015b0d5d358c4a0fe86d296c89017b444275d45aa1ef6fbecd9c37c545"
+  },
+  "English pattern 10 of diamonds.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/d/da/English_pattern_10_of_diamonds.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_10_of_diamonds.svg",
+   "license": "CC0",
+   "sha256": "1915f198420ff16650fe01f8735ad4f055c5f31191cb88eeb27839d4eaa5bf0f"
+  },
+  "English pattern 10 of hearts.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/b/bb/English_pattern_10_of_hearts.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_10_of_hearts.svg",
+   "license": "CC0",
+   "sha256": "94b522050a5da0e5211cb7a4b5bc7cac04469f339ef181d2b6162e217de26471"
+  },
+  "English pattern 10 of spades.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/d/da/English_pattern_10_of_spades.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_10_of_spades.svg",
+   "license": "CC0",
+   "sha256": "e0f6e02196358822effa782e3f47158efef3e8d25c77289d593383fcdb099d18"
+  },
+  "English pattern 6 of clubs.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/0/02/English_pattern_6_of_clubs.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_6_of_clubs.svg",
+   "license": "CC0",
+   "sha256": "4077820740ca1ed6f6fd58657bfc9ad3059c475ce1796fe78e927788cf8c8b00"
+  },
+  "English pattern 6 of diamonds.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/4/4e/English_pattern_6_of_diamonds.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_6_of_diamonds.svg",
+   "license": "CC0",
+   "sha256": "39243252bbc612b0bb07d595472ecc3ea95038cf7334b3c134a73e46cb88d8fe"
+  },
+  "English pattern 6 of hearts.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/d/da/English_pattern_6_of_hearts.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_6_of_hearts.svg",
+   "license": "CC0",
+   "sha256": "14b58b296c8cb0ca761dbcabca7c3b729059da2f24c4fff42c53580e8ed55c6e"
+  },
+  "English pattern 6 of spades.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/a/ac/English_pattern_6_of_spades.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_6_of_spades.svg",
+   "license": "CC0",
+   "sha256": "b9d80d8d7cfbf06586276fbb1c2b39eb161ee806474f02744c021ad49344fddc"
+  },
+  "English pattern 7 of clubs.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/6/60/English_pattern_7_of_clubs.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_7_of_clubs.svg",
+   "license": "CC0",
+   "sha256": "7827254fff85e1ac706f2815f1bf8c518008910a6c8400d33c03e3c6b29b059b"
+  },
+  "English pattern 7 of diamonds.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/5/5d/English_pattern_7_of_diamonds.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_7_of_diamonds.svg",
+   "license": "CC0",
+   "sha256": "477ea95290010d43864a32b591906e630db0e53270cc733d64cb0ffd9b5e0af7"
+  },
+  "English pattern 7 of hearts.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/c/cb/English_pattern_7_of_hearts.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_7_of_hearts.svg",
+   "license": "CC0",
+   "sha256": "6a9563b02d6066602ec665b9470e29bf5f0c55e39e1a7802ff68240902cbf815"
+  },
+  "English pattern 7 of spades.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/d/d1/English_pattern_7_of_spades.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_7_of_spades.svg",
+   "license": "CC0",
+   "sha256": "2f5c207442662060cab17bace96c57066c588f3a01e96affa1a0e8359e22ceac"
+  },
+  "English pattern 8 of clubs.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/f/f0/English_pattern_8_of_clubs.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_8_of_clubs.svg",
+   "license": "CC0",
+   "sha256": "23e9c39e09b89eeca0e95ad2be5cb86bdac9e435ec52233c39defd58da185d61"
+  },
+  "English pattern 8 of diamonds.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/1/18/English_pattern_8_of_diamonds.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_8_of_diamonds.svg",
+   "license": "CC0",
+   "sha256": "57d7b894773bb0e830d043609396671caa5e1a1fb24b0d84ab40efe4818504de"
+  },
+  "English pattern 8 of hearts.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/English_pattern_8_of_hearts.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_8_of_hearts.svg",
+   "license": "CC0",
+   "sha256": "7a4a55aec64b812c078b4538845517a8aff605062fc4b5c5e193be5bbc004690"
+  },
+  "English pattern 8 of spades.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/4/4d/English_pattern_8_of_spades.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_8_of_spades.svg",
+   "license": "CC0",
+   "sha256": "da6e3b7a0294d4092c4c8eb94044e5fe859418e6ec8486dc10c4a603fe06ddaf"
+  },
+  "English pattern 9 of clubs.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/1/14/English_pattern_9_of_clubs.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_9_of_clubs.svg",
+   "license": "CC0",
+   "sha256": "5291b04d84052929bb372df264e8e913d5c162cc6777dea23b1c90b588d6335d"
+  },
+  "English pattern 9 of diamonds.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/f/f5/English_pattern_9_of_diamonds.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_9_of_diamonds.svg",
+   "license": "CC0",
+   "sha256": "1b3585b4fa35f91cf6816e01cd616df8465d23a145a14cbcf1b1b5ffb978af49"
+  },
+  "English pattern 9 of hearts.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/2/22/English_pattern_9_of_hearts.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_9_of_hearts.svg",
+   "license": "CC0",
+   "sha256": "e32059ff9bc2743d513395c4ec9087538b8dd90b969a9a9b1ec82f3ce0037155"
+  },
+  "English pattern 9 of spades.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/f/f0/English_pattern_9_of_spades.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_9_of_spades.svg",
+   "license": "CC0",
+   "sha256": "955f70d1253b37ad246a86fd552792862264dce6162c17b22793d3fccf403ad0"
+  },
+  "English pattern ace of clubs.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/5/5f/English_pattern_ace_of_clubs.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_ace_of_clubs.svg",
+   "license": "CC0",
+   "sha256": "983ac041f9759090a29027684c8fb55f6e98a0e6157a2569f919d184b3d1e9d8"
+  },
+  "English pattern ace of diamonds.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/0/00/English_pattern_ace_of_diamonds.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_ace_of_diamonds.svg",
+   "license": "CC0",
+   "sha256": "5763bc587efa3e0b7d78bd1caa8496484bf3129d85fee6c4d6089704aff39143"
+  },
+  "English pattern ace of hearts.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/d/d4/English_pattern_ace_of_hearts.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_ace_of_hearts.svg",
+   "license": "CC0",
+   "sha256": "cd64a993fa9f77de0fda98523342fda4ce442fcfda245b552bb8fc69c5d4813a"
+  },
+  "English pattern ace of spades.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/1/19/English_pattern_ace_of_spades.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_ace_of_spades.svg",
+   "license": "CC0",
+   "sha256": "68c03f1ebcb8a478804790dfd14480cf55c044b5ebe3e31a212653e21256fb05"
+  },
+  "English pattern jack of clubs.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/8/80/English_pattern_jack_of_clubs.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_jack_of_clubs.svg",
+   "license": "CC0",
+   "sha256": "deab1cb95636f43c66958bc6fd929117251a73a946a82edff0b2f05c6a5f2a2f"
+  },
+  "English pattern jack of diamonds.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/1/16/English_pattern_jack_of_diamonds.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_jack_of_diamonds.svg",
+   "license": "CC0",
+   "sha256": "cb2f45f56894429013df897f7cdb23e56358c609e10ffb70800d886233e1d097"
+  },
+  "English pattern jack of hearts.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/5/56/English_pattern_jack_of_hearts.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_jack_of_hearts.svg",
+   "license": "CC0",
+   "sha256": "860ed2ae525a46a817b729ce2baa694366fc67fa60d9b0c99e02e6849617c10c"
+  },
+  "English pattern jack of spades.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/4/4f/English_pattern_jack_of_spades.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_jack_of_spades.svg",
+   "license": "CC0",
+   "sha256": "4080df7894e61aac6a0160239c20c2841a16bf62dd56c66fc1abe2787db3d474"
+  },
+  "English pattern king of clubs.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/3/3e/English_pattern_king_of_clubs.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_king_of_clubs.svg",
+   "license": "CC0",
+   "sha256": "effead34633a19272f67c91d0aa52ba262c96d23c963f8a9ade93fd770b05e00"
+  },
+  "English pattern king of diamonds.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/1/1c/English_pattern_king_of_diamonds.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_king_of_diamonds.svg",
+   "license": "CC0",
+   "sha256": "5012284c7fe3e7083ddaa419fa5baf77eac50fba6e0512ea0b8ec2fe1d15f116"
+  },
+  "English pattern king of hearts.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/1/14/English_pattern_king_of_hearts.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_king_of_hearts.svg",
+   "license": "CC0",
+   "sha256": "c13342f70b97a552c8180e9dd801120cdf76e1aeacf4681da11a467be75d21d9"
+  },
+  "English pattern king of spades.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/f/f1/English_pattern_king_of_spades.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_king_of_spades.svg",
+   "license": "CC0",
+   "sha256": "339ee8cabe33a8366d95868dcd8a66404c4cebfd189467b74f7ecda225ac7999"
+  },
+  "English pattern queen of clubs.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/b/b3/English_pattern_queen_of_clubs.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_queen_of_clubs.svg",
+   "license": "CC0",
+   "sha256": "0ea4d90a468388515dfbee282de55a495ce7521b7f209f679db73bf374b6831f"
+  },
+  "English pattern queen of diamonds.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/4/4f/English_pattern_queen_of_diamonds.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_queen_of_diamonds.svg",
+   "license": "CC0",
+   "sha256": "e9a96c67d420f275d7352ba0745bb745fe70680a0a86b7299fe4b9892e6f395a"
+  },
+  "English pattern queen of hearts.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/9/9d/English_pattern_queen_of_hearts.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_queen_of_hearts.svg",
+   "license": "CC0",
+   "sha256": "750b2b41bdbe70e9c15399411683d2d0f9d507c9b4c313b60e37351e2900b16e"
+  },
+  "English pattern queen of spades.svg": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/c/ca/English_pattern_queen_of_spades.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:English_pattern_queen_of_spades.svg",
+   "license": "CC0",
+   "sha256": "4c8e266405e0cc5b5ec025374eac037ce22eb3a27770a6149a76e809a8c3da3d"
+  }
+ }
+}

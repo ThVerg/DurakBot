@@ -57,8 +57,13 @@ NUM_PLANES = 23
 
 # -------------------------------------------------------------------- scalars
 SEAT_FEATS = 9  # present, active, hand/6, attacker, defender, cothrower, takes, took_last, to_draw_rank
-NUM_SCALARS = MAX_PLAYERS * SEAT_FEATS + 3 + 4 + 4 + 5 + 5 + 5 + 3
+NUM_SCALARS_V1 = MAX_PLAYERS * SEAT_FEATS + 3 + 4 + 4 + 5 + 5 + 5 + 3
+NUM_SCALARS = NUM_SCALARS_V1 + 1 + 5 + 1  # + stall, unknown counts (5 opp seats, talon)
+OBS_DIM_V1 = NUM_PLANES * NUM_CARDS + NUM_SCALARS_V1  # 911 (models before round 2)
 OBS_DIM = NUM_PLANES * NUM_CARDS + NUM_SCALARS
+# column of the first "unknown count" scalar (5 opp seats then talon) -> belief feasibility
+UNKNOWN_COL = OBS_DIM_V1 + 1
+NUM_LOCS = 6  # belief classes: opponent rel seat 1..5, talon
 NUM_ACTIONS = NUM_CARDS + 1
 
 
@@ -337,11 +342,38 @@ def encode_parts(game: DurakGame, player: int, tracker: PublicTracker):
     a1[max(min(n_act, 6), 2) - 2] = 1.0
     sc += a1
     sc += [unseen.bit_count() / 36.0, len(finished) / 5.0, game.thrower_idx / 2.0]
+    # v2 scalars (appended so v1 models can use the obs prefix): stall counter and
+    # the number of *unknown* cards per location (belief-head feasibility).
+    sc.append(getattr(game, "stall", 0) / 30.0)
+    for k in range(1, MAX_PLAYERS):
+        if k < n:
+            q = (player + k) % n
+            sc.append((game.hands[q].bit_count() - known[q].bit_count()) / 6.0)
+        else:
+            sc.append(0.0)
+    sc.append(max(talon_n - 1, 0) / 24.0)
 
     # legal moves only for the player to move (never read another hand)
     legal = game.legal_mask_int() if (not game.done and game.current_player == player) else 0
     clegal = remap_mask(legal & FULL_MASK, canon) | (legal & (1 << PASS))
     return cplanes, sc, clegal, canon
+
+
+def belief_targets(game: DurakGame, player: int, canon: list[int]) -> list[int]:
+    """Ground truth for the belief head (training only; reads hidden hands):
+    6 canonical masks = unseen cards held by opponent rel seat 1..5, and in the talon."""
+    n = game.num_players
+    unseen = game.unseen_mask(player)
+    out = [0] * NUM_LOCS
+    rest = unseen
+    for k in range(1, n):
+        m = game.hands[(player + k) % n] & unseen
+        if m:
+            out[k - 1] = remap_mask(m, canon)
+            rest &= ~m
+    if rest:
+        out[5] = remap_mask(rest, canon)
+    return out
 
 
 _SHIFTS = np.arange(NUM_ACTIONS, dtype=np.uint64)

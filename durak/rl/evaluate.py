@@ -7,7 +7,7 @@ win rate = 1 - durak rate). 95% Wilson intervals.
 Controller specs:
   ``nn:<path>``        greedy policy of a checkpoint (batched, no search)
   ``agent:<name>``     any registered agent, e.g. agent:champion, agent:heuristic
-  ``agent:champion@<path>``  champion agent (policy + endgame solver) on a given checkpoint
+  ``agent:champion@<path>?search=1&belief_dets=0``  champion agent on a checkpoint, with kwargs
   ``random`` / ``heuristic`` / ``solver``   shorthand for agent:<name>
 
 Bots are always handed ``game.determinize(player, rng)`` (cheat-safe).
@@ -33,7 +33,7 @@ import torch
 from ..engine import DurakGame
 from .encoding import PublicTracker, encode_parts, inverse_perm
 from .model import load_model
-from .rollout import MAX_GAME_STEPS, nn_policy
+from .rollout import MAX_GAME_STEPS, _solver, nn_policy, solve_small
 
 
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
@@ -67,21 +67,39 @@ def _make_agent(name: str):
     """``name`` or ``name@path`` (path -> ``path=`` kwarg, e.g. champion@ckpt.pt)."""
     from ..agents import get_agent
 
+    kw = {}
+    if "?" in name:
+        name, q = name.split("?", 1)
+        for item in q.split("&"):
+            k, v = item.split("=", 1)
+            kw[k] = float(v) if "." in v else int(v) if v.lstrip("-").isdigit() else v
+            if k in ("search", "search_multi", "belief_dets", "use_solver"):
+                kw[k] = bool(int(v))
     if "@" in name:
         name, path = name.split("@", 1)
-        return get_agent(name, path=path)
-    return get_agent(name)
+        kw["path"] = path
+    return get_agent(name, **kw)
 
 
-def play_games(me: str, opp: str, n_players: int, n_games: int, seed: int, concurrency: int = 64) -> dict:
-    """Play ``n_games``; ``me`` controls seat ``(seed_offset + i) % N`` of game i."""
+def play_games(me: str, opp: str, n_players: int, n_games: int, seed: int, concurrency: int = 64,
+               endgame: str = "none", solve_cards: int = 16, solve_nodes: int = 100_000) -> dict:
+    """Play ``n_games`` as paired deals: deal k is played N times with ``me`` in
+    seat 0..N-1 (variance reduction). ``endgame``:
+
+    * ``none``  - everyone plays everything out.
+    * ``me``    - our seat uses the exact solver whenever it applies (as the
+      champion does): proven win/draw -> solver move, otherwise the policy.
+    * ``solve`` - once a 2-player perfect-information endgame with at most
+      ``solve_cards`` cards is solvable, the game ends with its exact value
+      (both sides play the endgame perfectly; emulates the ``solver`` bot).
+    """
     torch.set_num_threads(1)
     me, opp = _norm_spec(me), _norm_spec(opp)
     rng = random.Random(seed)
-    results = {"games": 0, "durak": 0, "draws": 0, "ret": 0.0, "ret2": 0.0}
+    results = {"games": 0, "durak": 0, "draws": 0, "ret": 0.0, "ret2": 0.0, "deals": {}}
     next_game = 0
     slots: list = [None] * min(concurrency, n_games)
-    agent_cache: dict[str, list] = {}
+    sv = _solver() if endgame != "none" else None
 
     def start(i_slot):
         nonlocal next_game
@@ -90,7 +108,8 @@ def play_games(me: str, opp: str, n_players: int, n_games: int, seed: int, concu
             return
         gi = next_game
         next_game += 1
-        g = DurakGame(seed=seed * 1_000_003 + gi, num_players=n_players)
+        deal = gi // n_players
+        g = DurakGame(seed=seed * 1_000_003 + deal, num_players=n_players)
         my_seat = gi % n_players
         ctrl = [me if p == my_seat else opp for p in range(n_players)]
         agents = {}
@@ -99,16 +118,24 @@ def play_games(me: str, opp: str, n_players: int, n_games: int, seed: int, concu
                 ag = _make_agent(c[6:])
                 ag.reset()
                 agents[p] = ag
-        slots[i_slot] = [g, PublicTracker(n_players, g.trump, g.attacker), ctrl, agents, my_seat]
+        slots[i_slot] = [g, PublicTracker(n_players, g.trump, g.attacker), ctrl, agents, my_seat, deal, None, -1]
 
     def finish(s):
-        g, _, _, _, my = s
-        r = g.returns()[my]  # all zeros (draw) if truncated
+        g, _, _, _, my, deal, solved, _ = s
+        if solved is not None:
+            rets, loser = solved
+        else:
+            rets, loser = g.returns(), g.loser  # all zeros (draw) if truncated
+        r = rets[my]
+        d = 1 if loser == my else 0
         results["games"] += 1
-        results["durak"] += 1 if g.loser == my else 0
-        results["draws"] += 1 if g.loser is None else 0
+        results["durak"] += d
+        results["draws"] += 1 if loser is None else 0
         results["ret"] += r
         results["ret2"] += r * r
+        e = results["deals"].setdefault(f"{seed}:{deal}", [0, 0])
+        e[0] += d
+        e[1] += 1
 
     for i in range(len(slots)):
         start(i)
@@ -116,8 +143,13 @@ def play_games(me: str, opp: str, n_players: int, n_games: int, seed: int, concu
         groups: dict[str, list] = {}
         for i, s in enumerate(slots):
             while s is not None:
-                g, tr, ctrl, agents, my = s
-                if g.done or len(g.log) > MAX_GAME_STEPS:
+                g, tr, ctrl, agents, my = s[:5]
+                if endgame == "solve" and not g.done and not g.talon and s[6] is None:
+                    cards = sum(h.bit_count() for h in g.hands) + len(g.attack_cards) + len(g.defense_cards)
+                    if cards != s[7]:
+                        s[7] = cards
+                        s[6] = solve_small(g, solve_cards, solve_nodes)
+                if g.done or len(g.log) > MAX_GAME_STEPS or s[6] is not None:
                     finish(s)
                     start(i)
                     s = slots[i]
@@ -130,8 +162,14 @@ def play_games(me: str, opp: str, n_players: int, n_games: int, seed: int, concu
                     view = g.determinize(p, rng)
                     a = agents[p].act(view, p)
                 else:
-                    groups.setdefault(ctrl[p][3:], []).append((i, p, encode_parts(g, p, tr)))
-                    break
+                    a = None
+                    if endgame == "me" and p == my and sv is not None and sv.applicable(g):
+                        res = sv.solve(g, p, time_limit=None, node_limit=solve_nodes)
+                        if res is not None and res[0] >= 0:
+                            a = res[1]
+                    if a is None:
+                        groups.setdefault(ctrl[p][3:], []).append((i, p, encode_parts(g, p, tr)))
+                        break
                 g.step(a)
                 tr.event(p, a)
         for path, items in groups.items():
@@ -146,16 +184,16 @@ def play_games(me: str, opp: str, n_players: int, n_games: int, seed: int, concu
 
 
 def _job(args):
-    return play_games(*args)
+    me, opp, n, k, seed, kw = args
+    return play_games(me, opp, n, k, seed, **kw)
 
 
-def run_match(me: str, opp: str, n_players: int, n_games: int, seed: int, workers: int) -> dict:
-    per = [n_games // workers + (1 if i < n_games % workers else 0) for i in range(workers)]
-    jobs, off = [], 0
-    for i, k in enumerate(per):
-        if k:
-            jobs.append((me, opp, n_players, k, seed + 7919 * i))
-    tot = {"games": 0, "durak": 0, "draws": 0, "ret": 0.0, "ret2": 0.0}
+def run_match(me: str, opp: str, n_players: int, n_games: int, seed: int, workers: int, **kw) -> dict:
+    """Split ``n_games`` (rounded up to whole deals) over ``workers`` processes."""
+    deals = -(-n_games // n_players)
+    per = [deals // workers + (1 if i < deals % workers else 0) for i in range(workers)]
+    jobs = [(me, opp, n_players, k * n_players, seed + 7919 * i, kw) for i, k in enumerate(per) if k]
+    tot = {"games": 0, "durak": 0, "draws": 0, "ret": 0.0, "ret2": 0.0, "deals": {}}
     if workers <= 1:
         res = [_job(j) for j in jobs]
     else:
@@ -163,20 +201,38 @@ def run_match(me: str, opp: str, n_players: int, n_games: int, seed: int, worker
             res = list(ex.map(_job, jobs))
     for r in res:
         for k in tot:
-            tot[k] += r[k]
+            if k == "deals":
+                tot[k].update(r[k])
+            else:
+                tot[k] += r[k]
     return summarize(tot, n_players)
 
 
 def summarize(tot: dict, n_players: int) -> dict:
+    """Durak rate with a deal-clustered 95% CI (normal approx.; Wilson if no
+    deal info) and the standardized score z of E[1 - N*D] (0 = equal strength)."""
     n = tot["games"]
     d = tot["durak"]
-    lo, hi = wilson(d, n)
     base = 1.0 / n_players
-    # standardized score: E[1 - N*D] = 0 when equal strength; var = N-1
-    mean_y = (n - n_players * d) / max(n, 1)
-    z = mean_y / math.sqrt((n_players - 1) / max(n, 1)) if n else 0.0
+    rate = d / max(n, 1)
+    deals = list(tot.get("deals", {}).values())
+    if len(deals) >= 10:
+        # cluster-robust variance of the mean over deals
+        m = len(deals)
+        dev = [(dd - rate * c) for dd, c in deals]
+        var = m / (m - 1) * sum(x * x for x in dev) / (n * n)
+        pf = max(rate, 1.0 / n)
+        se = max(math.sqrt(max(var, 0.0)), 0.5 * math.sqrt(pf * (1 - pf) / n))  # floor for rate ~ 0
+        lo, hi = max(0.0, rate - 1.96 * se), min(1.0, rate + 1.96 * se)
+        if d == 0 or d == n:  # degenerate: use the Wilson interval
+            lo, hi = wilson(d, n)
+        z = (base - rate) / se if se > 0 else 0.0
+    else:
+        lo, hi = wilson(d, n)
+        mean_y = (n - n_players * d) / max(n, 1)
+        z = mean_y / math.sqrt((n_players - 1) / max(n, 1)) if n else 0.0
     return {
-        "N": n_players, "games": n, "durak_rate": d / max(n, 1), "ci_lo": lo, "ci_hi": hi,
+        "N": n_players, "games": n, "durak_rate": rate, "ci_lo": lo, "ci_hi": hi,
         "baseline": base, "draws": tot["draws"], "mean_return": tot["ret"] / max(n, 1), "z": z,
     }
 
@@ -206,6 +262,8 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--seed", type=int, default=12345)
     ap.add_argument("--json", help="append results as JSON lines to this file")
+    ap.add_argument("--endgame", choices=["none", "me", "solve"], default="none",
+                    help="none: play out; me: our nn seat uses the exact solver; solve: exact termination")
     args = ap.parse_args(argv)
     from ..agents import available_agents
 
@@ -213,12 +271,12 @@ def main(argv=None):
     rows = []
     for opp in args.opps:
         spec = _norm_spec(opp)
-        if spec.startswith("agent:") and spec[6:].split("@")[0] not in avail:
+        if spec.startswith("agent:") and spec[6:].split("@")[0].split("?")[0] not in avail:
             print(f"skip {opp}: not available ({avail})")
             continue
         for n in args.ns:
             t = time.time()
-            r = run_match(args.me, opp, n, args.games, args.seed + n, args.workers)
+            r = run_match(args.me, opp, n, args.games, args.seed + n, args.workers, endgame=args.endgame)
             r["opp"] = opp
             r["sec"] = round(time.time() - t, 1)
             rows.append(r)
