@@ -47,6 +47,10 @@ class Config:
     max_bout_cards: int = 6
     # Limit on attack cards in the very first bout of the game only.
     first_bout_limit: int = 5
+    # Once the talon is empty and 3+ players remain, the game is declared a
+    # draw after this many consecutive bouts that end in a take (no bita).
+    # Without it, 3+ players can pass the same cards around forever.
+    stall_bouts: int = 30
 
 
 DEFAULT_CONFIG = Config()
@@ -78,6 +82,7 @@ class DurakGame:
         "finished",
         "log",
         "bout_index",
+        "stall",
     )
 
     def __init__(
@@ -118,6 +123,7 @@ class DurakGame:
         self.finished: list[int] = []  # players in the order they went out
         self.log: list[tuple[int, int]] = []  # (player, action)
         self.bout_index = 0
+        self.stall = 0  # consecutive takes since the talon ran out
         self.first_bout = True
 
         # First attacker: holder of the lowest trump; random if nobody has one.
@@ -255,7 +261,11 @@ class DurakGame:
         for p in order:
             need = hs - self.hands[p].bit_count()
             while need > 0 and self.talon:
-                self.hands[p] |= 1 << self.talon.pop()
+                c = self.talon.pop()
+                self.hands[p] |= 1 << c
+                if not self.talon:
+                    # The face-up trump card is drawn last; everyone sees who takes it.
+                    self.known[p] |= 1 << c
                 need -= 1
         self.bout_index += 1
         self.first_bout = False
@@ -269,6 +279,13 @@ class DurakGame:
         if len(active) <= 1:
             self.done = True
             self.loser = active[0] if active else None
+            return
+        # Only 3+ players can cycle; with 2 left every take shrinks the
+        # attacker's hand, so the game always terminates (and stays solvable).
+        self.stall = 0 if (defended or self.talon or len(active) < 3) else self.stall + 1
+        if self.stall >= self.config.stall_bouts:
+            self.done = True  # draw by stalemate
+            self.loser = None
             return
 
         # Next attacker: the defender after a successful defence, otherwise the
@@ -320,6 +337,7 @@ class DurakGame:
         g.finished = self.finished[:]
         g.log = self.log[:]
         g.bout_index = self.bout_index
+        g.stall = self.stall
         return g
 
     def unseen_mask(self, player: int) -> int:

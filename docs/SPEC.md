@@ -37,6 +37,9 @@ website for a human to play against it.
   (`game.finished`, in order). The game ends when ≤1 player has cards. That player is the
   **durak** (`game.loser`). If the last players all run out together, it's a draw
   (`loser is None`).
+- **Stall rule**: once the talon is empty and 3+ players remain, 30 consecutive bouts ending in
+  a take (no bita) end the game as a draw (`Config.stall_bouts`, `game.stall`). With 2 players
+  this can't happen, because every take shrinks the attacker's hand.
 - Payoff (`game.returns()`, zero-sum): durak −1, everyone else +1/(N−1); a draw is all zeros.
   With 2 players this is ±1.
 
