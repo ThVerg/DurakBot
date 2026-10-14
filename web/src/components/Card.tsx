@@ -1,4 +1,5 @@
-import { memo, type CSSProperties, type ReactNode } from "react";
+import { memo, useState, type CSSProperties, type ReactNode } from "react";
+import { cardCode } from "../assets";
 import { RANKS, rankOf, suitOf } from "../cards";
 import { SUIT_NAMES, useI18n } from "../i18n";
 
@@ -103,6 +104,15 @@ function CardFace({ card }: { card: number }) {
   );
 }
 
+/** The premium card art when available, the vector face otherwise. */
+function FaceArt({ card, small }: { card: number; small: boolean }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <CardFace card={card} />;
+  const four = typeof document !== "undefined" && document.documentElement.dataset.fourColor === "on";
+  const dir = four ? "cards4" : small ? "cards_sm" : "cards";
+  return <img className="card-img" src={`/assets/${dir}/${cardCode(card)}.webp`} alt="" draggable={false} onError={() => setFailed(true)} />;
+}
+
 export interface CardProps {
   card: number;
   className?: string;
@@ -146,7 +156,7 @@ export const Card = memo(function Card({
     .join(" ");
   const content = (
     <>
-      <CardFace card={card} />
+      <FaceArt card={card} small={className.includes("mini")} />
       {known && <span className="known-tag">{t("opp.known")}</span>}
       {hint && <span className="key-hint">{hint}</span>}
     </>

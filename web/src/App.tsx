@@ -7,6 +7,9 @@ import { displayName, type Bubble, type Dealing } from "./components/Board";
 import { DurakReveal, HintPanel, Tutorial } from "./components/Coach";
 import { GameOverDialog, NewGameDialog, RulesDialog, SettingsDialog, StatsDialog, botLabel, type Settings } from "./components/Dialogs";
 import { GameTable } from "./components/GameTable";
+import { GameStage } from "./hud/GameStage";
+import { Lobby, TIERS, TitleScreen, tierAgent } from "./hud/Title";
+import type { Quality, SceneApi, SceneMode } from "./three/Scene3D";
 import { clearFx, confetti, fly, hiddenDuring, makeBack, makeFlipCard, rectOf, reducedMotion } from "./fx";
 import { I18nProvider, Rich, makeT, type TFn } from "./i18n";
 import { describeStep, type LogEntry, type Val } from "./log";
@@ -14,6 +17,18 @@ import { SPEED_SCALE, load, save, usePrefs, type Prefs, type Speed } from "./pre
 import { setSoundEnabled, sfx, unlockAudio } from "./sound";
 
 const Lab = lazy(() => import("./lab/Lab"));
+const Scene3D = lazy(() => import("./three/Scene3D"));
+
+function webglAvailable(): boolean {
+  try {
+    const c = document.createElement("canvas");
+    return !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch {
+    return false;
+  }
+}
+const WEBGL = webglAvailable();
+const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 const Replay = lazy(() => import("./components/Replay"));
 
 type DialogKind = "new" | "stats" | "rules" | "over" | "settings" | null;
@@ -82,6 +97,14 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
   const [autoPlay, setAutoPlay] = useState(true);
   const [hint, setHint] = useState<{ open: boolean; loading: boolean; data: Hint | null }>({ open: false, loading: false, data: null });
   const [tutorial, setTutorial] = useState(false);
+  const [lastStep, setLastStep] = useState<Step | null>(null);
+  const [screen, setScreen] = useState<SceneMode>("title");
+  const sceneApi = useRef<SceneApi | null>(null);
+  const quality: Quality | "2d" =
+    prefs.quality === "auto" ? "medium" : prefs.quality; // medium = soft shadows + bloom at DPR <= 1.5 (60 fps on iGPUs)
+  const use3d = WEBGL && quality !== "2d";
+  const use3dRef = useRef(use3d);
+  use3dRef.current = use3d;
 
   const genRef = useRef(0);
   const skipRef = useRef(false);
@@ -124,7 +147,10 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
     api.bots().then(
       (b) => {
         setBots(b);
-        setSettings((s) => ({ ...s, bot: b.bots.some((x) => x.name === s.bot) ? s.bot : b.default }));
+        setSettings((s) => ({
+          ...s,
+          bot: b.bots.some((x) => x.name === s.bot) ? s.bot : tierAgent(TIERS[3], b) ?? b.default,
+        }));
         const onGame = !window.location.hash.startsWith("#/lab");
         let saved: string | null = null;
         try {
@@ -132,21 +158,17 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
         } catch {
           /* ignore */
         }
-        if (!saved) return onGame ? setDialog("new") : undefined;
+        void onGame;
+        if (!saved) return;
         api.get(saved).then(
           (r) => {
-            if (r.state.done) return onGame ? setDialog("new") : undefined;
+            if (r.state.done) return;
             gidRef.current = r.game_id;
             setGid(r.game_id);
             setView(r.state);
             setLog(r.history.flatMap((st) => describeStep(st, r.state.human_seat)));
-            if (!r.state.your_turn) {
-              const gen = ++genRef.current;
-              setBusy(true);
-              void pump(gen);
-            }
           },
-          () => (onGame ? setDialog("new") : undefined),
+          () => undefined,
         );
       },
       (e) => setError(tRef.current("err.server", { e: String(e) })),
@@ -209,6 +231,23 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
 
     const sc = scale();
     if (!v) return;
+    if (use3dRef.current) {
+      // 3D: the scene tweens every card to its new place; we just wait for it.
+      if (endEv && sc > 0) await sleep(isHuman ? 140 : 420 * sc);
+      flushSync(() => {
+        setLastStep(st);
+        setView(v);
+      });
+      if (endEv) endEv.type === "bita" ? sfx.swoosh() : sfx.take();
+      if (sc > 0) {
+        await nextFrame();
+        await nextFrame();
+        await sleep(Math.min(2600, sceneApi.current?.settleMs() ?? 400 * sc));
+      }
+      afterEvents(st, human);
+      if (sc > 0) await sleep((isHuman ? 40 : 140) * sc);
+      return;
+    }
     if (sc === 0) {
       flushSync(() => setView(v));
       if (st.card !== null) sfx.snap();
@@ -442,6 +481,7 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
       unlockAudio();
       setSettings(s);
       setDialog(null);
+      setScreen("game");
       setReplayOpen(false);
       setReveal(null);
       const gen = ++genRef.current;
@@ -489,10 +529,21 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
           },
         ]);
         const sc = scale();
-        if (sc > 0) setDealing({ dealt: new Array(n).fill(0), trumpShown: false, extra: 36 - st.talon_size });
-        setView(st);
-        await sleep(30);
-        await dealAnimation(st, gen);
+        setLastStep(null);
+        if (use3dRef.current) {
+          if (sc > 0) sfx.shuffle();
+          setView(st);
+          if (sc > 0) {
+            await nextFrame();
+            await nextFrame();
+            await sleep(Math.min(5000, sceneApi.current?.settleMs() ?? 1500));
+          }
+        } else {
+          if (sc > 0) setDealing({ dealt: new Array(n).fill(0), trumpShown: false, extra: 36 - st.talon_size });
+          setView(st);
+          await sleep(30);
+          await dealAnimation(st, gen);
+        }
         if (genRef.current !== gen) return;
         await pump(gen);
       } catch (e) {
@@ -504,6 +555,16 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
+
+  const continueGame = () => {
+    setScreen("game");
+    const v = viewRef.current;
+    if (v && !v.done && !v.your_turn) {
+      const gen = ++genRef.current;
+      setBusy(true);
+      void pump(gen);
+    }
+  };
 
   const play = useCallback(
     async (action: number) => {
@@ -630,8 +691,8 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
 
   // First-game coach marks.
   useEffect(() => {
-    if (!prefs.tutorialDone && view?.mode === "play" && view.your_turn && !busy && !dialog && !dealing && route === "game") setTutorial(true);
-  }, [prefs.tutorialDone, view?.your_turn, busy, dialog, dealing, route, view?.mode]);
+    if (!prefs.tutorialDone && screen === "game" && view?.mode === "play" && view.your_turn && !busy && !dialog && !dealing && route === "game") setTutorial(true);
+  }, [prefs.tutorialDone, view?.your_turn, busy, dialog, dealing, route, view?.mode, screen]);
 
   // ------------------------------------------------------------- keyboard
   const legalSorted = useMemo(() => {
@@ -647,6 +708,13 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
       const tag = (e.target as HTMLElement)?.tagName;
       const inField = tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA";
       if (inField && k !== "Escape") return;
+      if (screen !== "game") {
+        if (k === "Escape") {
+          if (dialog) setDialog(null);
+          else if (screen === "lobby") setScreen("title");
+        }
+        return;
+      }
       if (route !== "game" || replayOpen || tutorial || reveal) {
         if (k === "Escape" && dialog) setDialog(null);
         return;
@@ -664,7 +732,7 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
         return;
       }
       const lower = k.toLowerCase();
-      if (lower === "n") return setDialog("new");
+      if (lower === "n") return setScreen("lobby");
       if (lower === "s") return setDialog("stats");
       if (k === "?") return setDialog("rules");
       if (lower === "l") return setLogOpen((o) => !o);
@@ -699,7 +767,7 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [dialog, busy, view, legalSorted, selected, play, spectateRun, toggleDebug, askHint, hint.open, route, replayOpen, tutorial, reveal, setPrefs]);
+  }, [dialog, busy, view, legalSorted, selected, play, spectateRun, toggleDebug, askHint, hint.open, route, replayOpen, tutorial, reveal, setPrefs, screen]);
 
   // ------------------------------------------------------------- rendering
   const nameOf = (seat: number) => (view ? displayName(view.players[seat], t) : `P${seat + 1}`);
@@ -768,10 +836,11 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
     <TopBar
       prefs={prefs}
       setPrefs={setPrefs}
-      onNew={() => setDialog("new")}
+      onNew={() => setScreen("lobby")}
       onStats={() => setDialog("stats")}
       onRules={() => setDialog("rules")}
       onSettings={() => setDialog("settings")}
+      onHome={() => setScreen("title")}
       onLog={view ? () => setLogOpen((o) => !o) : undefined}
       evalAvailable={!!bots?.evaluate_available}
       debug={view?.mode === "play" && !view.done ? { on: view.debug_reveal, toggle: toggleDebug } : undefined}
@@ -817,23 +886,67 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
     );
   }
 
-  if (!view) {
+  const sceneLayer =
+    use3d && !replayOpen ? (
+      <div className="scene-layer" data-testid="scene-layer">
+        <Suspense fallback={null}>
+          <Scene3D
+            mode={screen}
+            view={screen === "game" ? view : null}
+            step={lastStep}
+            sort={prefs.sort}
+            reveal={!!view && (view.mode === "spectate" || view.debug_reveal)}
+            legal={new Set(view && view.your_turn && !busy ? view.legal : [])}
+            canAct={!!view && view.your_turn && !busy && screen === "game"}
+            hintAction={hint.open && hint.data ? hint.data.recommended : null}
+            selected={selected}
+            onPlay={play}
+            speed={reducedMotion() ? 0 : SPEED_SCALE[prefs.speed]}
+            quality={quality as Quality}
+            theme={prefs.theme}
+            back={prefs.back}
+            fourColor={prefs.fourColor}
+            bubbles={bubbles}
+            thinkingSeat={thinkingSeat}
+            winProb={winProb}
+            showWinProb={prefs.showWinProb}
+            botLabelOf={botLabelOf}
+            apiRef={sceneApi}
+            onSound={(k) => (k === "snap" ? sfx.snap() : sfx.deal())}
+          />
+        </Suspense>
+      </div>
+    ) : null;
+
+  if (screen !== "game" || !view) {
+    const resume = view && !view.done && view.mode === "play" ? view : null;
     return (
-      <div className="app">
-        {topBar}
-        <div className="splash">
-          <div className="splash-cards" aria-hidden="true">
-            <span className="sc red">A♥︎</span>
-            <span className="sc">K♠︎</span>
-            <span className="sc red">Q♦︎</span>
+      <div className={`app screen-${screen} ${use3d ? "has-3d" : "no-3d"}`}>
+        {sceneLayer}
+        <div className="title-scrim" aria-hidden="true" />
+        {screen === "lobby" ? (
+          <Lobby bots={bots} initial={settings} onStart={startGame} onBack={() => setScreen("title")} />
+        ) : (
+          <TitleScreen
+            bots={bots}
+            settings={settings}
+            resume={resume}
+            onPlay={() => startGame({ ...settings, spectate: false, seed: "" })}
+            onContinue={continueGame}
+            onLobby={() => setScreen("lobby")}
+            onWatch={() => startGame({ ...settings, spectate: true, numPlayers: Math.max(3, settings.numPlayers), seed: "" })}
+            onRules={() => setDialog("rules")}
+            setLang={(l) => setPrefs((p) => ({ ...p, lang: l }))}
+            onSettings={() => setDialog("settings")}
+            sound={prefs.sound}
+            toggleSound={() => setPrefs((p) => ({ ...p, sound: !p.sound }))}
+          />
+        )}
+        {error && (
+          <div className="toast" role="alert" onClick={() => setError(null)}>
+            {error}
           </div>
-          <h1>DurakBot</h1>
-          <p>{t("app.tagline")}</p>
-          {error && <div className="error">{error}</div>}
-          <button type="button" className="btn primary" onClick={() => setDialog("new")}>
-            {t("nav.new")}
-          </button>
-        </div>
+        )}
         {dialogs}
       </div>
     );
@@ -858,48 +971,102 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
     ) : null;
 
   return (
-    <div className="app">
+    <div className={`app screen-game ${use3d ? "has-3d" : "no-3d"}`}>
+      {sceneLayer}
       {topBar}
       <main className={`main ${logOpen ? "log-open" : ""}`}>
-        <GameTable
-          view={view}
-          busy={busy || !!dealing}
-          thinkingSeat={thinkingSeat}
-          bubbles={bubbles}
-          dealing={dealing}
-          reveal={isReveal}
-          winProb={winProb}
-          showWinProb={prefs.showWinProb}
-          status={status}
-          selected={selected}
-          onPlay={play}
-          sort={prefs.sort}
-          onSort={() => setPrefs((p) => ({ ...p, sort: p.sort === "suit" ? "rank" : "suit" }))}
-          onHint={askHint}
-          hintAvailable={!!bots}
-          hintAction={hintAction}
-          hintOpen={hint.open}
-          extraControls={spectateControls}
-          botLabelOf={botLabelOf}
-          overlay={
-            hint.open ? (
-              <HintPanel
-                hint={hint.data}
-                loading={hint.loading}
-                passLabel={view.pass_label}
-                onPlay={(a) => void play(a)}
-                onClose={() => setHint({ open: false, loading: false, data: null })}
-              />
-            ) : null
-          }
-          boardExtra={
-            busy && !dealing && SPEED_SCALE[prefs.speed] > 0 ? (
-              <button type="button" className="skip-btn" onClick={() => (skipRef.current = true)} title="Space">
-                {t("skip")}
-              </button>
-            ) : null
-          }
-        />
+        {use3d && replayOpen ? (
+          <section className="stage" />
+        ) : use3d ? (
+          <GameStage
+            embedScene={false}
+            view={view}
+            step={lastStep}
+            busy={busy}
+            thinkingSeat={thinkingSeat}
+            bubbles={bubbles}
+            reveal={isReveal}
+            winProb={winProb}
+            showWinProb={prefs.showWinProb}
+            status={status}
+            statusTone={view.done ? "over" : view.your_turn && !busy ? "you" : "wait"}
+            selected={selected}
+            onPlay={play}
+            sort={prefs.sort}
+            onSort={() => setPrefs((p) => ({ ...p, sort: p.sort === "suit" ? "rank" : "suit" }))}
+            onHint={askHint}
+            hintAvailable={!!bots}
+            hintAction={hintAction}
+            hintOpen={hint.open}
+            extraControls={spectateControls}
+            botLabelOf={botLabelOf}
+            speed={reducedMotion() ? 0 : SPEED_SCALE[prefs.speed]}
+            quality={quality as Quality}
+            theme={prefs.theme}
+            back={prefs.back}
+            fourColor={prefs.fourColor}
+            apiRef={sceneApi}
+            onSound={(k) => (k === "snap" ? sfx.snap() : sfx.deal())}
+            overlay={
+              hint.open ? (
+                <HintPanel
+                  hint={hint.data}
+                  loading={hint.loading}
+                  passLabel={view.pass_label}
+                  onPlay={(a) => void play(a)}
+                  onClose={() => setHint({ open: false, loading: false, data: null })}
+                />
+              ) : null
+            }
+            boardExtra={
+              busy && SPEED_SCALE[prefs.speed] > 0 ? (
+                <button type="button" className="skip-btn" onClick={() => (skipRef.current = true)} title="Space">
+                  {t("skip")}
+                </button>
+              ) : null
+            }
+          />
+        ) : (
+          <GameTable
+            view={view}
+            busy={busy || !!dealing}
+            thinkingSeat={thinkingSeat}
+            bubbles={bubbles}
+            dealing={dealing}
+            reveal={isReveal}
+            winProb={winProb}
+            showWinProb={prefs.showWinProb}
+            status={status}
+            selected={selected}
+            onPlay={play}
+            sort={prefs.sort}
+            onSort={() => setPrefs((p) => ({ ...p, sort: p.sort === "suit" ? "rank" : "suit" }))}
+            onHint={askHint}
+            hintAvailable={!!bots}
+            hintAction={hintAction}
+            hintOpen={hint.open}
+            extraControls={spectateControls}
+            botLabelOf={botLabelOf}
+            overlay={
+              hint.open ? (
+                <HintPanel
+                  hint={hint.data}
+                  loading={hint.loading}
+                  passLabel={view.pass_label}
+                  onPlay={(a) => void play(a)}
+                  onClose={() => setHint({ open: false, loading: false, data: null })}
+                />
+              ) : null
+            }
+            boardExtra={
+              busy && !dealing && SPEED_SCALE[prefs.speed] > 0 ? (
+                <button type="button" className="skip-btn" onClick={() => (skipRef.current = true)} title="Space">
+                  {t("skip")}
+                </button>
+              ) : null
+            }
+          />
+        )}
         <aside className="log-panel" aria-label={t("log.title")}>
           <div className="log-head">
             <h3>{t("log.title")}</h3>
@@ -937,7 +1104,10 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
         <GameOverDialog
           state={view}
           onAgain={() => startGame({ ...settings, seed: "" })}
-          onNew={() => setDialog("new")}
+          onNew={() => {
+            setDialog(null);
+            setScreen("lobby");
+          }}
           onClose={() => setDialog(null)}
           onAnalyze={
             view.mode === "play"
@@ -952,7 +1122,17 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
       )}
       {replayOpen && gid && (
         <Suspense fallback={<div className="loading">{t("loading")}</div>}>
-          <Replay gameId={gid} onClose={() => setReplayOpen(false)} sort={prefs.sort} botLabelOf={botLabelOf} />
+          <Replay
+            gameId={gid}
+            onClose={() => setReplayOpen(false)}
+            sort={prefs.sort}
+            botLabelOf={botLabelOf}
+            stage={
+              use3d
+                ? { quality: quality as Quality, theme: prefs.theme, back: prefs.back, fourColor: prefs.fourColor, speed: reducedMotion() ? 0 : 0.55 }
+                : undefined
+            }
+          />
         </Suspense>
       )}
       {tutorial && (
@@ -974,6 +1154,7 @@ function TopBar({
   onStats,
   onRules,
   onSettings,
+  onHome,
   onLog,
   evalAvailable,
   debug,
@@ -987,6 +1168,7 @@ function TopBar({
   onStats: () => void;
   onRules: () => void;
   onSettings: () => void;
+  onHome?: () => void;
   onLog?: () => void;
   evalAvailable: boolean;
   debug?: { on: boolean; toggle: () => void };
@@ -996,7 +1178,7 @@ function TopBar({
 }) {
   return (
     <header className="topbar">
-      <a className="brand" href="#/" aria-label="DurakBot">
+      <a className="brand" href="#/" aria-label="DurakBot" onClick={(e) => (onHome ? (e.preventDefault(), onHome()) : undefined)}>
         <span className="logo" aria-hidden="true">
           <i />
           <i />
@@ -1006,7 +1188,7 @@ function TopBar({
       </a>
       <nav className="tools" aria-label="Main">
         {route === "game" && (
-          <label className="speed hide-narrow" title={t("nav.speed")}>
+          <label className="speed hide-narrow tb-extra" title={t("nav.speed")}>
             <span>{t("nav.speed")}</span>
             <select value={prefs.speed} onChange={(e) => setPrefs((p) => ({ ...p, speed: e.target.value as Speed }))} aria-label={t("nav.speed")}>
               <option value="slow">{t("speed.slow")}</option>
@@ -1019,7 +1201,7 @@ function TopBar({
         {route === "game" && evalAvailable && (
           <button
             type="button"
-            className={`chip hide-narrow ${prefs.showWinProb ? "on" : ""}`}
+            className={`chip hide-narrow tb-extra ${prefs.showWinProb ? "on" : ""}`}
             onClick={() => setPrefs((p) => ({ ...p, showWinProb: !p.showWinProb }))}
             aria-pressed={prefs.showWinProb}
           >
@@ -1027,7 +1209,7 @@ function TopBar({
           </button>
         )}
         {route === "game" && debug && (
-          <button type="button" className={`chip debug hide-narrow ${debug.on ? "on" : ""}`} onClick={debug.toggle} title={t("nav.revealTitle")} aria-pressed={debug.on} data-testid="debug-toggle">
+          <button type="button" className={`chip debug hide-narrow ${debug.on ? "on" : "tb-extra"}`} onClick={debug.toggle} title={t("nav.revealTitle")} aria-pressed={debug.on} data-testid="debug-toggle">
             {t("nav.reveal")}
           </button>
         )}

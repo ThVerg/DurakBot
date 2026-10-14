@@ -104,11 +104,11 @@ export function DurakReveal({ lose, onDone }: { lose: boolean; onDone: () => voi
 }
 
 const TUT_STEPS = [
-  { sel: ".hand", key: "hand" },
-  { sel: ".table-center", key: "table" },
-  { sel: ".talon", key: "talon" },
-  { sel: ".opponent", key: "opps" },
-  { sel: ".human-bar .actions", key: "actions" },
+  { sel: ".hand, .tut-hand", key: "hand" },
+  { sel: ".table-center, .tut-table", key: "table" },
+  { sel: ".talon, .tut-talon", key: "talon" },
+  { sel: ".opponent, .tut-opps", key: "opps" },
+  { sel: ".human-bar .actions, .hud-actions", key: "actions" },
 ];
 
 export function Tutorial({ onDone }: { onDone: () => void }) {

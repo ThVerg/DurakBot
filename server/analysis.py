@@ -192,12 +192,12 @@ def get_replay(sess: GameSession) -> dict[str, Any]:
     if not sess.game.done:
         raise GameError(409, "replay is available after the game")
     g = DurakGame(seed=sess.seed, num_players=sess.num_players, config=sess.game.config)
-    frames = [{"seq": 0, "step": None, "view": sess.view(compact=True, game=g, reveal=sess.mode == "spectate")}]
+    frames = [{"seq": 0, "step": None, "view": sess.view(compact=False, game=g, reveal=sess.mode == "spectate")}]
     for k, (_, a) in enumerate(sess.game.log):
         g.step(a)
         frames.append({
             "seq": k + 1,
             "step": sess.history[k] if k < len(sess.history) else None,
-            "view": sess.view(compact=True, game=g, reveal=sess.mode == "spectate"),
+            "view": sess.view(compact=False, game=g, reveal=sess.mode == "spectate"),
         })
     return {"game_id": sess.id, "frames": frames, "result": sess.result()}

@@ -8,3 +8,4 @@ web/dist/
 checkpoints/*
 !checkpoints/champion.pt
 server/data/
+web/dist-next/

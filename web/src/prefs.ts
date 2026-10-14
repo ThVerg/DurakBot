@@ -17,6 +17,7 @@ export interface Prefs {
   sound: boolean;
   sort: SortMode;
   tutorialDone: boolean;
+  quality: "auto" | "high" | "medium" | "low" | "2d";
 }
 
 export const THEMES: Theme[] = ["felt", "modern", "kitchen", "casino"];
@@ -43,6 +44,7 @@ export const DEFAULT_PREFS: Prefs = {
   sound: true,
   sort: "suit",
   tutorialDone: false,
+  quality: "auto",
 };
 
 export function load<T extends object>(key: string, fallback: T): T {

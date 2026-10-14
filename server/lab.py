@@ -143,7 +143,12 @@ def _normalize_ladder(raw: Any) -> dict | None:
             if isinstance(v, dict):
                 rows = [r for b, x in v.items() if (r := row(b, x))]
             elif isinstance(v, list):
-                rows = [r for x in v if isinstance(x, dict) and (r := row(str(x.get("bot") or x.get("name")), x))]
+                rows = [
+                    r
+                    for x in v
+                    if isinstance(x, dict) and not x.get("alias_of")
+                    and (r := row(str(x.get("bot") or x.get("agent") or x.get("name")), x))
+                ]
             if rows:
                 by_n[n] = sorted(rows, key=lambda r: -r["elo"])
         return by_n
@@ -163,7 +168,7 @@ def _normalize_ladder(raw: Any) -> dict | None:
         for x in raw:
             if isinstance(x, dict):
                 n = as_n(x.get("n") or x.get("num_players") or x.get("N"))
-                r = row(str(x.get("bot") or x.get("name")), x)
+                r = row(str(x.get("bot") or x.get("agent") or x.get("name")), x)
                 if n and r:
                     by_n.setdefault(n, []).append(r)
         for n in by_n:
@@ -216,9 +221,31 @@ def ladder_elo(n: int | None = None) -> dict[str, float]:
         return {}
     by_n = norm["by_n"]
     if n is not None and str(n) in by_n:
-        return {r["bot"]: r["elo"] for r in by_n[str(n)]}
-    acc: dict[str, list[float]] = {}
-    for rows in by_n.values():
-        for r in rows:
-            acc.setdefault(r["bot"], []).append(r["elo"])
-    return {b: sum(v) / len(v) for b, v in acc.items()}
+        out = {r["bot"]: r["elo"] for r in by_n[str(n)]}
+    else:
+        acc: dict[str, list[float]] = {}
+        for rows in by_n.values():
+            for r in rows:
+                acc.setdefault(r["bot"], []).append(r["elo"])
+        out = {b: sum(v) / len(v) for b, v in acc.items()}
+    aliases = lad.get("aliases") if isinstance(lad, dict) else None
+    if isinstance(aliases, dict):
+        for a, target in aliases.items():
+            if isinstance(target, str) and target in out and a not in out:
+                out[a] = out[target]
+    return out
+
+
+def credential() -> dict | None:
+    """Headline AI strength for the title screen: champion's 2-player win
+    rate against the perfect-endgame solver bot (from eval_summary.json)."""
+    summ = _cached(RUNS / "eval_summary.json", _parse_json)
+    try:
+        res = summ["results"]
+        for opp in ("solver", "heuristic"):
+            r = res.get(opp, {}).get("2")
+            if r and isinstance(r.get("rate"), (int, float)):
+                return {"opponent": opp, "num_players": 2, "win_rate": round(1 - float(r["rate"]), 3), "games": r.get("games")}
+    except (TypeError, KeyError, AttributeError):
+        pass
+    return None

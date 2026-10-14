@@ -2,9 +2,21 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api, type BotInfo, type BotsResponse, type GameState, type StatsResponse } from "../api";
 import { Rich, useI18n, type Lang } from "../i18n";
 import { BACKS, THEMES, type Prefs } from "../prefs";
-import { Avatar } from "./Avatar";
 import { displayName } from "./Board";
 import { Card, CardBack, SuitIcon } from "./Card";
+import { Portrait } from "../hud/Plaque";
+
+const BOT_PORTRAIT: Record<string, string> = {
+  champion: "lev",
+  grandmaster: "zina",
+  champion_fast: "sveta",
+  solver: "grisha",
+  expert: "misha",
+  heuristic: "dasha",
+  intermediate: "kostya",
+  novice: "kostya",
+  random: "misha",
+};
 
 export interface Settings {
   numPlayers: number;
@@ -183,6 +195,9 @@ export function NewGameDialog({
                     onClick={() => set({ bot: b.name, seatBots: [] })}
                     data-bot={b.name}
                   >
+                    <span className="bot-medal" aria-hidden="true">
+                      <Portrait player={{ is_human: false, persona: BOT_PORTRAIT[b.name] ?? "misha", name: b.name, seat: 0 }} size={42} />
+                    </span>
                     <div className="bot-card-top">
                       <b>{botLabel(b, b.name, lang)}</b>
                       <Stars tier={b.tier} />
@@ -297,7 +312,7 @@ export function GameOverDialog({
       {sub && <p className="go-sub">{sub}</p>}
       {durak && (
         <div className="go-durak">
-          <Avatar player={durak} size={52} />
+          <Portrait player={durak} size={56} />
           <div>
             <div className="go-label">{t("over.durak")}</div>
             <div className="go-name">
@@ -317,7 +332,7 @@ export function GameOverDialog({
           return (
             <li key={seat} className={seat === loser ? "durak" : ""}>
               <span className="place">{seat === loser ? "Д" : rest.includes(seat) ? "=" : i + 1}</span>
-              <Avatar player={p} size={24} />
+              <Portrait player={p} size={26} />
               <span>{displayName(p, t)}</span>
               {p.bot && <span className="bot-tag">{botLabelOf(p.bot)}</span>}
             </li>
@@ -584,6 +599,16 @@ export function SettingsDialog({
           {(["slow", "normal", "fast", "instant"] as const).map((sp) => (
             <button type="button" key={sp} className={prefs.speed === sp ? "on" : ""} aria-pressed={prefs.speed === sp} onClick={() => set({ speed: sp })}>
               {t(`speed.${sp}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="field">
+        <label>{t("settings.quality")}</label>
+        <div className="seg">
+          {(["auto", "high", "medium", "low", "2d"] as const).map((q) => (
+            <button type="button" key={q} className={prefs.quality === q ? "on" : ""} aria-pressed={prefs.quality === q} onClick={() => set({ quality: q })} data-quality={q}>
+              {t(`quality.${q}`)}
             </button>
           ))}
         </div>

@@ -12,6 +12,7 @@ the human's next turn in one response.
 from __future__ import annotations
 
 import logging
+import os
 import threading
 import time
 from collections import OrderedDict
@@ -36,7 +37,7 @@ from .storage import Storage
 
 log = logging.getLogger("durak.server")
 ROOT = Path(__file__).resolve().parent.parent
-DIST = ROOT / "web" / "dist"
+DIST = Path(os.environ.get("DURAK_DIST", ROOT / "web" / "dist"))
 MAX_SESSIONS = 500
 LOCK_TIMEOUT = 120.0
 
@@ -143,6 +144,7 @@ def create_app(db_path: str | None = None) -> FastAPI:
 
         bots.sort(key=order)
         return {
+            "credential": lab.credential(),
             "bots": [b for b in bots if b["available"]],
             "unavailable": [b for b in bots if not b["available"]],
             "default": default_bot(),

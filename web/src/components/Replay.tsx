@@ -8,17 +8,29 @@ import { LineChart, pctFmt } from "../lab/charts";
 import type { SortMode } from "../prefs";
 import { ActionChip } from "./Coach";
 import { GameTable } from "./GameTable";
+import { GameStage } from "../hud/GameStage";
+import type { Quality } from "../three/Scene3D";
+
+export interface StageOpts {
+  quality: Quality;
+  theme: string;
+  back: string;
+  fourColor: boolean;
+  speed: number;
+}
 
 export default function Replay({
   gameId,
   onClose,
   sort,
   botLabelOf,
+  stage,
 }: {
   gameId: string;
   onClose: () => void;
   sort: SortMode;
   botLabelOf: (n: string) => string;
+  stage?: StageOpts;
 }) {
   const { t } = useI18n();
   const [frames, setFrames] = useState<ReplayFrame[] | null>(null);
@@ -26,6 +38,7 @@ export default function Replay({
   const [k, setK] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const replayApi = useMemo(() => ({ current: null }), []);
 
   useEffect(() => {
     api.replay(gameId).then(
@@ -109,6 +122,44 @@ export default function Replay({
   return (
     <div className="replay" data-testid="replay">
       <div className="replay-main">
+        {stage ? (
+          <GameStage
+            view={frame.view}
+            step={frame.step}
+            busy={true}
+            thinkingSeat={null}
+            bubbles={{}}
+            reveal={frame.view.mode === "spectate"}
+            winProb={{}}
+            showWinProb={false}
+          status={
+              step ? (
+                <span>
+                  {t("replay.move", { k, n })}
+                  {step.player === humanSeat && d && d.loss >= 0.04 ? <span className="mini-tag bad" style={{ marginLeft: 8 }}>{t("replay.loss", { p: Math.round(d.loss * 100) })}</span> : null}
+                </span>
+              ) : (
+                t("replay.start")
+              )
+            }
+            statusTone="info"
+            selected={step?.card ?? null}
+            onPlay={() => undefined}
+            sort={sort}
+            onSort={() => undefined}
+            hintAvailable={false}
+            hintAction={null}
+            hintOpen={false}
+            botLabelOf={botLabelOf}
+            speed={stage.speed}
+            quality={stage.quality}
+            theme={stage.theme}
+            back={stage.back}
+            fourColor={stage.fourColor}
+            apiRef={replayApi}
+            onSound={() => undefined}
+          />
+        ) : (
         <GameTable
           view={frame.view}
           busy={true}
@@ -137,6 +188,7 @@ export default function Replay({
           hintOpen={false}
           botLabelOf={botLabelOf}
         />
+        )}
       </div>
       <aside className="replay-side">
         <div className="replay-head">
