@@ -1,34 +1,44 @@
 # DurakBot — Spec & Architecture
 
-Goal: a superhuman bot for **2-player Podkidnoy Durak (36 cards)**, trained with
+Goal: a superhuman bot for **Podkidnoy Durak, 2–6 players (36 cards)** — one model for all player counts, with emphasis on 2 and 4–5 players, trained with
 RL on this server (CPU only: i5-12600K, 16 threads, 31 GB RAM, no GPU), plus a
 website for a human to play against it.
 
 ## Rules (authoritative — implemented in `durak/engine.py`)
 
-- 36 cards: ranks 6..A in 4 suits. 2 players, 6 cards each.
-- After dealing, the bottom card of the talon is face-up; its suit is **trump**.
-  It is drawn last.
-- First attacker: the player holding the lowest trump; random if neither holds a trump.
-- **Bout limit**: the number of attack cards in a bout is at most
-  `min(6, defender's hand size at bout start)`. The **first bout of the game
-  only** uses 5 instead of 6.
-- Play is **sequential** (one card at a time):
-  - ATTACK phase (attacker to move): on an empty table, the attacker must lead
-    any card. Otherwise they may add a card whose rank is already on the table
-    (if under the limit), or PASS (= "bita", all cards are beaten → discard).
-  - DEFEND phase (defender to move): beat the single uncovered card (higher
-    card of the same suit, or any trump vs a non-trump; a trump only beats a lower
-    trump), or PASS (= "take").
-  - THROW_IN phase (after "take"): the attacker may add more cards matching
-    table ranks (still under the limit), then PASS (= "done"). The defender
-    picks up every table card. Those cards become **publicly known** (`game.known`).
-- After a bout, the attacker draws up to 6 first, then the defender.
-- After a successful defence, the defender attacks next. After a take, the same
-  attacker attacks again.
-- The game ends after a bout when the talon is empty and at least one player has
-  no cards. The player with no cards wins; if both are empty, it's a draw. The
-  player left holding cards is the *durak* (loser).
+- **2–6 players** (`DurakGame(seed, num_players=N)`), 36 cards (ranks 6..A, 4 suits), 6 cards each.
+  Seats are 0..N-1; play goes clockwise = increasing seat index.
+- The bottom card of the talon is face-up and sets **trump**; it is drawn last. With 6 players
+  the talon is empty after dealing: the last dealt card (in seat 5's hand) sets trump and is
+  publicly known (`known[5]`).
+- First attacker: the holder of the lowest trump; random if nobody holds one.
+- Each bout, the attacker attacks the next active player clockwise (the defender).
+  **Throwers** = the main attacker plus the defender's *other* neighbour (the next active
+  player after the defender), if that's a different player. Only throwers may add cards
+  (neighbours-only rule). With 2 active players the only thrower is the attacker.
+- **Bout limit**: attack cards per bout ≤ `min(6, defender's hand size at bout start)`.
+  In the **first bout of the game only**, 5 replaces 6.
+- Sequential play (one card per action):
+  - ATTACK phase: on an empty table the main attacker must lead any card. Once the table is
+    non-empty and fully covered, throwers are asked in priority order (main attacker first):
+    each either adds a card whose rank is on the table (if under the limit) or PASSes.
+    Adding a card → DEFEND. If **all** throwers pass in a row → "bita": the table is discarded.
+  - DEFEND phase: the defender beats the single uncovered card (higher card of the same suit,
+    or a trump vs a non-trump; trump vs trump by rank), or PASSes (= take). After a beat,
+    priority restarts from the main attacker.
+  - THROW_IN phase (after a take): each thrower in order may add any number of cards matching
+    table ranks (under the limit), then PASS (= done). After the last thrower passes, the
+    defender picks up all table cards. Picked-up cards become **publicly known** (`game.known`).
+- Drawing after a bout: main attacker first, then the other players clockwise, defender last,
+  each up to 6, while the talon lasts.
+- Next attacker: after a successful defence, the defender. After a take, the next active player
+  after the defender (the defender's turn is skipped).
+- Once the talon is empty, players with no cards at the end of a bout are **out**
+  (`game.finished`, in order). The game ends when ≤1 player has cards. That player is the
+  **durak** (`game.loser`). If the last players all run out together, it's a draw
+  (`loser is None`).
+- Payoff (`game.returns()`, zero-sum): durak −1, everyone else +1/(N−1); a draw is all zeros.
+  With 2 players this is ±1.
 
 ## Encoding
 
@@ -37,22 +47,28 @@ website for a human to play against it.
 - Actions `∈ [0,37)`: 0..35 = play card `c`; **36 = PASS** (bita / take / done
   depending on phase).
 
-## Engine API (`durak/engine.py`, frozen; ask before changing)
+## Engine API (`durak/engine.py`, frozen; ask the lead before changing)
 
 ```python
-g = DurakGame(seed=123)          # deals immediately
-g.current_player, g.phase, g.attacker, g.defender
+g = DurakGame(seed=123, num_players=4)   # deals immediately
+g.num_players, g.current_player, g.phase, g.attacker, g.defender, g.throwers, g.thrower_idx
 g.legal_actions() -> list[int];  g.legal_mask_int() -> int (37-bit)
 g.step(action)                   # raises ValueError on illegal moves
-g.done, g.winner (0/1, or None for draw), g.returns() -> (r0, r1)
+g.done, g.loser (seat or None = draw), g.finished (order out), g.returns() -> tuple of N floats
+g.winner                         # 2-player convenience only
 g.hands[p] (bitmask), g.known[p] (publicly known cards in p's hand), g.discard,
 g.attack_cards / g.defense_cards (lists; defense[i] beats attack[i]),
 g.talon (list, drawn from the end, talon[0] == trump_card), g.trump, g.trump_card,
-g.bout_limit, g.first_bout, g.log [(player, action)], g.bout_index
+g.bout_limit, g.first_bout, g.log [(player, action)], g.bout_index,
+g.active_players, g.is_active(p)
 g.clone(); g.determinize(player, rng); g.unseen_mask(player); g.info_state(player)
 ```
 
-Speed: about 300k random steps/s in a single Python process.
+When the talon is empty and exactly 2 players remain, the position is **perfect
+information**: `determinize` reproduces the true hands, so exact search applies. This holds
+at the end of *every* game, multiplayer included.
+
+Speed: about 300k random steps/s (2p) in one Python process.
 
 ## Agents (`durak/agents/`)
 
@@ -65,8 +81,8 @@ Planned agents:
 |---|---|---|
 | `random` | `durak/agents/__init__.py` | done |
 | `heuristic` | `durak/agents/heuristic.py`: strong rule-based baseline | bots agent |
-| `solver` | `durak/agents/solver_agent.py`: heuristic + exact endgame solver once the talon is empty | bots agent |
-| `champion` | `durak/agents/champion.py`: trained RL policy + endgame solver (+ optional search) | RL agent |
+| `solver` | `durak/agents/solver_agent.py`: heuristic + exact endgame solver once the talon is empty and 2 players remain | bots agent |
+| `champion` | `durak/agents/champion.py`: trained RL policy (any N) + endgame solver (+ optional search) | RL agent |
 
 ## Layout / ownership
 
