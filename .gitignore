@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+runs/
+web/node_modules/
+web/dist/
+checkpoints/*
+!checkpoints/champion.pt
