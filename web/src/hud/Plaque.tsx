@@ -97,3 +97,46 @@ export function Plaque({
     </div>
   );
 }
+
+/** Compact seat chip for the phone opponent row: portrait, short name, count, role. */
+export function SeatChip({
+  player,
+  state,
+  thinking,
+  bubble,
+}: {
+  player: Player;
+  state: GameState;
+  thinking: boolean;
+  bubble?: Bubble | null;
+}) {
+  const { t } = useI18n();
+  const chip = roleChip(player, state);
+  const cls = [
+    "seat-chip",
+    player.to_move && !state.done ? "to-move" : "",
+    thinking ? "thinking-now" : "",
+    player.out ? "is-out" : "",
+    player.is_durak ? "is-durak" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return (
+    <div className={cls} data-seat={player.seat} aria-label={displayName(player, t)}>
+      <span className="sc-face">
+        <Portrait player={player} size={40} />
+        {chip && <span className={`sc-role ${chip.cls}`}>{t(chip.key)}{chip.cls === "out" && player.place ? ` ${player.place}` : ""}</span>}
+      </span>
+      <span className="sc-name">{displayName(player, t, true)}</span>
+      <span className="sc-count">
+        <i aria-hidden="true" />
+        {player.hand_size}
+      </span>
+      {bubble && (
+        <div key={bubble.key} className={`bubble sc-bubble tone-${bubble.tone}`} role="status">
+          {bubble.text}
+        </div>
+      )}
+    </div>
+  );
+}

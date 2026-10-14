@@ -2040,3 +2040,259 @@ th {
     height: 10px;
   }
 }
+
+/* ===================== phones (portrait): opponent row, compact HUD ===== */
+.opp-row {
+  display: none;
+}
+@media (max-aspect-ratio: 19/20) {
+  .opp-row {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    display: flex;
+    justify-content: space-evenly;
+    gap: 4px;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .seat-chip {
+    position: relative;
+    flex: 0 1 76px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 5px 4px 5px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(14, 22, 19, 0.9), rgba(6, 10, 9, 0.86));
+    border: 1px solid var(--hair);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    transition: border-color 0.25s, box-shadow 0.25s, opacity 0.25s;
+  }
+  .seat-chip.to-move,
+  .seat-chip.thinking-now {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.4), 0 0 22px rgba(212, 175, 55, 0.3);
+  }
+  .seat-chip.is-out {
+    opacity: 0.55;
+  }
+  .seat-chip.is-durak {
+    border-color: var(--crimson-2);
+    opacity: 1;
+  }
+  .sc-face {
+    position: relative;
+  }
+  .sc-face .portrait {
+    display: block;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 0 0 2px #0b0f0d, 0 0 0 3px var(--gold);
+  }
+  .sc-face .portrait img,
+  .sc-face .portrait svg,
+  .sc-face .portrait .avatar {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+  }
+  .sc-role {
+    position: absolute;
+    left: 50%;
+    bottom: -6px;
+    translate: -50% 0;
+    font-size: 7.5px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 999px;
+    color: #0b0f0d;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+  .sc-role.attack {
+    background: linear-gradient(180deg, #f08a6a, #d2532f);
+  }
+  .sc-role.defend {
+    background: linear-gradient(180deg, #8cc6f0, #3f8ccc);
+  }
+  .sc-role.throw {
+    background: linear-gradient(180deg, #f1d77f, #c39a2c);
+  }
+  .sc-role.out {
+    background: linear-gradient(180deg, #8fdab0, #3f9b6a);
+  }
+  .sc-role.durak {
+    background: linear-gradient(180deg, #ff6b80, #b3122a);
+    color: #fff;
+  }
+  .sc-name {
+    margin-top: 5px;
+    max-width: 100%;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 1.1;
+    color: #fbf2dd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+  }
+  .sc-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fbf2dd;
+    font-variant-numeric: tabular-nums;
+  }
+  .sc-count i {
+    width: 7px;
+    height: 10px;
+    border-radius: 2px;
+    background: linear-gradient(135deg, #7a1424, #3a0811);
+    box-shadow: 0 0 0 1px rgba(243, 234, 216, 0.6);
+  }
+  /* phones: last-move bubble is a small badge on the chip's corner */
+  .sc-bubble {
+    position: absolute;
+    top: -7px;
+    right: -6px;
+    bottom: auto;
+    left: auto;
+    translate: none;
+    font-size: 10px;
+    padding: 1px 7px;
+    max-width: 96px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 4;
+    border-radius: 999px;
+  }
+  .sc-bubble::after {
+    display: none;
+  }
+  .sc-bubble.tone-say {
+    font-style: normal;
+  }
+  .opp-row.n5 .seat-chip,
+  .opp-row.n4 .seat-chip {
+    flex-basis: 68px;
+  }
+  .opp-row.n5 .sc-face .portrait {
+    width: 34px !important;
+    height: 34px !important;
+  }
+  .opp-row.n5 .sc-name {
+    font-size: 11px;
+  }
+
+  /* status banner sits under the opponent row */
+  .stage .status-banner {
+    top: 100px;
+    left: 8px;
+    width: calc(100% - 16px);
+    max-width: none;
+    min-width: 0;
+    padding: 6px 12px 5px;
+    border-radius: 14px;
+    text-align: center;
+  }
+  .stage .status-banner .sb-main {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+  .stage .status-banner .sb-sub {
+    justify-content: center;
+    font-size: 9px;
+  }
+  .stage .skip-btn {
+    top: auto;
+    bottom: 76px;
+    right: 10px;
+  }
+
+  /* bottom HUD: never clip, respect safe areas */
+  .hud-bottom {
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    gap: 6px;
+  }
+  .hud-actions {
+    gap: 6px;
+    flex: 1;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+  .hud-me .plaque {
+    padding: 3px;
+    gap: 0;
+  }
+  .hud-me .plaque .plaque-body {
+    display: none;
+  }
+  .hud-me .plaque .portrait {
+    width: 42px !important;
+    height: 42px !important;
+  }
+  .hud-me .plaque .role-chip {
+    right: auto;
+    left: 50%;
+    translate: -50% 0;
+    top: auto;
+    bottom: -7px;
+    font-size: 7.5px;
+  }
+  .hud-me .bubble {
+    display: none;
+  }
+  .hud-btn {
+    height: 44px;
+  }
+  .hud-btn.hint-btn {
+    min-width: 44px;
+    padding: 0 12px;
+  }
+  .hud-btn.hint-btn .hint-label {
+    display: none;
+  }
+  .primary-action {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 52vw;
+    height: 48px;
+    padding: 0 22px;
+    font-size: 19px;
+  }
+  .primary-action kbd {
+    display: none;
+  }
+  .felt-label {
+    font-size: 9px;
+  }
+}
+@media (max-aspect-ratio: 19/20) {
+  .sc-bubble,
+  .sc-bubble.tone-say {
+    white-space: nowrap !important;
+    max-width: 92px !important;
+    width: auto !important;
+    line-height: 1.35;
+  }
+}
+
+/* Portrait: anchor the trump/talon label by its left edge so longer (RU)
+   text grows rightward instead of pushing the trump disc off-screen. */
+@media (max-aspect-ratio: 19/20) {
+  .talon-info {
+    transform: translateX(calc(50% - 22px));
+  }
+}

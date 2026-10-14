@@ -281,7 +281,7 @@ export const Card3D = memo(function Card3D(p: CardProps) {
       glowRef.current.visible = glowMat.opacity > 0.01;
     }
     if (faceRef.current && faceMat) {
-      const k = p.dim ? 0.48 : 1;
+      const k = p.dim ? 0.62 : 1;
       const cur = faceMat.emissiveIntensity / FACE_EMISSIVE;
       const next = cur + (k - cur) * Math.min(1, dt * 10);
       faceMat.emissiveIntensity = FACE_EMISSIVE * next;

@@ -18,9 +18,9 @@ export interface Dealing {
   extra: number; // cards still in the dealer's hands (shown on the talon)
 }
 
-export function displayName(p: Pick<Player, "is_human" | "persona" | "name">, t: TFn): string {
+export function displayName(p: Pick<Player, "is_human" | "persona" | "name">, t: TFn, short = false): string {
   if (p.is_human) return t("role.you");
-  return p.persona ? t(`persona.${p.persona}`) : p.name;
+  return p.persona ? t(`${short ? "personaShort" : "persona"}.${p.persona}`) : p.name;
 }
 
 export function RoleBadges({ player, state }: { player: Player; state: GameState }) {

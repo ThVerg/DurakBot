@@ -6,7 +6,21 @@ import type { Bubble } from "../components/Board";
 import { useI18n } from "../i18n";
 import type { SortMode } from "../prefs";
 import type { Quality, SceneApi } from "../three/Scene3D";
-import { Plaque } from "./Plaque";
+import { useEffect, useState } from "react";
+import { Plaque, SeatChip } from "./Plaque";
+
+function usePortrait() {
+  const q = "(max-aspect-ratio: 19/20)";
+  const [p, setP] = useState(() => typeof window !== "undefined" && window.matchMedia?.(q).matches);
+  useEffect(() => {
+    const m = window.matchMedia?.(q);
+    if (!m) return;
+    const on = () => setP(m.matches);
+    m.addEventListener?.("change", on);
+    return () => m.removeEventListener?.("change", on);
+  }, []);
+  return p;
+}
 
 const Scene3D = lazy(() => import("../three/Scene3D"));
 
@@ -69,6 +83,9 @@ export function GameStage(p: GameStageProps) {
   const pl = view.pass_label;
   const myWp = view.human_seat !== null && p.showWinProb && !view.done && !me.out ? p.winProb[String(view.human_seat)] : undefined;
   const legalCards = sortHand(view.hand, view.trump_suit, p.sort).filter((c) => legal.has(c));
+  const portrait = usePortrait();
+  const n = view.num_players;
+  const opponents = Array.from({ length: n - 1 }, (_, i) => view.players[(bottomSeat + 1 + i) % n]);
 
   return (
     <section className={`stage ${canAct ? "my-turn" : ""} ${p.embedScene === false ? "hud-only" : ""}`} data-testid="play-area">
@@ -116,6 +133,13 @@ export function GameStage(p: GameStageProps) {
         </div>
 
         {p.boardExtra}
+        {portrait && (
+          <div className={`opp-row n${opponents.length}`} data-testid="opp-row">
+            {opponents.map((o) => (
+              <SeatChip key={o.seat} player={o} state={view} thinking={p.thinkingSeat === o.seat} bubble={p.bubbles[o.seat]} />
+            ))}
+          </div>
+        )}
 
         <div className="hud-bottom">
           <div className="hud-me">
@@ -143,7 +167,8 @@ export function GameStage(p: GameStageProps) {
                     data-testid="hint"
                     title={`${t("hint.button")} (H)`}
                   >
-                    <span aria-hidden="true">✦</span> {t("hint.button")}
+                    <span aria-hidden="true">✦</span>
+                  <span className="hint-label">{t("hint.button")}</span>
                   </button>
                 )}
               </>

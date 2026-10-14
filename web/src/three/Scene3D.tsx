@@ -68,8 +68,8 @@ function CameraRig({ dims, focus, mode = "game" }: { dims: Dims; focus: boolean;
     const aspect = size.width / size.height;
     if (dims.portrait) {
       cam.fov = 50;
-      base.current.set(0, 13.4 + Math.max(0, 0.62 - aspect) * 9, 10.6);
-      look.current.set(0, 0, 1.6);
+      base.current.set(0, 12.2 + Math.max(0, 0.55 - aspect) * 8, 9.4);
+      look.current.set(0, 0, 1.15);
     } else {
       cam.fov = 34;
       const extra = Math.max(0, 1.75 - aspect) * 5.2;
@@ -185,7 +185,7 @@ function HandKey({ dims }: { dims: Dims }) {
   useEffect(() => {
     if (ref.current) ref.current.target = tgt;
   }, [tgt]);
-  const z = dims.B + (dims.portrait ? 1.5 : 0.5);
+  const z = dims.B + (dims.portrait ? 1.25 : 0.5);
   return (
     <>
       <primitive object={tgt} position={[0, 1.1, z]} />
@@ -296,9 +296,9 @@ function Content(p: Scene3DProps & { dims: Dims; view: GameState }) {
   // visible world width at the hand plane
   const handWidth = useMemo(() => {
     const cam = camera as THREE.PerspectiveCamera;
-    const d = dims.portrait ? 12.5 : 9.0;
+    const d = dims.portrait ? 11.4 : 9.0;
     // leave room for the HUD (your plaque on the left, actions on the right)
-    return 2 * d * Math.tan(((cam.fov || 36) * Math.PI) / 360) * (size.width / size.height) * (dims.portrait ? 0.92 : 0.6);
+    return 2 * d * Math.tan(((cam.fov || 36) * Math.PI) / 360) * (size.width / size.height) * (dims.portrait ? 0.84 : 0.6);
   }, [camera, size.width, size.height, dims.portrait]);
 
   const { targets, anchors } = useMemo(
@@ -359,7 +359,7 @@ function Content(p: Scene3DProps & { dims: Dims; view: GameState }) {
           onLand={onLand}
         />
       ))}
-      {view.players
+      {!dims.portrait && view.players
         .filter((pl) => pl.seat !== bottom)
         .map((pl) => {
           const s = anchors.seats[pl.seat];
@@ -380,7 +380,7 @@ function Content(p: Scene3DProps & { dims: Dims; view: GameState }) {
             </Html>
           );
         })}
-      <Html position={[anchors.talon[0], 0.05, anchors.talon[2] + (dims.portrait ? 1.05 : 1.2)]} center zIndexRange={[9, 0]} pointerEvents="none">
+      <Html position={[anchors.talon[0] + (dims.portrait ? 0.55 : 0), 0.05, anchors.talon[2] + (dims.portrait ? 1.05 : 1.2)]} center zIndexRange={[9, 0]} pointerEvents="none">
         <div className="felt-label talon-info" data-testid="talon-label">
           <span className={`trump-badge suit-${view.trump_suit}`} title={t("talon.trump")}>
             {["♠", "♣", "♦", "♥"][view.trump_suit]}&#xFE0E;

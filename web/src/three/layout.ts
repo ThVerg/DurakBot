@@ -66,12 +66,21 @@ export function anchors(view: GameState, d: Dims): Anchors {
     const pxSafe = k >= 3 && Math.abs(px) < 1.75 ? Math.sign(px || 1) * 1.75 : px;
     const plaque: V3 = d.portrait ? [k === 1 ? 0 : pxSafe, 0.9, sz * (d.B + 0.3)] : [sx * (d.A + 0.35), 0.9, sz * (d.B + 0.45)];
     const yaw = Math.atan2(-fan[0], -fan[2]); // +z faces the centre
+    if (d.portrait) {
+      // phones: fans in an even row along the far rail, matching the HUD
+      // plaque row above the table (left to right in seat order)
+      const span = 2 * d.A - 0.9;
+      const fx = (i - (k - 1) / 2) * (span / Math.max(k, 1));
+      const pf: V3 = [fx, 0.02, -d.B + 1.85];
+      seats[seat] = { seat: [fx, 0, -d.B - 0.4], fan: pf, plaque: pf, yaw: 0 };
+      continue;
+    }
     seats[seat] = { seat: rim, fan, plaque, yaw };
   }
-  const talon: V3 = d.portrait ? [-d.A + 1.4, 0, d.B - 1.7] : [-d.A + 1.55, 0, 0.35];
-  const discard: V3 = d.portrait ? [d.A - 1.05, 0, d.B - 1.7] : [d.A - 1.55, 0, 0.35];
-  const tableCenter: V3 = d.portrait ? [0, 0, -0.35] : [0, 0, 0.05];
-  const hand = d.portrait ? { origin: [0, 1.5, d.B + 1.55] as V3, tilt: -1.0 } : { origin: [0, 0.82, d.B + 0.62] as V3, tilt: -0.9 };
+  const talon: V3 = d.portrait ? [-d.A + 1.25, 0, d.B - 1.9] : [-d.A + 1.55, 0, 0.35];
+  const discard: V3 = d.portrait ? [d.A - 1.25, 0, d.B - 1.9] : [d.A - 1.55, 0, 0.35];
+  const tableCenter: V3 = d.portrait ? [0, 0, 0.15] : [0, 0, 0.05];
+  const hand = d.portrait ? { origin: [0, 1.05, d.B + 1.25] as V3, tilt: -1.0 } : { origin: [0, 0.82, d.B + 0.62] as V3, tilt: -0.9 };
   // human "seat" for flights (pickups go to the hand)
   seats[bottom] = { seat: hand.origin, fan: hand.origin, plaque: hand.origin, yaw: 0 };
   return { talon, discard, tableCenter, seats, hand };
@@ -215,8 +224,9 @@ export function computeLayout(inp: LayoutInput): { targets: CardTarget[]; anchor
     const known = new Set(p.known);
     const cards: (number | null)[] = showAll ? sortHand(p.hand!, trump) : [...sortHand(p.known, trump), ...Array(Math.max(0, p.hand_size - p.known.length)).fill(null)];
     const m = cards.length;
-    const spacing = Math.min(0.2, 1.7 / Math.max(1, m));
-    const fanSpread = Math.min(0.13, 0.9 / Math.max(1, m));
+    const narrow = dims.portrait && view.num_players > 3;
+    const spacing = narrow ? Math.min(0.12, 0.9 / Math.max(1, m)) : Math.min(0.2, 1.7 / Math.max(1, m));
+    const fanSpread = narrow ? Math.min(0.1, 0.7 / Math.max(1, m)) : Math.min(0.13, 0.9 / Math.max(1, m));
     let hidden = 0;
     cards.forEach((c, i) => {
       const off = i - (m - 1) / 2;
@@ -231,7 +241,7 @@ export function computeLayout(inp: LayoutInput): { targets: CardTarget[]; anchor
         pos,
         rot: [-0.55, s.yaw, -off * fanSpread],
         faceUp: c !== null,
-        scale: 0.56,
+        scale: narrow ? 0.46 : 0.56,
         zone: "opp",
         seat: p.seat,
         known: c !== null && known.has(c),
