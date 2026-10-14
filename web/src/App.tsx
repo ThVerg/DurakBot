@@ -8,7 +8,7 @@ import { DurakReveal, HintPanel, Tutorial } from "./components/Coach";
 import { GameOverDialog, NewGameDialog, RulesDialog, SettingsDialog, StatsDialog, botLabel, type Settings } from "./components/Dialogs";
 import { GameTable } from "./components/GameTable";
 import { GameStage } from "./hud/GameStage";
-import { Lobby, TIERS, TitleScreen, tierAgent } from "./hud/Title";
+import { Lobby, TIERS, TitleScreen, tierAgent, tierOfAgent } from "./hud/Title";
 import type { Quality, SceneApi, SceneMode } from "./three/Scene3D";
 import { clearFx, confetti, fly, hiddenDuring, makeBack, makeFlipCard, rectOf, reducedMotion } from "./fx";
 import { I18nProvider, Rich, makeT, type TFn } from "./i18n";
@@ -140,6 +140,14 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
   const botLabelOf = useCallback(
     (name: string) => botLabel(bots?.bots.find((b) => b.name === name), name, prefs.lang),
     [bots, prefs.lang],
+  );
+  /** What a seat shows: the difficulty tier when the engine is one, else its label. */
+  const seatLabelOf = useCallback(
+    (name: string) => {
+      const tier = tierOfAgent(name);
+      return tier ? t(`tier.${tier.id}`) : botLabel(bots?.bots.find((b) => b.name === name), name, prefs.lang);
+    },
+    [bots, prefs.lang, t],
   );
 
   // ---------------------------------------------------------------- boot
@@ -910,7 +918,7 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
             thinkingSeat={thinkingSeat}
             winProb={winProb}
             showWinProb={prefs.showWinProb}
-            botLabelOf={botLabelOf}
+            botLabelOf={seatLabelOf}
             apiRef={sceneApi}
             onSound={(k) => (k === "snap" ? sfx.snap() : sfx.deal())}
           />
@@ -1117,7 +1125,7 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
                 }
               : undefined
           }
-          botLabelOf={botLabelOf}
+          botLabelOf={seatLabelOf}
         />
       )}
       {replayOpen && gid && (
@@ -1126,7 +1134,7 @@ function Game({ prefs, setPrefs, t }: { prefs: Prefs; setPrefs: (f: (p: Prefs) =
             gameId={gid}
             onClose={() => setReplayOpen(false)}
             sort={prefs.sort}
-            botLabelOf={botLabelOf}
+            botLabelOf={seatLabelOf}
             stage={
               use3d
                 ? { quality: quality as Quality, theme: prefs.theme, back: prefs.back, fourColor: prefs.fourColor, speed: reducedMotion() ? 0 : 0.55 }

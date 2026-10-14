@@ -70,22 +70,51 @@ const backMats = new Map<string, THREE.MeshStandardMaterial>();
 function backMaterial(id: string) {
   let m = backMats.get(id);
   if (!m) {
-    m = new THREE.MeshStandardMaterial({ map: backTexture(id), roughness: 0.4, metalness: 0.05, alphaTest: 0.5, envMapIntensity: 0.6 });
+    const tex = backTexture(id);
+    m = new THREE.MeshStandardMaterial({
+      map: tex,
+      emissiveMap: tex,
+      emissive: new THREE.Color(1, 1, 1),
+      emissiveIntensity: 0.32,
+      color: new THREE.Color(0.75, 0.75, 0.75),
+      roughness: 0.42,
+      metalness: 0.05,
+      alphaTest: 0.5,
+      envMapIntensity: 0.4,
+      toneMapped: false,
+    });
     backMats.set(id, m);
   }
   return m;
 }
+const FACE_EMISSIVE = 0.62;
+const FACE_LIT = 0.42;
 const faceMats = new Map<string, THREE.MeshStandardMaterial>();
 function faceMaterial(card: number, four: boolean) {
   const k = `${card}:${four}`;
   let m = faceMats.get(k);
   if (!m) {
-    m = new THREE.MeshStandardMaterial({ map: faceTexture(card, four), roughness: 0.42, metalness: 0, alphaTest: 0.5, envMapIntensity: 0.45 });
+    // Faces keep the asset's true colours: an emissive copy of the face map
+    // provides a neutral base (no warm tint, no tone-mapping), and a modest
+    // lit layer on top adds shadows, gloss and depth.
+    const tex = faceTexture(card, four);
+    m = new THREE.MeshStandardMaterial({
+      map: tex,
+      emissiveMap: tex,
+      emissive: new THREE.Color(1, 1, 1),
+      emissiveIntensity: FACE_EMISSIVE,
+      color: new THREE.Color(FACE_LIT, FACE_LIT, FACE_LIT),
+      roughness: 0.5,
+      metalness: 0,
+      alphaTest: 0.5,
+      envMapIntensity: 0.25,
+      toneMapped: false,
+    });
     faceMats.set(k, m);
   }
   return m;
 }
-const edgeMat = new THREE.MeshStandardMaterial({ color: "#efe6d2", roughness: 0.6 });
+const edgeMat = new THREE.MeshStandardMaterial({ color: "#f4efe4", roughness: 0.6, emissive: new THREE.Color("#4a463e"), toneMapped: false });
 
 export function disposeCardResources() {
   for (const m of backMats.values()) m.dispose();
@@ -252,8 +281,11 @@ export const Card3D = memo(function Card3D(p: CardProps) {
       glowRef.current.visible = glowMat.opacity > 0.01;
     }
     if (faceRef.current && faceMat) {
-      const c = p.dim ? 0.5 : 1;
-      faceMat.color.setScalar(faceMat.color.r + (c - faceMat.color.r) * Math.min(1, dt * 10));
+      const k = p.dim ? 0.48 : 1;
+      const cur = faceMat.emissiveIntensity / FACE_EMISSIVE;
+      const next = cur + (k - cur) * Math.min(1, dt * 10);
+      faceMat.emissiveIntensity = FACE_EMISSIVE * next;
+      faceMat.color.setScalar(FACE_LIT * next);
     }
   });
 

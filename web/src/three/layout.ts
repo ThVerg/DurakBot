@@ -61,14 +61,17 @@ export function anchors(view: GameState, d: Dims): Anchors {
     const rim: V3 = [sx * (d.A + 0.55), 0, sz * (d.B + 0.55)];
     const fan: V3 = [sx * (d.A - 0.95), 0.02, sz * (d.B - 0.85)];
     // portrait: plaques sit on the felt just in front of each fan (clear of the status banner)
-    const plaque: V3 = d.portrait ? [sx * (d.A + 0.25), 0.9, sz * (d.B + 0.3)] : [sx * (d.A + 0.35), 0.9, sz * (d.B + 0.45)];
+    // portrait: keep side plaques on screen and the top pair far enough apart
+    const px = sx * (d.A + 0.25) * 0.8;
+    const pxSafe = k >= 3 && Math.abs(px) < 1.75 ? Math.sign(px || 1) * 1.75 : px;
+    const plaque: V3 = d.portrait ? [k === 1 ? 0 : pxSafe, 0.9, sz * (d.B + 0.3)] : [sx * (d.A + 0.35), 0.9, sz * (d.B + 0.45)];
     const yaw = Math.atan2(-fan[0], -fan[2]); // +z faces the centre
     seats[seat] = { seat: rim, fan, plaque, yaw };
   }
-  const talon: V3 = d.portrait ? [-d.A + 1.05, 0, d.B - 1.7] : [-d.A + 1.55, 0, 0.35];
+  const talon: V3 = d.portrait ? [-d.A + 1.4, 0, d.B - 1.7] : [-d.A + 1.55, 0, 0.35];
   const discard: V3 = d.portrait ? [d.A - 1.05, 0, d.B - 1.7] : [d.A - 1.55, 0, 0.35];
   const tableCenter: V3 = d.portrait ? [0, 0, -0.35] : [0, 0, 0.05];
-  const hand = d.portrait ? { origin: [0, 1.5, d.B + 1.55] as V3, tilt: -1.0 } : { origin: [0, 1.2, d.B + 0.5] as V3, tilt: -0.92 };
+  const hand = d.portrait ? { origin: [0, 1.5, d.B + 1.55] as V3, tilt: -1.0 } : { origin: [0, 0.82, d.B + 0.62] as V3, tilt: -0.9 };
   // human "seat" for flights (pickups go to the hand)
   seats[bottom] = { seat: hand.origin, fan: hand.origin, plaque: hand.origin, yaw: 0 };
   return { talon, discard, tableCenter, seats, hand };
@@ -107,26 +110,26 @@ export function computeLayout(inp: LayoutInput): { targets: CardTarget[]; anchor
   const pairs = view.table;
   const perRow = dims.portrait ? 2 : 3;
   const rows = Math.ceil(pairs.length / perRow) || 1;
-  const sxp = dims.portrait ? 1.45 : 1.55;
-  const szp = 1.75;
+  const sxp = dims.portrait ? 1.5 : 1.7;
+  const szp = 1.95;
   const tc = a.tableCenter;
   pairs.forEach((p, i) => {
     const row = Math.floor(i / perRow);
     const inRow = Math.min(perRow, pairs.length - row * perRow);
     const col = i % perRow;
     const x = tc[0] + (col - (inRow - 1) / 2) * sxp;
-    const z = tc[2] + (row - (rows - 1) / 2) * szp - 0.15;
+    const z = tc[2] + (row - (rows - 1) / 2) * szp - (rows > 1 ? 0.45 : 0.25);
     const jitter = (hash01(p.attack) - 0.5) * 0.12;
-    out.push({ key: `c${p.attack}`, card: p.attack, pos: [x, 0.012, z], rot: [-Math.PI / 2, jitter, 0], faceUp: true, scale: 1.12, zone: "table" });
+    out.push({ key: `c${p.attack}`, card: p.attack, pos: [x, 0.012, z], rot: [-Math.PI / 2, jitter, 0], faceUp: true, scale: 1.2, zone: "table" });
     if (p.defense !== null) {
       const j2 = 0.2 + (hash01(p.defense) - 0.5) * 0.1;
       out.push({
         key: `c${p.defense}`,
         card: p.defense,
-        pos: [x + 0.26, 0.03, z + 0.34],
+        pos: [x + 0.28, 0.03, z + 0.36],
         rot: [-Math.PI / 2, -j2, 0],
         faceUp: true,
-        scale: 1.12,
+        scale: 1.2,
         zone: "table",
       });
     }
@@ -138,10 +141,10 @@ export function computeLayout(inp: LayoutInput): { targets: CardTarget[]; anchor
     out.push({
       key: `c${view.trump_card}`,
       card: view.trump_card,
-      pos: [t[0] + (dims.portrait ? 0.0 : 0.42), 0.006, t[2] + (dims.portrait ? -0.45 : 0)],
+      pos: [t[0] + (dims.portrait ? 0.0 : 0.62), 0.006, t[2] + (dims.portrait ? -0.62 : 0)],
       rot: [-Math.PI / 2, Math.PI / 2 + 0.05, 0],
       faceUp: true,
-      scale: 0.95,
+      scale: 1.02,
       zone: "trump",
     });
   }
@@ -175,20 +178,28 @@ export function computeLayout(inp: LayoutInput): { targets: CardTarget[]; anchor
   const handCards = sortHand(me?.hand ?? [], trump, sort);
   const n = handCards.length;
   if (n) {
-    const maxSpan = Math.max(1.5, inp.handWidth - CARD_W * 1.3);
-    const step = n > 1 ? Math.min(0.66, maxSpan / (n - 1)) : 0;
-    const spread = n > 1 ? Math.min(0.07, 0.5 / n) : 0;
+    // Size the fan to the hand and the viewport: keep every card's corner
+    // index visible (step >= ~30% of a card), cap the card size, and shrink
+    // the cards smoothly for very large hands instead of over-overlapping.
+    const baseScale = dims.portrait ? 1.05 : 0.86;
+    const avail = Math.max(2.4, inp.handWidth);
+    const minStepK = 0.34; // fraction of card width that stays visible
+    const fitScale = n > 1 ? avail / (CARD_W * (1 + (n - 1) * minStepK)) : baseScale;
+    const scale = Math.max(dims.portrait ? 0.6 : 0.62, Math.min(baseScale, fitScale));
+    const w = CARD_W * scale;
+    const step = n > 1 ? Math.min(w * 0.7, Math.max(w * minStepK, (avail - w) / (n - 1))) : 0;
+    const spread = n > 1 ? Math.min(0.045, 0.32 / n) : 0;
     handCards.forEach((c, i) => {
       const off = i - (n - 1) / 2;
       const x = off * step;
-      const y = -Math.abs(off) * Math.abs(off) * spread * 0.55;
+      const y = -Math.abs(off) * Math.abs(off) * spread * 0.3 * scale;
       out.push({
         key: `c${c}`,
         card: c,
         pos: handPoint(a, x, y, i * 0.012),
         rot: [a.hand.tilt, 0, -off * spread],
         faceUp: true,
-        scale: dims.portrait ? 1.12 : 0.98,
+        scale,
         zone: "hand",
         seat: bottom,
       });

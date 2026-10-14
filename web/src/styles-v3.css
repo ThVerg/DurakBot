@@ -1894,3 +1894,149 @@ th {
     letter-spacing: 0.1em;
   }
 }
+
+/* ---------------- polish pass: plaques, coach, talon info */
+.plaque {
+  gap: 12px;
+  padding: 7px 18px 7px 7px;
+}
+.pl-name {
+  font-size: 17px;
+  max-width: 170px;
+}
+.plaque.compact .pl-name {
+  font-size: 14.5px;
+  max-width: 130px;
+}
+.pl-bot {
+  max-width: none !important;
+  overflow: visible;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+.plaque.compact .pl-bot {
+  max-width: none !important;
+  font-size: 9px;
+}
+.pl-meta {
+  gap: 10px;
+}
+.pl-count {
+  font-size: 13.5px;
+  color: #fbf2dd;
+  padding: 1px 8px 1px 6px;
+  border-radius: 999px;
+  background: rgba(243, 234, 216, 0.08);
+  border: 1px solid rgba(243, 234, 216, 0.12);
+}
+.pl-count i {
+  width: 10px;
+  height: 14px;
+}
+.hint-panel {
+  background: linear-gradient(180deg, #13201b, #0a110e) !important;
+  backdrop-filter: none;
+  animation: none !important;
+  width: min(380px, calc(100vw - 24px)) !important;
+}
+.hint-panel .hint-mini,
+.hint-panel .card.mini {
+  --mw: 42px !important;
+}
+.hint-move {
+  grid-template-columns: 62px 1fr 46px !important;
+  padding: 4px 8px !important;
+}
+.hint-move b {
+  font-size: 15px;
+}
+.talon-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: none;
+  letter-spacing: 0.04em;
+}
+.trump-badge {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffdf6, #efe4cc);
+  box-shadow: 0 0 0 2px #0b0f0d, 0 0 0 3.5px var(--gold), 0 4px 12px rgba(0, 0, 0, 0.6);
+  font-size: 19px;
+  line-height: 1;
+  text-shadow: none;
+}
+.trump-badge.suit-0,
+.trump-badge.suit-1 {
+  color: #17171b;
+}
+.trump-badge.suit-2,
+.trump-badge.suit-3 {
+  color: #b3162c;
+}
+:root[data-four-color="on"] .trump-badge.suit-1 {
+  color: #0d7a3e;
+}
+:root[data-four-color="on"] .trump-badge.suit-2 {
+  color: #1662c4;
+}
+.ti-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.ti-trump {
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+@media (max-width: 760px) {
+  .pl-name {
+    font-size: 14px;
+  }
+  .plaque.compact .pl-name {
+    font-size: 12px;
+    max-width: 84px;
+  }
+  .trump-badge {
+    width: 24px;
+    height: 24px;
+    font-size: 15px;
+  }
+}
+@media (max-width: 760px) {
+  /* phones: the level is shown in the lobby; plaques keep name + count */
+  .plaque.compact .pl-bot {
+    display: none !important;
+  }
+  .plaque.compact .pl-count {
+    font-size: 12px;
+    padding: 0 6px 0 5px;
+  }
+}
+
+@media (max-width: 760px) {
+  .plaque.compact {
+    gap: 5px;
+    padding: 3px 9px 3px 3px;
+  }
+  .plaque.compact .portrait {
+    width: 34px !important;
+    height: 34px !important;
+  }
+  .plaque.compact .pl-name {
+    font-size: 11.5px;
+    max-width: 78px;
+  }
+  .plaque.compact .pl-count {
+    font-size: 11px;
+  }
+  .plaque.compact .pl-count i {
+    width: 7px;
+    height: 10px;
+  }
+}

@@ -100,7 +100,7 @@ export function Table({ dims, theme, lang }: { dims: Dims; theme: string; lang: 
     const pedestal = new THREE.CylinderGeometry(1.1, 1.6, 2.4, 48);
     const floor = new THREE.CircleGeometry(30, 64);
     floor.rotateX(-Math.PI / 2);
-    const emblemG = new THREE.PlaneGeometry(3.6, 1.8);
+    const emblemG = new THREE.PlaneGeometry(dims.portrait ? 2.2 : 2.5, dims.portrait ? 1.1 : 1.25);
     emblemG.rotateX(-Math.PI / 2);
     const vignG = new THREE.CircleGeometry(1, 96);
     vignG.rotateX(-Math.PI / 2);
@@ -118,8 +118,9 @@ export function Table({ dims, theme, lang }: { dims: Dims; theme: string; lang: 
       <mesh geometry={geo.vignG} position={[0, 0.002, 0]} renderOrder={1}>
         <meshBasicMaterial map={vign} transparent depthWrite={false} />
       </mesh>
-      <mesh geometry={geo.emblemG} position={[0, 0.003, dims.portrait ? -0.3 : 0.1]} rotation={[0, dims.portrait ? Math.PI / 2 : 0, 0]} renderOrder={2}>
-        <meshStandardMaterial map={tex.logo} transparent opacity={0.55} depthWrite={false} metalness={0.6} roughness={0.35} />
+      {/* foil logo toward the far rail, clear of the play area */}
+      <mesh geometry={geo.emblemG} position={[0, 0.003, -dims.B * (dims.portrait ? 0.56 : 0.6)]} renderOrder={2}>
+        <meshStandardMaterial map={tex.logo} transparent opacity={0.38} depthWrite={false} metalness={0.85} roughness={0.32} />
       </mesh>
       <mesh geometry={geo.brass} castShadow>
         <meshStandardMaterial map={tex.brass} normalMap={tex.brassN} roughnessMap={tex.brassR} metalness={1} roughness={1} />

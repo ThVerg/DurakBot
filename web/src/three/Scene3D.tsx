@@ -189,7 +189,7 @@ function HandKey({ dims }: { dims: Dims }) {
   return (
     <>
       <primitive object={tgt} position={[0, 1.1, z]} />
-      <spotLight ref={ref} position={[0, 13, z + 2.5]} angle={0.62} penumbra={1} intensity={170} decay={2} distance={30} color="#fff1dc" />
+      <spotLight ref={ref} position={[0, 13, z + 2.5]} angle={0.62} penumbra={1} intensity={150} decay={2} distance={30} color="#fff8f0" />
     </>
   );
 }
@@ -380,9 +380,17 @@ function Content(p: Scene3DProps & { dims: Dims; view: GameState }) {
             </Html>
           );
         })}
-      <Html position={[anchors.talon[0], 0.05, anchors.talon[2] + (dims.portrait ? 0.95 : 1.05)]} center zIndexRange={[9, 0]} pointerEvents="none">
-        <div className="felt-label" data-testid="talon-label">
-          <b>{view.talon_size}</b> {view.talon_size ? t("talon.left", { n: "" }).trim() : t("talon.empty")}
+      <Html position={[anchors.talon[0], 0.05, anchors.talon[2] + (dims.portrait ? 1.05 : 1.2)]} center zIndexRange={[9, 0]} pointerEvents="none">
+        <div className="felt-label talon-info" data-testid="talon-label">
+          <span className={`trump-badge suit-${view.trump_suit}`} title={t("talon.trump")}>
+            {["♠", "♣", "♦", "♥"][view.trump_suit]}&#xFE0E;
+          </span>
+          <span className="ti-text">
+            <span className="ti-trump">{t("talon.trump")}</span>
+            <span>
+              <b>{view.talon_size}</b> {view.talon_size ? t("talon.left", { n: "" }).trim() : t("talon.empty")}
+            </span>
+          </span>
         </div>
       </Html>
       <Html position={[anchors.discard[0], 0.05, anchors.discard[2] + (dims.portrait ? 0.95 : 1.05)]} center zIndexRange={[9, 0]} pointerEvents="none">

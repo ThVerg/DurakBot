@@ -64,7 +64,7 @@ export function Plaque({
   const name = displayName(player, t);
   return (
     <div className={cls} data-seat={player.seat} aria-label={name}>
-      <Portrait player={player} size={compact ? 40 : 52} />
+      <Portrait player={player} size={compact ? 46 : 58} />
       <div className="plaque-body">
         <div className="pl-name">{name}</div>
         <div className="pl-meta">
