@@ -2,6 +2,11 @@
 
 Run:  .venv/bin/python -m uvicorn server.app:app --host 0.0.0.0 --port 8000
 API lives under /api; the built frontend (web/dist) is served at /.
+
+Streaming: the UI submits the human move with ``auto=false`` and then pulls
+bot moves one at a time from ``/advance`` (each animates as soon as it is
+made). With ``auto=true`` (the default) the server plays all bot moves up to
+the human's next turn in one response.
 """
 
 from __future__ import annotations
@@ -15,6 +20,7 @@ from typing import Callable, TypeVar
 
 import anyio
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -22,7 +28,10 @@ from pydantic import BaseModel, Field
 from durak.agents import available_agents
 from durak.engine import MAX_PLAYERS, MIN_PLAYERS, NUM_ACTIONS
 
-from .sessions import GameError, GameSession, bot_label, bot_status, default_bot, evaluator_available, usable_agents
+from . import lab
+from .analysis import compute_hint, get_analysis, get_replay
+from .bots_meta import BOT_PREFERENCE, bot_meta
+from .sessions import GameError, GameSession, bot_status, default_bot, evaluator_available, usable_agents
 from .storage import Storage
 
 log = logging.getLogger("durak.server")
@@ -42,10 +51,12 @@ class CreateGame(BaseModel):
     bots: list[str | None] | None = Field(None, description="Bot type per seat (overrides `bot`)")
     seed: int | None = None
     debug_reveal: bool = False
+    auto: bool = Field(True, description="Play bot moves up to the human's first turn immediately")
 
 
 class ActionIn(BaseModel):
     action: int = Field(..., ge=0, lt=NUM_ACTIONS)
+    auto: bool = Field(True, description="Also play all bot replies (false = stream them via /advance)")
 
 
 class AdvanceIn(BaseModel):
@@ -58,7 +69,8 @@ class DebugIn(BaseModel):
 
 
 def create_app(db_path: str | None = None) -> FastAPI:
-    app = FastAPI(title="DurakBot", version="1.0")
+    app = FastAPI(title="DurakBot", version="2.0")
+    app.add_middleware(GZipMiddleware, minimum_size=1024)
     storage = Storage(db_path)
     sessions: "OrderedDict[str, GameSession]" = OrderedDict()
     sessions_lock = threading.Lock()
@@ -105,13 +117,31 @@ def create_app(db_path: str | None = None) -> FastAPI:
     def health():
         return {"ok": True, "sessions": len(sessions)}
 
-    @app.get("/api/bots")
-    def bots_():
+    def bots_payload():
+        from durak.agents import _REGISTRY  # factory classes, for docstrings of unknown bots
+
         names = available_agents()
+        elo = lab.ladder_elo()
         bots = []
         for n in names:
             ok, err = bot_status(n)
-            bots.append({"name": n, "label": bot_label(n), "available": ok, "error": err})
+            meta = bot_meta(n, _REGISTRY.get(n))
+            bots.append({
+                "name": n,
+                "label": meta["label"]["en"],
+                "labels": meta["label"],
+                "desc": meta["desc"],
+                "tier": meta["tier"],
+                "elo": round(elo[n]) if n in elo else None,
+                "available": ok,
+                "error": err,
+            })
+
+        def order(b):
+            pref = BOT_PREFERENCE.index(b["name"]) if b["name"] in BOT_PREFERENCE else len(BOT_PREFERENCE)
+            return (-(b["tier"] if b["tier"] is not None else -1), pref, b["name"])
+
+        bots.sort(key=order)
         return {
             "bots": [b for b in bots if b["available"]],
             "unavailable": [b for b in bots if not b["available"]],
@@ -120,6 +150,10 @@ def create_app(db_path: str | None = None) -> FastAPI:
             "min_players": MIN_PLAYERS,
             "max_players": MAX_PLAYERS,
         }
+
+    @app.get("/api/bots")
+    async def bots_():
+        return await anyio.to_thread.run_sync(bots_payload)
 
     @app.post("/api/games")
     async def create_game(req: CreateGame):
@@ -148,7 +182,7 @@ def create_app(db_path: str | None = None) -> FastAPI:
                 sessions.popitem(last=False)
 
         def start():
-            steps = s.run_bots() if s.mode == "play" else []
+            steps = s.run_bots() if (s.mode == "play" and req.auto) else []
             return {"game_id": s.id, "steps": steps, "state": s.view()}
 
         return await locked(s, start)
@@ -165,14 +199,15 @@ def create_app(db_path: str | None = None) -> FastAPI:
             raise HTTPException(409, "spectate games have no human player")
 
         def run():
-            steps = s.human_act(req.action)
+            steps = s.human_act(req.action, auto=req.auto)
             return {"game_id": s.id, "steps": steps, "state": s.view()}
 
         return await locked(s, run)
 
     @app.post("/api/games/{gid}/advance")
     async def advance(gid: str, req: AdvanceIn):
-        """Advance a game by bot moves: spectate mode, or after the human is out."""
+        """Advance by bot moves: one step (streaming), to the end of the bout,
+        or to the end. Never plays for the human."""
         s = get_session(gid)
 
         def run():
@@ -206,9 +241,39 @@ def create_app(db_path: str | None = None) -> FastAPI:
         s = get_session(gid)
         return await locked(s, s.evaluate)
 
+    @app.get("/api/games/{gid}/hint")
+    async def hint(gid: str):
+        s = get_session(gid)
+
+        def run():
+            out = compute_hint(s)
+            s.hints_used += 1
+            return out
+
+        return await locked(s, run)
+
+    @app.get("/api/games/{gid}/analysis")
+    async def analysis(gid: str):
+        s = get_session(gid)
+        return await locked(s, lambda: get_analysis(s))
+
+    @app.get("/api/games/{gid}/replay")
+    async def replay(gid: str):
+        s = get_session(gid)
+        return await locked(s, lambda: get_replay(s))
+
     @app.get("/api/stats")
     async def stats():
         return await anyio.to_thread.run_sync(storage.stats)
+
+    @app.get("/api/lab")
+    async def lab_endpoint(run: str = "main"):
+        def build():
+            data = lab.lab_data(run)
+            data["human"] = storage.timeline()
+            return data
+
+        return await anyio.to_thread.run_sync(build)
 
     # ------------------------------------------------------------ frontend
     @app.get("/api/{rest:path}")

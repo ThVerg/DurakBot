@@ -25,9 +25,15 @@ CREATE TABLE IF NOT EXISTS games (
     human_place INTEGER,            -- 1..N (N = durak), NULL in spectate / draw
     moves INTEGER NOT NULL,
     seed INTEGER,
-    debug_used INTEGER NOT NULL DEFAULT 0
+    debug_used INTEGER NOT NULL DEFAULT 0,
+    end_reason TEXT,                -- 'durak' | 'draw' | 'stalemate'
+    hints_used INTEGER NOT NULL DEFAULT 0
 );
 """
+_MIGRATIONS = {
+    "end_reason": "ALTER TABLE games ADD COLUMN end_reason TEXT",
+    "hints_used": "ALTER TABLE games ADD COLUMN hints_used INTEGER NOT NULL DEFAULT 0",
+}
 
 
 class Storage:
@@ -37,6 +43,10 @@ class Storage:
         self._lock = threading.Lock()
         with self._connect() as con:
             con.executescript(_SCHEMA)
+            have = {r[1] for r in con.execute("PRAGMA table_info(games)")}
+            for col, sql in _MIGRATIONS.items():
+                if col not in have:
+                    con.execute(sql)
 
     def _connect(self) -> sqlite3.Connection:
         con = sqlite3.connect(self.path, timeout=10)
@@ -49,9 +59,10 @@ class Storage:
         row["seats"] = json.dumps(row["seats"])
         row["finished"] = json.dumps(row["finished"])
         row["debug_used"] = int(bool(row.get("debug_used")))
+        row["hints_used"] = int(row.get("hints_used") or 0)
         cols = [
             "id", "date", "mode", "num_players", "human_seat", "seats", "loser", "finished",
-            "human_result", "human_place", "moves", "seed", "debug_used",
+            "human_result", "human_place", "moves", "seed", "debug_used", "end_reason", "hints_used",
         ]
         with self._lock, self._connect() as con:
             con.execute(
@@ -140,8 +151,26 @@ class Storage:
             "by_players": by_n,
             "by_bot": by_bot,
             "recent": [
-                {k: r[k] for k in ("id", "date", "mode", "num_players", "human_seat", "seats", "loser",
-                                   "human_result", "human_place", "moves", "debug_used")}
+                {k: r.get(k) for k in ("id", "date", "mode", "num_players", "human_seat", "seats", "loser",
+                                       "human_result", "human_place", "moves", "debug_used", "end_reason",
+                                       "hints_used")}
                 for r in rows[:20]
             ],
         }
+
+    def timeline(self) -> list[dict]:
+        """Human games in chronological order (for the Lab page)."""
+        out = []
+        for r in reversed(self.rows()):
+            if r["mode"] != "play":
+                continue
+            out.append({
+                "date": r["date"],
+                "num_players": r["num_players"],
+                "bots": sorted(set(s for s in r["seats"] if s != "human")),
+                "result": r["human_result"],
+                "place": r["human_place"],
+                "moves": r["moves"],
+                "assisted": bool(r["debug_used"]) or bool(r.get("hints_used")),
+            })
+        return out

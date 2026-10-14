@@ -17,6 +17,8 @@ if rows:
     sps = sum(float(x["sps"]) for x in recent) / len(recent)
     print(f"iter {r['iter']}  steps {int(r['steps']):,}  games {int(r['games']):,}  hours {f('hours',2)}  sps(avg20) {sps:.0f}")
     print(f"entropy {f('entropy')}  kl {f('kl',4)}  clipfrac {f('clipfrac')}  expl_var {f('explained_var')}  v_loss {f('v_loss')}  lr {f('lr',6)}  stale {f('stale',2)}")
+    if r.get("bel_loss") not in (None, "", "0.0"):
+        print(f"belief: CE {f('bel_loss')} nats/card, gain over count prior {f('bel_gain')}, top-1 acc {f('bel_acc')}  solved_frac {f('solved_frac')}  draw_frac {f('draw_frac')}")
     for opp in ("heuristic", "solver", "snap"):
         vals = []
         for n in range(2, 7):
@@ -26,17 +28,30 @@ if rows:
 ev = os.path.join(run, "eval.jsonl")
 if os.path.exists(ev):
     lines = [json.loads(l) for l in open(ev) if l.strip()]
-    print(f"\nevals: {len(lines)}  (durak rate of the checkpoint, greedy policy, 1 seat vs field; baseline 1/N)")
-    for e in lines[-6:]:
-        def row(o):
-            parts = []
-            for n in range(2, 7):
-                k = f"{o}_{n}p_durak"
-                if k in e:
-                    parts.append(f"{n}p {e[k]:.3f}")
-            return "  ".join(parts)
+    print(f"\nevals: {len(lines)}. Regression dashboard: durak rate per N of each checkpoint (baseline 1/N:"
+          " .500 .333 .250 .200 .167); lower is better")
+    v2 = [e for e in lines if e.get("suite_version") == 2]
+    old = [e for e in lines if e.get("suite_version") != 2]
+    for e in old[-3:]:
         z = e.get("vs_champion_z")
-        print(f"it {e['iter']:>6} [{e['time']}] vs heur: {row('heuristic')} | vs champ z={z if z is None else round(z,2)} promoted={e['promoted']}")
+        row = "  ".join(f"{n}p {e[f'heuristic_{n}p_durak']:.3f}" for n in range(2, 7) if f"heuristic_{n}p_durak" in e)
+        print(f"  [suite v1] it {e['iter']:>5} vs heuristic(policy only): {row} | champ z={z if z is None else round(z,2)} promoted={e['promoted']}")
+    if v2:
+        names = ["heuristic", "solver"] + sorted({k.rsplit('_', 2)[0] for e in v2 for k in e if k.startswith("anchor:") and k.endswith("p_durak")}) + ["champ"]
+        for name in names:
+            print(f"  vs {name}:")
+            for e in v2[-6:]:
+                vals = "  ".join(f"{e[f'{name}_{n}p_durak']:.3f}" if f"{name}_{n}p_durak" in e else "  -  " for n in range(2, 7))
+                extra = ""
+                if name == "champ":
+                    z = e.get("vs_champion_z")
+                    extra = f"  z={z if z is None else round(z, 2)} promoted={e.get('promoted')} {e.get('rejected', '')}"
+                print(f"    it {e['iter']:>5} [{e['time'][5:16]}]  {vals}{extra}")
+lg = os.path.join(run, "league.json")
+if os.path.exists(lg):
+    L = json.load(open(lg)).get("snapshots", {})
+    hard = sorted(((e["durak"] + 2) / (e["base"] + 2), k) for k, e in L.items())
+    print(f"\nleague: {len(L)} members; hardest (durak/baseline): " + ", ".join(f"{k} {h:.2f}" for h, k in hard[-4:][::-1]))
 cj = "checkpoints/champion.json"
 if os.path.exists(cj):
     c = json.load(open(cj))

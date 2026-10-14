@@ -1,74 +1,68 @@
 import { type CSSProperties, type ReactNode } from "react";
 import type { GameState, Player } from "../api";
-import { SUIT_NAMES, sortHand } from "../cards";
+import { sortHand, suitOf } from "../cards";
+import { SUIT_NAMES, useI18n, type TFn } from "../i18n";
+import { Avatar } from "./Avatar";
 import { Card, CardBack, SuitIcon } from "./Card";
 
 export interface Bubble {
   seat: number;
   text: string;
-  tone: "play" | "pass" | "take" | "bita" | "out";
+  tone: "play" | "pass" | "take" | "bita" | "out" | "say";
   key: number;
 }
 
-export interface Fresh {
-  card: number;
-  dx: number;
-  dy: number;
+export interface Dealing {
+  dealt: number[];
+  trumpShown: boolean;
+  extra: number; // cards still in the dealer's hands (shown on the talon)
 }
 
-export interface Sweep {
-  dx: number;
-  dy: number;
-}
-
-const AVATAR_COLORS = ["#e07a5f", "#3d8bfd", "#f2cc8f", "#81b29a", "#c77dff", "#f28482"];
-
-export function Avatar({ player, size = 40 }: { player: Player; size?: number }) {
-  const bg = player.is_human ? "#f4d35e" : AVATAR_COLORS[player.seat % AVATAR_COLORS.length];
-  return (
-    <div className="avatar" style={{ width: size, height: size, background: bg, fontSize: size * 0.42 }}>
-      {player.is_human ? "★" : player.name[0]}
-    </div>
-  );
+export function displayName(p: Pick<Player, "is_human" | "persona" | "name">, t: TFn): string {
+  if (p.is_human) return t("role.you");
+  return p.persona ? t(`persona.${p.persona}`) : p.name;
 }
 
 export function RoleBadges({ player, state }: { player: Player; state: GameState }) {
+  const { t } = useI18n();
   const out: ReactNode[] = [];
   if (state.done) {
-    if (player.is_durak) out.push(<span key="d" className="badge durak">Durak</span>);
-    else if (player.place) out.push(<span key="o" className="badge out">Out · #{player.place}</span>);
+    if (player.is_durak) out.push(<span key="d" className="badge durak">{t("role.durak")}</span>);
+    else if (player.place) out.push(<span key="o" className="badge out">{t("role.out", { p: player.place })}</span>);
     return <div className="badges">{out}</div>;
   }
-  if (player.out) out.push(<span key="o" className="badge out">Out · #{player.place}</span>);
-  if (player.is_attacker) out.push(<span key="a" className="badge attacker">Attacker</span>);
-  if (player.is_defender) out.push(<span key="f" className="badge defender">Defender</span>);
-  if (player.is_thrower) out.push(<span key="t" className="badge thrower">Thrower</span>);
+  if (player.out) out.push(<span key="o" className="badge out">{t("role.out", { p: player.place ?? "" })}</span>);
+  if (player.is_attacker) out.push(<span key="a" className="badge attacker">{t("role.attacker")}</span>);
+  if (player.is_defender) out.push(<span key="f" className="badge defender">{t("role.defender")}</span>);
+  if (player.is_thrower) out.push(<span key="t" className="badge thrower">{t("role.thrower")}</span>);
   return <div className="badges">{out}</div>;
 }
 
-function BubbleView({ bubble }: { bubble?: Bubble | null }) {
+export function BubbleView({ bubble, className = "" }: { bubble?: Bubble | null; className?: string }) {
   if (!bubble) return null;
   return (
-    <div key={bubble.key} className={`bubble tone-${bubble.tone}`}>
+    <div key={bubble.key} className={`bubble tone-${bubble.tone} ${className}`} role="status">
       {bubble.text}
     </div>
   );
 }
 
-function OpponentHand({ player, state, reveal }: { player: Player; state: GameState; reveal: boolean }) {
-  if (player.hand_size === 0) return <div className="opp-hand empty">no cards</div>;
+function OpponentHand({ player, state, reveal, count }: { player: Player; state: GameState; reveal: boolean; count: number }) {
+  const { t } = useI18n();
+  if (count === 0) return <div className="opp-hand empty">{player.out || state.done ? t("opp.noCards") : ""}</div>;
   if (reveal && player.hand) {
     const cards = sortHand(player.hand, state.trump_suit);
     const known = new Set(player.known);
     return (
       <div className="opp-hand revealed">
         {cards.map((c) => (
-          <Card key={c} card={c} className="mini" known={known.has(c)} trump={Math.floor(c / 9) === state.trump_suit} />
+          <Card key={c} card={c} className="mini" known={known.has(c)} />
         ))}
       </div>
     );
   }
-  const hidden = player.hand_size - player.known.length;
+  const knownCards = count === player.hand_size ? player.known : [];
+  const hidden = count - knownCards.length;
   const shownBacks = Math.min(hidden, 7);
   return (
     <div className="opp-hand">
@@ -76,13 +70,13 @@ function OpponentHand({ player, state, reveal }: { player: Player; state: GameSt
         {Array.from({ length: shownBacks }, (_, i) => (
           <CardBack key={i} className="mini" style={{ "--i": i, "--n": shownBacks } as CSSProperties} />
         ))}
-        <span className="count" title={`${player.hand_size} cards`}>
-          {player.hand_size}
+        <span className="count" aria-label={`${count}`}>
+          {count}
         </span>
       </div>
-      {player.known.length > 0 && (
-        <div className="known-row" title="Cards this player picked up (publicly known)">
-          {sortHand(player.known, state.trump_suit).map((c) => (
+      {knownCards.length > 0 && (
+        <div className="known-row">
+          {sortHand(knownCards, state.trump_suit).map((c) => (
             <Card key={c} card={c} className="mini" known />
           ))}
         </div>
@@ -99,7 +93,8 @@ export function Opponent({
   thinking,
   reveal,
   winProb,
-  refCb,
+  botLabel,
+  count,
 }: {
   player: Player;
   state: GameState;
@@ -108,31 +103,33 @@ export function Opponent({
   thinking: boolean;
   reveal: boolean;
   winProb?: number;
-  refCb: (el: HTMLDivElement | null) => void;
+  botLabel?: string;
+  count: number;
 }) {
+  const { t } = useI18n();
   const cls = [
     "opponent",
     player.to_move && !state.done ? "to-move" : "",
+    thinking ? "thinking-now" : "",
     player.out ? "is-out" : "",
     player.is_durak ? "is-durak" : "",
-    player.is_defender && !state.done ? "role-defender" : "",
-    player.is_attacker && !state.done ? "role-attacker" : "",
   ]
     .filter(Boolean)
     .join(" ");
+  const name = displayName(player, t);
   return (
-    <div className={cls} style={style} ref={refCb} data-seat={player.seat}>
+    <div className={cls} style={style} data-seat={player.seat} aria-label={name}>
       <div className="opp-head">
-        <Avatar player={player} size={34} />
+        <Avatar player={player} size={36} />
         <div className="opp-name">
-          <div className="name">{player.name}</div>
+          <div className="name">{name}</div>
           <div className="sub">
-            {player.bot ? <span className="bot-tag">{player.bot}</span> : null}
+            {botLabel ? <span className="bot-tag">{botLabel}</span> : null}
             {winProb !== undefined && <span className="wp-tag">{Math.round(winProb * 100)}%</span>}
           </div>
         </div>
-        {thinking && player.to_move && !state.done && (
-          <div className="thinking" aria-label="thinking">
+        {thinking && (
+          <div className="thinking" aria-label={t("status.thinking", { name })}>
             <i />
             <i />
             <i />
@@ -140,80 +137,56 @@ export function Opponent({
         )}
       </div>
       <RoleBadges player={player} state={state} />
-      <OpponentHand player={player} state={state} reveal={reveal} />
+      <OpponentHand player={player} state={state} reveal={reveal} count={count} />
       <BubbleView bubble={bubble} />
     </div>
   );
 }
 
-export function TableCenter({
-  state,
-  fresh,
-  sweep,
-  refCb,
-}: {
-  state: GameState;
-  fresh: Fresh | null;
-  sweep: Sweep | null;
-  refCb: (el: HTMLDivElement | null) => void;
-}) {
+export function TableCenter({ state, hintCard }: { state: GameState; hintCard?: number | null }) {
+  const { t } = useI18n();
   const attackCount = state.table.length;
+  const bits: string[] = [];
+  if (!state.done) {
+    bits.push(t("table.bout", { b: state.bout + 1 }), t("table.cards", { a: attackCount, l: state.bout_limit }));
+    if (state.first_bout) bits.push(t("table.first"));
+    if (state.phase === "throw_in") bits.push(t("table.taking"));
+  }
   return (
-    <div className="table-center" ref={refCb}>
-      <div className="bout-info">
-        {state.done ? (
-          "Game over"
-        ) : (
-          <>
-            Bout {state.bout + 1} · {attackCount}/{state.bout_limit} cards
-            {state.first_bout ? " · first bout" : ""}
-            {state.phase === "throw_in" ? " · taking" : ""}
-          </>
-        )}
-      </div>
-      <div
-        className={`pairs ${sweep ? "sweeping" : ""}`}
-        style={sweep ? ({ "--tx": `${sweep.dx}px`, "--ty": `${sweep.dy}px` } as CSSProperties) : undefined}
-      >
-        {state.table.length === 0 && !state.done && <div className="table-empty">Table is empty</div>}
-        {state.table.map((p) => {
-          const freshA = fresh && fresh.card === p.attack;
-          const freshD = fresh && p.defense !== null && fresh.card === p.defense;
-          return (
-            <div className={`pair ${p.defense === null ? "uncovered" : "covered"}`} key={p.attack}>
-              <Card
-                key={p.attack}
-                card={p.attack}
-                className={`table-card attack ${freshA ? "fly-in" : ""}`}
-                style={freshA ? ({ "--fx": `${fresh!.dx}px`, "--fy": `${fresh!.dy}px` } as CSSProperties) : undefined}
-                trump={Math.floor(p.attack / 9) === state.trump_suit}
-              />
-              {p.defense !== null && (
-                <Card
-                  key={p.defense}
-                  card={p.defense}
-                  className={`table-card defense ${freshD ? "fly-in" : ""}`}
-                  style={freshD ? ({ "--fx": `${fresh!.dx}px`, "--fy": `${fresh!.dy}px` } as CSSProperties) : undefined}
-                  trump={Math.floor(p.defense / 9) === state.trump_suit}
-                />
-              )}
-            </div>
-          );
-        })}
+    <div className="table-center" aria-label={t("a11y.table")}>
+      <div className="bout-info">{state.done ? t("table.over") : bits.join(" · ")}</div>
+      <div className="pairs">
+        {state.table.length === 0 && !state.done && <div className="table-empty">{t("table.empty")}</div>}
+        {state.table.map((p, i) => (
+          <div
+            className={`pair ${p.defense === null ? "uncovered" : "covered"} ${hintCard !== undefined && hintCard !== null && p.defense === null ? "hint-target" : ""}`}
+            key={p.attack}
+            style={{ "--k": i } as CSSProperties}
+          >
+            <Card card={p.attack} className="table-card attack" />
+            {p.defense !== null && <Card card={p.defense} className="table-card defense" />}
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-export function Talon({ state }: { state: GameState }) {
-  const n = state.talon_size;
-  const layers = Math.min(Math.max(n - 1, 0), 5);
+export function Talon({ state, dealing }: { state: GameState; dealing: Dealing | null }) {
+  const { lang, t } = useI18n();
+  const n = state.talon_size + (dealing ? dealing.extra : 0);
+  const layers = Math.min(Math.max(n - 1, 0), 6);
+  const showTrump = !dealing || dealing.trumpShown;
   return (
-    <div className="talon" title={`Talon: ${n} card${n === 1 ? "" : "s"} · trump ${SUIT_NAMES[state.trump_suit]}`}>
+    <div className="talon" title={`${t("talon.left", { n })} · ${t("talon.trump")} ${SUIT_NAMES[lang][state.trump_suit]}`}>
       <div className="talon-stack">
         {n > 0 ? (
           <>
-            <Card card={state.trump_card} className="table-card trump-card" />
+            {showTrump ? (
+              <Card card={state.trump_card} className="table-card trump-card flip-in" />
+            ) : (
+              <CardBack className="table-card trump-card" />
+            )}
             {n > 1 &&
               Array.from({ length: layers }, (_, i) => (
                 <CardBack key={i} className="table-card talon-back" style={{ "--i": i } as CSSProperties} />
@@ -227,18 +200,19 @@ export function Talon({ state }: { state: GameState }) {
       </div>
       <div className="talon-label">
         <span className="trump-chip">
-          Trump <SuitIcon suit={state.trump_suit} size={13} />
+          {t("talon.trump")} <SuitIcon suit={state.trump_suit} size={13} />
         </span>
-        <span className="talon-count">{n > 0 ? `${n} left` : "talon empty"}</span>
+        <span className="talon-count">{n > 0 ? t("talon.left", { n }) : t("talon.empty")}</span>
       </div>
     </div>
   );
 }
 
-export function DiscardPile({ count, refCb }: { count: number; refCb: (el: HTMLDivElement | null) => void }) {
-  const layers = Math.min(count, 6);
+export function DiscardPile({ count }: { count: number }) {
+  const { t } = useI18n();
+  const layers = Math.min(count, 7);
   return (
-    <div className="discard" ref={refCb} title={`${count} cards discarded`}>
+    <div className="discard" title={t("discard.label", { n: count })}>
       <div className="discard-stack">
         {layers === 0 ? (
           <div className="discard-empty" />
@@ -249,8 +223,10 @@ export function DiscardPile({ count, refCb }: { count: number; refCb: (el: HTMLD
         )}
       </div>
       <div className="talon-label">
-        <span className="talon-count">Bita · {count}</span>
+        <span className="talon-count">{t("discard.label", { n: count })}</span>
       </div>
     </div>
   );
 }
+
+export const isTrump = (c: number, s: GameState) => suitOf(c) === s.trump_suit;

@@ -1,5 +1,6 @@
 import { memo, type CSSProperties, type ReactNode } from "react";
-import { RANKS, SUIT_NAMES, isRed, rankOf, suitOf } from "../cards";
+import { RANKS, rankOf, suitOf } from "../cards";
+import { SUIT_NAMES, useI18n } from "../i18n";
 
 // Suit shapes in a 100x100 box.
 const SUIT_PATHS: string[] = [
@@ -23,7 +24,7 @@ export function SuitIcon({ suit, size = 14, className }: { suit: number; size?: 
       aria-hidden="true"
       style={{ display: "inline-block", verticalAlign: "-0.12em" }}
     >
-      <path d={SUIT_PATHS[suit]} fill={suit === 2 || suit === 3 ? "var(--red)" : "var(--black)"} />
+      <path d={SUIT_PATHS[suit]} fill={`var(--suit-${suit})`} />
     </svg>
   );
 }
@@ -55,7 +56,7 @@ function CardFace({ card }: { card: number }) {
   const s = suitOf(card);
   const r = rankOf(card);
   const rank = RANKS[r];
-  const color = isRed(card) ? "var(--red)" : "var(--black)";
+  const color = `var(--suit-${s})`;
   const corner = (
     <g>
       <text
@@ -129,7 +130,8 @@ export const Card = memo(function Card({
   onClick,
   title,
 }: CardProps) {
-  const label = `${RANKS[rankOf(card)]} of ${SUIT_NAMES[suitOf(card)]}`;
+  const { lang, t } = useI18n();
+  const label = t("a11y.card", { rank: RANKS[rankOf(card)], suit: SUIT_NAMES[lang][suitOf(card)] });
   const cls = [
     "card",
     className,
@@ -145,7 +147,7 @@ export const Card = memo(function Card({
   const content = (
     <>
       <CardFace card={card} />
-      {known && <span className="known-tag" title="Publicly known card">seen</span>}
+      {known && <span className="known-tag">{t("opp.known")}</span>}
       {hint && <span className="key-hint">{hint}</span>}
     </>
   );

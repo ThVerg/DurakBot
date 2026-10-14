@@ -19,17 +19,9 @@ from durak.agents import Agent, available_agents, get_agent
 from durak.cards import mask_to_list, popcount
 from durak.engine import ATTACK, DEFEND, PASS, PHASE_NAMES, DurakGame
 
+from .bots_meta import BOT_PREFERENCE, PERSONAS, bot_label  # noqa: F401  (re-exported)
+
 log = logging.getLogger("durak.server")
-
-BOT_PREFERENCE = ("champion", "solver", "heuristic", "random")
-BOT_LABELS = {
-    "champion": "Champion",
-    "solver": "Solver",
-    "heuristic": "Heuristic",
-    "random": "Random",
-}
-NAMES = ["Anya", "Boris", "Dasha", "Fyodor", "Galya", "Ivan"]
-
 
 _usable_lock = threading.Lock()
 _usable: dict[str, tuple[bool, float, str | None]] = {}  # name -> (ok, checked_at, error)
@@ -65,44 +57,39 @@ def default_bot() -> str:
     return usable[0] if usable else "random"
 
 
-def bot_label(name: str) -> str:
-    return BOT_LABELS.get(name, name.replace("_", " ").title())
-
-
 # --------------------------------------------------------------- evaluation
-_eval_lock = threading.Lock()
-_eval_call_lock = threading.Lock()
-_eval_fn: Any = None
-_eval_checked = 0.0
+_analyst_lock = threading.Lock()
+_analyst_checked = 0.0
+_analyst_name: str | None = None
 
 
-def get_evaluator():
-    """Return the champion's ``evaluate(game, player) -> float`` if it exists."""
-    global _eval_fn, _eval_checked
-    with _eval_lock:
-        if _eval_fn is not None:
-            return _eval_fn
-        if time.time() - _eval_checked < 30:  # don't retry imports on every call
-            return None
-        _eval_checked = time.time()
-        if "champion" not in available_agents() or not bot_status("champion")[0]:
-            return None
-        try:
-            import durak.agents.champion as champ
+def analyst_name() -> str | None:
+    """Registry name of an agent with ``evaluate`` + ``policy`` (the champion)."""
+    global _analyst_checked, _analyst_name
+    with _analyst_lock:
+        if _analyst_name is not None or time.time() - _analyst_checked < 30:
+            return _analyst_name
+        _analyst_checked = time.time()
+        for name in ("champion_fast", "champion"):
+            if name in available_agents() and bot_status(name)[0]:
+                try:
+                    a = get_agent(name)
+                    if callable(getattr(a, "evaluate", None)):
+                        _analyst_name = name
+                        break
+                except Exception:  # pragma: no cover
+                    log.exception("analyst %s unavailable", name)
+        return _analyst_name
 
-            fn = getattr(champ, "evaluate", None)
-            if fn is None:
-                agent = get_agent("champion")
-                fn = getattr(agent, "evaluate", None)
-            if callable(fn):
-                _eval_fn = fn
-        except Exception:  # pragma: no cover - depends on other agent's code
-            log.exception("champion evaluator unavailable")
-        return _eval_fn
+
+def make_analyst():
+    """A fresh champion instance (own public-log tracker; thread-confined)."""
+    name = analyst_name()
+    return get_agent(name) if name else None
 
 
 def evaluator_available() -> bool:
-    return get_evaluator() is not None
+    return analyst_name() is not None
 
 
 # ------------------------------------------------------------------ session
@@ -142,24 +129,28 @@ class GameSession:
         self.recorded = False
         self.created = time.time()
         self.touched = time.time()
-        names = list(NAMES)
-        random.Random(self.seed).shuffle(names)
-        self.names = ["You" if p == human_seat else names[p] for p in range(num_players)]
+        self.analysis: dict | None = None  # post-game analysis (server/analysis.py)
+        self.hints_used = 0
+        personas = list(range(len(PERSONAS)))
+        random.Random(self.seed).shuffle(personas)
+        self.personas: list[str | None] = []
+        self.names: list[str] = []
+        for p in range(num_players):
+            if p == human_seat:
+                self.personas.append(None)
+                self.names.append("You")
+            else:
+                per = PERSONAS[personas[p % len(personas)]]
+                self.personas.append(per["key"])
+                self.names.append(per["name"])
 
     # ---------------------------------------------------------- helpers
-    @property
-    def viewer(self) -> int | None:
-        return self.human_seat
-
-    def human_active(self) -> bool:
-        return self.human_seat is not None and self.game.is_active(self.human_seat)
-
-    def needs_human(self) -> bool:
-        g = self.game
+    def needs_human(self, g: DurakGame | None = None) -> bool:
+        g = g or self.game
         return not g.done and self.human_seat is not None and g.current_player == self.human_seat
 
-    def pass_label(self) -> str | None:
-        g = self.game
+    @staticmethod
+    def pass_label_of(g: DurakGame) -> str | None:
         if g.done:
             return None
         if g.phase == DEFEND:
@@ -171,8 +162,23 @@ class GameSession:
             return "bita" if g.thrower_idx == len(g.throwers) - 1 else "pass"
         return "done"
 
+    def pass_label(self) -> str | None:
+        return self.pass_label_of(self.game)
+
     def reveal_all(self) -> bool:
         return self.mode == "spectate" or self.debug_reveal
+
+    @staticmethod
+    def end_reason(g: DurakGame) -> str | None:
+        if not g.done:
+            return None
+        if g.loser is not None:
+            return "durak"
+        stall = getattr(g, "stall", 0)
+        limit = getattr(g.config, "stall_bouts", None)
+        if limit and stall >= limit:
+            return "stalemate"
+        return "draw"
 
     # ----------------------------------------------------------- stepping
     def _bot_action(self, p: int) -> int:
@@ -190,7 +196,7 @@ class GameSession:
             a = self.rng.choice(legal)
         return a
 
-    def apply(self, action: int) -> dict:
+    def apply(self, action: int, think_ms: int | None = None) -> dict:
         """Apply ``action`` for the current player and describe what happened."""
         g = self.game
         player = g.current_player
@@ -256,7 +262,7 @@ class GameSession:
                 if q not in finished_before:
                     events.append({"type": "out", "player": q, "place": g.finished.index(q) + 1})
             if g.done:
-                events.append({"type": "game_over", "loser": g.loser})
+                events.append({"type": "game_over", "loser": g.loser, "reason": self.end_reason(g)})
             else:
                 events.append({"type": "new_bout", "attacker": g.attacker, "defender": g.defender})
 
@@ -271,10 +277,12 @@ class GameSession:
             "thrower_slot": tidx if phase != DEFEND else None,
             "num_throwers": len(throwers),
         }
+        if think_ms is not None:
+            step["think_ms"] = think_ms
         self.history.append(step)
         return step
 
-    def human_act(self, action: int) -> list[dict]:
+    def human_act(self, action: int, auto: bool = True) -> list[dict]:
         if self.game.done:
             raise GameError(409, "game is over")
         if not self.needs_human():
@@ -282,7 +290,8 @@ class GameSession:
         if not self.game.is_legal(action):
             raise GameError(400, f"illegal action {action}")
         steps = [self._with_view(self.apply(action))]
-        steps += self.run_bots()
+        if auto:
+            steps += self.run_bots()
         return steps
 
     def run_bots(self, max_steps: int | None = None, until_bout_end: bool = False) -> list[dict]:
@@ -294,7 +303,9 @@ class GameSession:
             if max_steps is not None and len(out) >= max_steps:
                 break
             p = g.current_player
-            step = self.apply(self._bot_action(p))
+            t0 = time.perf_counter()
+            a = self._bot_action(p)
+            step = self.apply(a, think_ms=int((time.perf_counter() - t0) * 1000))
             out.append(self._with_view(step))
             if until_bout_end and step["events"]:
                 break
@@ -304,12 +315,14 @@ class GameSession:
         return {**step, "view": self.view(compact=True)}
 
     # ------------------------------------------------------------- views
-    def view(self, compact: bool = False) -> dict:
+    def view(self, compact: bool = False, game: DurakGame | None = None, reveal: bool | None = None) -> dict:
         """Snapshot of everything the viewer may see. Hidden bot cards are
-        only included in spectate mode or with the debug reveal flag."""
-        g = self.game
+        only included in spectate mode or with the debug reveal flag.
+        ``game`` lets the replay build views of historical positions."""
+        g = game or self.game
         me = self.human_seat
-        reveal = self.reveal_all()
+        if reveal is None:
+            reveal = self.reveal_all()
         to_move = None if g.done else g.current_player
         thrower_set = set(g.throwers)
         players = []
@@ -317,6 +330,7 @@ class GameSession:
             entry: dict[str, Any] = {
                 "seat": p,
                 "name": self.names[p],
+                "persona": self.personas[p],
                 "bot": self.seat_bots[p],
                 "is_human": p == me,
                 "hand_size": popcount(g.hands[p]),
@@ -337,13 +351,13 @@ class GameSession:
             {"attack": a, "defense": g.defense_cards[i] if i < len(g.defense_cards) else None}
             for i, a in enumerate(g.attack_cards)
         ]
-        your_turn = self.needs_human()
+        your_turn = self.needs_human(g)
         state: dict[str, Any] = {
             "game_id": self.id,
             "mode": self.mode,
             "num_players": self.num_players,
             "human_seat": me,
-            "debug_reveal": self.debug_reveal,
+            "debug_reveal": self.debug_reveal and game is None,
             "players": players,
             "hand": mask_to_list(g.hands[me]) if me is not None else [],
             "table": table,
@@ -361,24 +375,30 @@ class GameSession:
             "to_move": to_move,
             "your_turn": your_turn,
             "legal": g.legal_actions() if your_turn else [],
-            "pass_label": self.pass_label() if your_turn else None,
+            "pass_label": self.pass_label_of(g) if your_turn else None,
             "bout": g.bout_index,
             "moves": len(g.log),
+            "stall": getattr(g, "stall", 0),
             "done": g.done,
             "loser": g.loser if g.done else None,
             "finished": list(g.finished),
-            "result": self.result(),
+            "result": self.result(g),
         }
         if not compact:
             state["discard"] = mask_to_list(g.discard)
-            state["seed"] = self.seed if (g.done or reveal) else None
+            state["seed"] = self.seed if (g.done or reveal) and game is None else None
         return state
 
-    def result(self) -> dict | None:
-        g = self.game
+    def result(self, g: DurakGame | None = None) -> dict | None:
+        g = g or self.game
         if not g.done:
             return None
-        res: dict[str, Any] = {"loser": g.loser, "draw": g.loser is None, "finished": list(g.finished)}
+        res: dict[str, Any] = {
+            "loser": g.loser,
+            "draw": g.loser is None,
+            "reason": self.end_reason(g),
+            "finished": list(g.finished),
+        }
         me = self.human_seat
         if me is not None:
             if g.loser is None:
@@ -408,29 +428,38 @@ class GameSession:
             "moves": len(g.log),
             "seed": self.seed,
             "debug_used": self.debug_used,
+            "end_reason": res.get("reason"),
+            "hints_used": self.hints_used,
         }
+
+    def replay_game(self, upto: int) -> DurakGame:
+        """Re-create the real game after ``upto`` moves (server-side only)."""
+        g = DurakGame(seed=self.seed, num_players=self.num_players, config=self.game.config)
+        for _, a in self.game.log[:upto]:
+            g.step(a)
+        return g
 
     def evaluate(self) -> dict:
         """Champion's estimate of P(not durak). For the human only, computed on
-        a determinization from the human's point of view (no leakage)."""
-        fn = get_evaluator()
+        determinizations from the human's point of view (no leakage)."""
+        agent = make_analyst()
         g = self.game
-        if fn is None:
+        if agent is None:
             return {"available": False, "values": {}}
         if g.done:
             return {"available": True, "values": {}}
         seats = [self.human_seat] if self.human_seat is not None else list(range(self.num_players))
         values = {}
-        with _eval_call_lock:
-            for p in seats:
-                if not g.is_active(p):
-                    continue
-                try:
-                    samples = [float(fn(g.determinize(p, self.rng), p)) for _ in range(2)]
-                    values[str(p)] = round(max(0.0, min(1.0, sum(samples) / len(samples))), 4)
-                except Exception:  # pragma: no cover
-                    log.exception("evaluate failed")
-                    return {"available": False, "values": {}}
+        rng = random.Random(self.seed * 31 + len(g.log))
+        for p in seats:
+            if not g.is_active(p):
+                continue
+            try:
+                samples = [float(agent.evaluate(g.determinize(p, rng), p)) for _ in range(2)]
+                values[str(p)] = round(max(0.0, min(1.0, sum(samples) / len(samples))), 4)
+            except Exception:  # pragma: no cover
+                log.exception("evaluate failed")
+                return {"available": False, "values": {}}
         return {"available": True, "values": values}
 
 
