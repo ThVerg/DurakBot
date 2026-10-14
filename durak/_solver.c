@@ -32,9 +32,41 @@ static u64 TTMASK = 0;
 static long long NODES = 0, NODE_LIMIT = -1;
 static double DEADLINE = -1.0;
 static int ABORTED = 0;
-static int OPT[8] = {0, 0, 0, 15, -5, 0, 0, 0}; /* tuned move-ordering options */
+static int OPT[8] = {0, 0, 0, 15, -5, 1, 1, 0}; /* tuned move-ordering options */
 static int HIST[2][37];
 static u64 CTX_A, CTX_TAB;
+static int KILLER[3][8][2]; /* [node kind][cards on table][slot]: recent cutoff moves */
+
+static inline void killer_front(int *moves, int k, int kind, int n) {
+    if (!OPT[6]) return;
+    if (n > 7) n = 7;
+    for (int s = 1; s >= 0; s--) {
+        int m = KILLER[kind][n][s];
+        if (m < 0) continue;
+        for (int i = 1; i < k; i++)
+            if (moves[i] == m) {
+                for (int j = i; j > 1; j--) moves[j] = moves[j - 1];
+                moves[1] = m; /* keep slot 0 for the TT move */
+                break;
+            }
+    }
+}
+
+static inline void killer_add(int kind, int n, int m) {
+    if (!OPT[6]) return;
+    if (n > 7) n = 7;
+    if (KILLER[kind][n][0] != m) { KILLER[kind][n][1] = KILLER[kind][n][0]; KILLER[kind][n][0] = m; }
+}
+/* Iterative deepening on bouts: at DEPTH_LEFT == 0 a new bout is not searched
+ * and gets the horizon value HZ (current attacker frame, +-1). HZ_HITS counts
+ * horizon leaves; results of subtrees that hit the horizon are stored in the TT
+ * only as the one-sided bound they prove. */
+static int DEPTH_LEFT = 1 << 30;
+static int HZ = 0;
+static long long HZ_HITS = 0;
+
+void dk_set_horizon(int depth, int hz) { DEPTH_LEFT = depth < 0 ? (1 << 30) : depth; HZ = hz; HZ_HITS = 0; }
+long long dk_hz_hits(void) { return HZ_HITS; }
 
 void dk_set_option(int which, int val) { if (which >= 0 && which < 8) OPT[which] = val; }
 
@@ -81,6 +113,7 @@ void dk_set_trump(int trump_card) {
 
 void dk_set_budget(long long node_limit, double seconds) {
     memset(HIST, 0, sizeof(HIST));
+    memset(KILLER, 0xff, sizeof(KILLER));
     NODES = 0;
     ABORTED = 0;
     NODE_LIMIT = node_limit;
@@ -138,6 +171,33 @@ static void store(u64 a, u64 d, u64 tab, uint32_t meta, Entry *old, int v, int a
     if (w > e->work) e->work = w;
 }
 
+/* Dominance pruning (exact; see solver.py docstring): drop card y from the
+ * hand-move set H when the next-lower live card x of y's suit is also in H and
+ * both ranks are singletons among live cards. Playing x dominates playing y. */
+static inline u64 prune_dominated(u64 cands, u64 H, u64 live) {
+    if (!OPT[5]) return cands;
+    u64 out = cands, m = cands;
+    while (m) {
+        int y = lowbit(m);
+        m &= m - 1;
+        if (popc(live & RANKALL[y % 9]) != 1) continue;
+        u64 below = live & (0x1FFULL << ((y / 9) * 9)) & ((1ULL << y) - 1);
+        if (!below) continue;
+        int x = 63 - __builtin_clzll(below);
+        if (((H >> x) & 1) && popc(live & RANKALL[x % 9]) == 1 && ((cands >> x) & 1)) out &= ~(1ULL << y);
+    }
+    return out;
+}
+
+static void store_hz(u64 a, u64 d, u64 tab, uint32_t meta, Entry *old, int v, int alpha, int beta, u64 move,
+                     long long work, long long hz0) {
+    if (HZ_HITS == hz0) { store(a, d, tab, meta, old, v, alpha, beta, move, work); return; }
+    /* Horizon pessimistic for the attacker (HZ=-1): v is a lower bound when it
+     * did not fail low. Optimistic (HZ=+1): an upper bound unless it failed high. */
+    if (HZ < 0 && v > alpha) store(a, d, tab, meta, old, v, LOSS - 1, v, move, work);       /* v >= beta form: lo */
+    else if (HZ > 0 && v < beta) store(a, d, tab, meta, old, v, v, WIN + 1, move, work);    /* v <= alpha form: hi */
+}
+
 static inline u64 table_ranks(u64 tab) {
     u64 r = 0;
     for (int k = 0; k < 9; k++)
@@ -158,13 +218,20 @@ int dk_end_bout(u64 a, u64 d, int defended, int flag, int alpha, int beta) {
         if (!a) return d ? WIN : DRAW;
         if (!d) return LOSS;
     }
+    if (DEPTH_LEFT <= 0) { HZ_HITS++; return HZ; }
+    DEPTH_LEFT--;
     if (defended) {
         int pa = popc(a);
+        HZ = -HZ;
         int v = dk_attack(d, a, 0, 0, pa < 6 ? pa : 6, flag, -beta, -alpha);
+        HZ = -HZ;
+        DEPTH_LEFT++;
         return v == ABORT ? ABORT : -v;
     }
     int pd = popc(d);
-    return dk_attack(a, d, 0, 0, pd < 6 ? pd : 6, flag, alpha, beta);
+    int v = dk_attack(a, d, 0, 0, pd < 6 ? pd : 6, flag, alpha, beta);
+    DEPTH_LEFT++;
+    return v;
 }
 
 static int sort_cards(u64 m, int *out, u64 dmask, int unbeatable_first, int side) {
@@ -195,7 +262,7 @@ int dk_attack(u64 a, u64 d, u64 tab, int n, int limit, int flag, int alpha, int 
         }
     }
     if (check()) return ABORT;
-    long long n0 = NODES;
+    long long n0 = NODES, hz0 = HZ_HITS;
     uint32_t meta = mkmeta(-1, limit, flag);
     Entry *e = probe(a, d, tab, meta);
     int tmove = -1;
@@ -210,6 +277,7 @@ int dk_attack(u64 a, u64 d, u64 tab, int n, int limit, int flag, int alpha, int 
     u64 cands = (n == 0) ? a : (n < limit ? (a & table_ranks(tab)) : 0);
     int moves[38];
     CTX_A = a; CTX_TAB = tab;
+    if (n == 0) cands = prune_dominated(cands, a, a | d | tab | (flag ? TCBIT : 0));
     int k = sort_cards(cands, moves, d, 1, 0);
     if (n > 0) {
         if (OPT[0]) { for (int j = k; j > 0; j--) moves[j] = moves[j - 1]; moves[0] = PASS; k++; }
@@ -223,6 +291,7 @@ int dk_attack(u64 a, u64 d, u64 tab, int n, int limit, int flag, int alpha, int 
                 break;
             }
     }
+    killer_front(moves, k, 0, n);
     int best = LOSS - 1, bmove = -1;
     for (int i = 0; i < k; i++) {
         int c = moves[i], v;
@@ -234,16 +303,16 @@ int dk_attack(u64 a, u64 d, u64 tab, int n, int limit, int flag, int alpha, int 
         if (v == ABORT) return ABORT;
         if (v > best) {
             best = v; bmove = c;
-            if (v > alpha) { alpha = v; if (alpha >= beta) { if (OPT[2] && c != PASS && HIST[0][c] < 1000) HIST[0][c]++; break; } }
+            if (v > alpha) { alpha = v; if (alpha >= beta) { if (OPT[2] && c != PASS && HIST[0][c] < 1000) HIST[0][c]++; killer_add(0, n, c); break; } }
         }
     }
-    store(a, d, tab, meta, e, best, a0, beta, (u64)bmove, NODES - n0);
+    store_hz(a, d, tab, meta, e, best, a0, beta, (u64)bmove, NODES - n0, hz0);
     return best;
 }
 
 int dk_defend(u64 a, u64 d, u64 tab, int n, int c, int limit, int flag, int alpha, int beta) {
     if (check()) return ABORT;
-    long long n0 = NODES;
+    long long n0 = NODES, hz0 = HZ_HITS;
     uint32_t meta = mkmeta(c, limit, flag);
     Entry *e = probe(a, d, tab, meta);
     int tmove = -1;
@@ -257,7 +326,7 @@ int dk_defend(u64 a, u64 d, u64 tab, int n, int c, int limit, int flag, int alph
     int b0 = beta;
     int moves[38];
     CTX_A = a; CTX_TAB = tab;
-    int k = sort_cards(d & BEAT[c], moves, 0, 0, 1);
+    int k = sort_cards(prune_dominated(d & BEAT[c], d, a | d | tab | (flag ? TCBIT : 0)), moves, 0, 0, 1);
     if (OPT[1]) { for (int j = k; j > 0; j--) moves[j] = moves[j - 1]; moves[0] = PASS; k++; }
     else moves[k++] = PASS;
     if (tmove >= 0) {
@@ -268,6 +337,7 @@ int dk_defend(u64 a, u64 d, u64 tab, int n, int c, int limit, int flag, int alph
                 break;
             }
     }
+    killer_front(moves, k, 1, n);
     int best = WIN + 1, bmove = -1;
     for (int i = 0; i < k; i++) {
         int b = moves[i], v;
@@ -279,10 +349,10 @@ int dk_defend(u64 a, u64 d, u64 tab, int n, int c, int limit, int flag, int alph
         if (v == ABORT) return ABORT;
         if (v < best) {
             best = v; bmove = b;
-            if (v < beta) { beta = v; if (alpha >= beta) { if (OPT[2] && b != PASS && HIST[1][b] < 1000) HIST[1][b]++; break; } }
+            if (v < beta) { beta = v; if (alpha >= beta) { if (OPT[2] && b != PASS && HIST[1][b] < 1000) HIST[1][b]++; killer_add(1, n, b); break; } }
         }
     }
-    store(a, d, tab, meta, e, best, alpha, b0, (u64)bmove, NODES - n0);
+    store_hz(a, d, tab, meta, e, best, alpha, b0, (u64)bmove, NODES - n0, hz0);
     return best;
 }
 
@@ -293,7 +363,7 @@ int dk_take(u64 a, u64 d, u64 tab, int n, int limit, int flag, int alpha, int be
     int room = limit - n;
     if (!cm || room <= 0) return dk_end_bout(a, d | tab, 0, flag, alpha, beta);
     if (check()) return ABORT;
-    long long n0 = NODES;
+    long long n0 = NODES, hz0 = HZ_HITS;
     uint32_t meta = mkmeta(-2, limit, flag);
     Entry *e = probe(a, d, tab, meta);
     u64 tsub = 0;
@@ -338,6 +408,6 @@ int dk_take(u64 a, u64 d, u64 tab, int n, int limit, int flag, int alpha, int be
             if (comb >= lim) break;
         }
     }
-    store(a, d, tab, meta, e, best, a0, beta, bmove | TAKE_MOVE_FLAG, NODES - n0);
+    store_hz(a, d, tab, meta, e, best, a0, beta, bmove | TAKE_MOVE_FLAG, NODES - n0, hz0);
     return best;
 }

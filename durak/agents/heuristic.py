@@ -22,9 +22,7 @@ Main ideas:
 
 Parameters were tuned in the arena (``durak.arena``) against random and earlier
 versions. Adding aggressively and counting-aware beater choice gave the
-largest gains. Games with 3+ players use ``MULTI_PARAMS`` overrides. A random
-"cycle valve" ends the rare endless games in which cards keep circulating
-through takes.
+largest gains. Games with 3+ players use ``MULTI_PARAMS`` overrides.
 """
 
 from __future__ import annotations
@@ -57,9 +55,6 @@ DEFAULT_PARAMS = dict(
     take_table_max=2,  # ...and the table holds at most this many cards
     take_attack_max=4,  # ...and every attack card is a non-trump of value <= this
     new_rank_penalty=4.0,  # beater opens a rank the throwers can follow: * P(they hold it)
-    # Safety valve: with an empty talon and 3+ players, cards can circulate
-    # forever through takes. Past this many actions, play some random moves.
-    cycle_steps=400,
 )
 
 # Overrides for games with 3+ players (tuned in the arena): conserve trumps more
@@ -161,9 +156,6 @@ class HeuristicAgent(Agent):
         if len(legal) == 1:
             return legal[0]
         self.p = self.p2 if game.num_players == 2 else self.pm
-        over = len(game.log) - self.p["cycle_steps"]
-        if over > 0 and self.rng.random() < min(0.5, over / 2000.0):
-            return self.rng.choice(legal)
         if game.phase == DEFEND:
             return self._defend(game, player, legal)
         if game.phase == ATTACK:

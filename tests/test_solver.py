@@ -236,3 +236,38 @@ def test_solver_agent_realizes_solved_value():
 
 def test_pass_constant():
     assert PASS == 36
+
+
+@pytest.mark.skipif(not NATIVE, reason="no C compiler")
+def test_real_large_endgame_regression():
+    # 11 vs 5 cards after takes, from a heuristic 4-player game: the attacker
+    # (seat 0) wins. Needs ~1.4M nodes with the tuned ordering + dominance
+    # pruning; the budget guards against performance regressions.
+    g = make_position(4, ["9S 9C JC QC KC 6D 9D JD 9H 10H QH", "10S 10C 7D 10D 7H", "", ""],
+                      trump="C", trump_card="8C", attacker=0, finished=[3, 2])
+    solver._SOLVERS.clear()
+    solver._load_native().dk_clear()
+    r = solver.solve(g, 0, time_limit=None, node_limit=6_000_000)
+    assert r is not None and r[0] == 1
+    c = g.clone()
+    c.step(r[1])
+    assert solver.solve(c, 0, time_limit=None, node_limit=6_000_000)[0] == 1
+
+
+def test_dominance_pruning_exact_on_dominance_positions():
+    """Positions where the pruning actually fires (singleton-rank adjacent
+    cards in one hand) still match brute force."""
+    rng = random.Random(9)
+    fired = 0
+    for _ in range(150):
+        deck = list(range(36))
+        rng.shuffle(deck)
+        na, nd = rng.randint(1, 3), rng.randint(1, 3)
+        g = make_position(2, [deck[:na], deck[na:na + nd]], trump=rng.randrange(4), attacker=0)
+        s = solver.EndgameSolver(g.trump_card)
+        live = g.hands[0] | g.hands[1]
+        if s._prune_dominated(g.hands[0], g.hands[0], live) != g.hands[0]:
+            fired += 1
+        for cls in SOLVER_CLASSES:
+            assert cls(g.trump_card).solve_game(g, 0, None)[0] == solver.brute_force(g.clone(), 0)
+    assert fired > 10

@@ -22,6 +22,7 @@ def test_play_match_basic_accounting():
         assert r["baseline"] == pytest.approx(1 / n)
         assert 0 <= r["a_durak_ci95"] < 1
         assert 0 <= r["a_durak_rate"] <= 1 and 0 <= r["b_durak_rate"] <= 1
+        assert r["timeout_rate"] == 0 and 0 <= r["stall_rate"] <= r["draw_rate"]
 
 
 def test_reproducible():

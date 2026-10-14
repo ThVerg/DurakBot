@@ -40,13 +40,13 @@ def _make(factory: AgentFactory) -> Agent:
     return get_agent(factory) if isinstance(factory, str) else factory()
 
 
-MAX_STEPS = 5000  # normal games take ~100-300 steps
+MAX_STEPS = 20000  # safety net only; normal games take ~100-300 steps
 
 
 class GameTimeout(RuntimeError):
-    """The game exceeded ``max_steps``. With an empty talon and 3+ players, cards
-    can circulate forever through repeated takes; the rules have no clause that
-    ends such a cycle. The arena scores such games as draws."""
+    """The game exceeded ``max_steps``. Should not happen: the engine's stall
+    rule (``Config.stall_bouts``) already ends endless take cycles with a draw.
+    The arena would score such a game as a draw."""
 
 
 def play_game(agents: list[Agent], deal_seed: int, num_players: int, rng: random.Random,
@@ -89,9 +89,10 @@ def _run_deals(args) -> list[tuple[int, int, int | None, int]]:
             rng = random.Random(deal_seed * 7 + seat)
             try:
                 g = play_game(seats, deal_seed, num_players, rng)
-                out.append((deal, seat, g.loser, len(g.log)))
+                stalled = g.loser is None and g.stall >= g.config.stall_bouts
+                out.append((deal, seat, g.loser, len(g.log), stalled))
             except GameTimeout:
-                out.append((deal, seat, None, -1))  # scored as a draw
+                out.append((deal, seat, None, -1, False))  # scored as a draw
     return out
 
 
@@ -114,7 +115,8 @@ def play_match(agent_a_factory: AgentFactory, agent_b_factory: AgentFactory, num
       b_durak_rate (per B player), draw_rate,
       a_score (A's mean zero-sum return), a_score_ci95,
       a_durak_rate_by_seat, games_per_sec, mean_steps,
-      timeout_rate (games cut at MAX_STEPS and scored as draws)
+      stall_rate (draws by the engine's stall rule), timeout_rate (games cut
+      at MAX_STEPS and scored as draws; should be 0)
     """
     n = num_players
     deals = max(1, math.ceil(n_games / n))
@@ -143,9 +145,11 @@ def summarize(results, n: int, elapsed: float = 0.0) -> dict:
     seat_loss = [0] * n
     seat_games = [0] * n
     steps = 0
-    timeouts = 0
+    timeouts = stalls = 0
     win = 1.0 / (n - 1)
-    for deal, seat, loser, st in results:
+    for rec in results:
+        deal, seat, loser, st = rec[:4]
+        stalls += bool(rec[4]) if len(rec) > 4 else 0
         if st < 0:
             timeouts += 1
         else:
@@ -189,6 +193,7 @@ def summarize(results, n: int, elapsed: float = 0.0) -> dict:
         "games_per_sec": games / elapsed if elapsed > 0 else float("nan"),
         "mean_steps": steps / max(1, games - timeouts),
         "timeout_rate": timeouts / games if games else 0.0,
+        "stall_rate": stalls / games if games else 0.0,
     }
 
 
@@ -198,7 +203,7 @@ def format_result(name_a: str, name_b: str, r: dict) -> str:
         f"{name_a} vs field of {name_b}  (N={n}, {r['games']} games / {r['deals']} deals)\n"
         f"  A durak rate: {r['a_durak_rate']:.4f} ± {r['a_durak_ci95']:.4f}   (fair baseline 1/N = {r['baseline']:.4f})\n"
         f"  B durak rate: {r['b_durak_rate']:.4f} per B player\n"
-        f"  draw rate:    {r['draw_rate']:.4f}   (of which step-limit timeouts: {r['timeout_rate']:.4f})\n"
+        f"  draw rate:    {r['draw_rate']:.4f}   (of which stall-rule draws: {r['stall_rate']:.4f}, step-cap timeouts: {r['timeout_rate']:.4f})\n"
         f"  A score:      {r['a_score']:+.4f} ± {r['a_score_ci95']:.4f}\n"
         f"  A durak by seat: {' '.join(f'{x:.3f}' for x in r['a_durak_rate_by_seat'])}\n"
         f"  {r['games_per_sec']:.1f} games/s, {r['mean_steps']:.0f} steps/game"

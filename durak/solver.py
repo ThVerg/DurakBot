@@ -83,6 +83,8 @@ def _load_native():
         lib.dk_set_budget.argtypes = [ctypes.c_longlong, ctypes.c_double]
         lib.dk_nodes.restype = ctypes.c_longlong
         lib.dk_set_option.argtypes = [_INT, _INT]
+        lib.dk_set_horizon.argtypes = [_INT, _INT]
+        lib.dk_hz_hits.restype = ctypes.c_longlong
         lib.dk_attack.argtypes = [_U64, _U64, _U64, _INT, _INT, _INT, _INT, _INT]
         lib.dk_defend.argtypes = [_U64, _U64, _U64, _INT, _INT, _INT, _INT, _INT, _INT]
         lib.dk_take.argtypes = [_U64, _U64, _U64, _INT, _INT, _INT, _INT, _INT]
@@ -153,6 +155,30 @@ class EndgameSolver:
             raise SearchAborted
         if self.nodes & 1023 == 0 and self._deadline is not None and time.perf_counter() > self._deadline:
             raise SearchAborted
+
+    def _prune_dominated(self, cands: int, H: int, live: int) -> int:
+        """Exact dominance pruning (mirrors ``prune_dominated`` in _solver.c).
+        Let x < y be cards of the same suit, both in hand ``H``, with no live
+        card of that suit between them and neither rank shared by another live
+        card. Swapping x and y preserves every rule relation except x against
+        y. Holding the higher card is then weakly better (a strategy-stealing
+        argument), so playing x (lead or beat) dominates playing y, and y is
+        dropped."""
+        out = cands
+        m = cands
+        while m:
+            low = m & -m
+            y = low.bit_length() - 1
+            m ^= low
+            if (live & self.rankmask[y]).bit_count() != 1:
+                continue
+            below = live & SUIT_MASKS[y // 9] & (low - 1)
+            if not below:
+                continue
+            x = below.bit_length() - 1
+            if (H >> x) & 1 and (cands >> x) & 1 and (live & self.rankmask[x]).bit_count() == 1:
+                out &= ~low
+        return out
 
     def _sorted_cards(self, m: int) -> list[int]:
         cs = _bits(m)
@@ -225,7 +251,7 @@ class EndgameSolver:
                 beta = hi
         a0 = alpha
         if n == 0:
-            cands = a
+            cands = self._prune_dominated(a, a, a | d | tab | (self.tc_bit if flag else 0))
         elif n < limit:
             ranks = 0
             t = tab
@@ -280,7 +306,7 @@ class EndgameSolver:
             if hi < beta:
                 beta = hi
         b0 = beta
-        moves = self._sorted_cards(d & self.beaters[c])
+        moves = self._sorted_cards(self._prune_dominated(d & self.beaters[c], d, a | d | tab | (self.tc_bit if flag else 0)))
         moves.append(PASS)
         if tmove is not None and tmove != moves[0]:
             moves.remove(tmove)
@@ -503,8 +529,12 @@ class NativeEndgameSolver(EndgameSolver):
         super().__init__(trump_card, max_tt=0)
         self.lib = _load_native()
 
+    # Bout-depth schedule for iterative deepening (None = unlimited).
+    ID_SCHEDULE = (None,)  # e.g. (3, None) enables bout-depth iterative deepening
+
     def _set_budget(self, time_limit, node_limit):
         self.nodes = 0
+        self.lib.dk_set_horizon(-1, 0)
         self.lib.dk_set_trump(self.trump_card)
         self.lib.dk_set_budget(-1 if node_limit is None else int(node_limit),
                                -1.0 if time_limit is None else float(time_limit))
@@ -531,6 +561,49 @@ class NativeEndgameSolver(EndgameSolver):
         r = super().solve_game(*args, **kw)
         self.nodes = self.lib.dk_nodes()
         return r
+
+    def _exists(self, game, moves, st, maximizing, target):
+        """Is there a root move with value >= target (maximizing) or <= target
+        (minimizing)? Iterative deepening on bouts: horizon leaves count as
+        bad for the mover (a 'yes' is then a proof), then as good (a 'no' is a
+        proof); deepen until one of them decides."""
+        a, d, tab, n, limit, flag = st
+        lo, hi = (target - 1, target) if maximizing else (target, target + 1)
+        bad, good = (LOSS, WIN) if maximizing else (WIN, LOSS)
+
+        def run(hz, depth):
+            self.lib.dk_set_horizon(-1 if depth is None else depth, hz)
+            found = None
+            for act in moves:
+                v = self._child(game, act, a, d, tab, n, limit, flag, lo, hi)
+                if (v >= target) if maximizing else (v <= target):
+                    found = act
+                    break
+            return found, self.lib.dk_hz_hits() == 0
+
+        for depth in self.ID_SCHEDULE:
+            found, exact = run(bad, depth)
+            if found is not None or exact:
+                return found
+            found, exact = run(good, depth)
+            if found is None:
+                return None
+        return None  # pragma: no cover
+
+    def _root_best(self, game: DurakGame, player: int):
+        att, dfd, a, d, tab, n, limit, flag = self._root_state(game)
+        maximizing = game.current_player == att
+        moves = self._root_moves(game, d)
+        sign = 1 if player == att else -1
+        st = (a, d, tab, n, limit, flag)
+        try:
+            for target in ((WIN, DRAW) if maximizing else (LOSS, DRAW)):
+                act = self._exists(game, moves, st, maximizing, target)
+                if act is not None:
+                    return sign * target, act
+            return sign * (LOSS if maximizing else WIN), moves[0]
+        finally:
+            self.lib.dk_set_horizon(-1, 0)
 
 
 # ------------------------------------------------------------- module API

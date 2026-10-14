@@ -59,7 +59,7 @@ def _load_builtin() -> None:
     # registry works while parts of the project are still being built.
     import importlib
 
-    for mod in ("durak.agents.heuristic", "durak.agents.solver_agent", "durak.agents.champion"):
+    for mod in ("durak.agents.heuristic", "durak.agents.solver_agent", "durak.agents.champion", "durak.agents.levels"):
         try:
             importlib.import_module(mod)
         except ModuleNotFoundError as e:

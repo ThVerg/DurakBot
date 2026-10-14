@@ -62,9 +62,9 @@ def test_heuristic_beats_random(n):
     assert r["a_durak_rate"] < 0.1
 
 
-def test_cycle_valve_ends_long_games():
-    # With an empty talon and 3+ players, cards can circulate forever; the
-    # heuristic's random valve must end such games.
+def test_long_games_end_by_stall_rule():
+    # With an empty talon and 3+ players cards can circulate through takes;
+    # the engine's stall rule must end every such game.
     for deal in range(40):
         agents = [get_agent("heuristic", seed=deal * 10 + p) for p in range(4)]
         g = arena.play_game(agents, 1000 + deal, 4, random.Random(deal), max_steps=4000)
