@@ -7,3 +7,4 @@ web/node_modules/
 web/dist/
 checkpoints/*
 !checkpoints/champion.pt
+server/data/
