@@ -1,0 +1,397 @@
+{
+ "name": "DurakBot · Dacha art kit",
+ "version": 1,
+ "generated": "2026-10-19",
+ "base": "/assets/dacha/",
+ "style": "Warm illustrated Russian folk-art world (Concept C \"Dacha\") with Concept D's oval card table.",
+ "licence": "Original artwork for DurakBot (same terms as the project). Fonts: SIL OFL 1.1 (see fonts/).",
+ "palette": {
+  "linen": "#e9d3a8",
+  "paper": "#fffaf0",
+  "paper2": "#fbf2df",
+  "cream": "#fbf3e2",
+  "vermilion": "#c8361f",
+  "vermilionHi": "#e2563a",
+  "vermilionLo": "#9b2414",
+  "gold": "#e0a52a",
+  "goldHi": "#f7d673",
+  "goldLo": "#a86d12",
+  "cobalt": "#2350b4",
+  "cobaltHi": "#4f78d2",
+  "cobaltLo": "#173a88",
+  "green": "#2f6b45",
+  "greenHi": "#4c8c5f",
+  "ink": "#33200f",
+  "ink2": "#5d4229",
+  "ink3": "#8a6d4e",
+  "shadowRGB": "92, 52, 20"
+ },
+ "typography": {
+  "display": "Playfair Display 600/700/900 + italic 400/700 (Cyrillic + Latin)",
+  "text": "Lato 400/600/700/900 + italic (Cyrillic + Latin)",
+  "css": "fonts/fonts.css",
+  "note": "Lettering in brand/ and illustrations/ is outlined: no font needed."
+ },
+ "tokens": "tokens.css",
+ "portraits": {
+  "size": [
+   200,
+   200
+  ],
+  "shape": "square artwork, designed to be clipped to a circle",
+  "frame": "portraits/frame.svg",
+  "frameNote": "frame.svg is 220x220; place the 200px circular portrait at (10,10) underneath it.",
+  "items": {
+   "kostya": {
+    "en": "Kostya",
+    "ru": "Костя",
+    "look": "cocky lad: tweed flat cap, freckles, seed husk, vermilion kosovorotka",
+    "bg": "#e9a92e",
+    "svg": "portraits/kostya.svg",
+    "webp": "portraits/kostya.webp"
+   },
+   "dasha": {
+    "en": "Dasha",
+    "ru": "Даша",
+    "look": "cheeky student: chestnut braids with red bows, cobalt hairband, sarafan",
+    "bg": "#e07a6e",
+    "svg": "portraits/dasha.svg",
+    "webp": "portraits/dasha.webp"
+   },
+   "misha": {
+    "en": "Uncle Misha",
+    "ru": "Дядя Миша",
+    "look": "bald, big beard, round red nose, telnyashka + ochre shirt",
+    "bg": "#2f6b45",
+    "svg": "portraits/misha.svg",
+    "webp": "portraits/misha.webp"
+   },
+   "lev": {
+    "en": "Professor Lev",
+    "ru": "Профессор Лев",
+    "look": "white goatee, gold spectacles, pencil behind ear, tweed + bow tie",
+    "bg": "#eedbb2",
+    "svg": "portraits/lev.svg",
+    "webp": "portraits/lev.webp"
+   },
+   "zina": {
+    "en": "Babushka Zina",
+    "ru": "Баба Зина",
+    "look": "red Pavlovo-Posad headscarf, round glasses, green cardigan",
+    "bg": "#2a56b2",
+    "svg": "portraits/zina.svg",
+    "webp": "portraits/zina.webp"
+   },
+   "sveta": {
+    "en": "Sveta",
+    "ru": "Света",
+    "look": "flower crown (daisy, cornflower, poppy), blond braid, embroidered blouse",
+    "bg": "#d2452a",
+    "svg": "portraits/sveta.svg",
+    "webp": "portraits/sveta.webp"
+   },
+   "grisha": {
+    "en": "Grisha",
+    "ru": "Гриша",
+    "look": "dark beard, mustard knit beanie with folk band + pompom, Nordic sweater",
+    "bg": "#2f8a86",
+    "svg": "portraits/grisha.svg",
+    "webp": "portraits/grisha.webp"
+   },
+   "you": {
+    "en": "You",
+    "ru": "Вы",
+    "look": "monogram «Я» medallion for the human seat",
+    "bg": "#fbf2df",
+    "svg": "portraits/you.svg",
+    "webp": "portraits/you.webp"
+   }
+  }
+ },
+ "tiers": [
+  {
+   "id": "novice",
+   "persona": "kostya",
+   "strength": 1,
+   "en": "Novice",
+   "ru": "Новичок",
+   "suit": "C",
+   "portrait": "portraits/kostya.svg"
+  },
+  {
+   "id": "intermediate",
+   "persona": "dasha",
+   "strength": 2,
+   "en": "Intermediate",
+   "ru": "Любитель",
+   "suit": "D",
+   "portrait": "portraits/dasha.svg"
+  },
+  {
+   "id": "expert",
+   "persona": "misha",
+   "strength": 3,
+   "en": "Expert",
+   "ru": "Знаток",
+   "suit": "S",
+   "portrait": "portraits/misha.svg"
+  },
+  {
+   "id": "grandmaster",
+   "persona": "lev",
+   "strength": 4,
+   "en": "Grandmaster",
+   "ru": "Гроссмейстер",
+   "suit": "H",
+   "portrait": "portraits/lev.svg"
+  }
+ ],
+ "brand": {
+  "wordmark-ru": "brand/wordmark-ru.svg",
+  "wordmark-ru-plain": "brand/wordmark-ru-plain.svg",
+  "wordmark-en": "brand/wordmark-en.svg",
+  "lockup": "brand/lockup.svg",
+  "jester-cap": "brand/jester-cap.svg"
+ },
+ "backs": {
+  "size": [
+   250,
+   350
+  ],
+  "cornerRadius": 13,
+  "rasterSize": [
+   512,
+   716
+  ],
+  "default": "gzhel",
+  "items": {
+   "gzhel": {
+    "en": "Gzhel",
+    "ru": "Гжель",
+    "svg": "backs/gzhel.svg",
+    "webp": "backs/gzhel.webp"
+   },
+   "khokhloma": {
+    "en": "Khokhloma",
+    "ru": "Хохлома",
+    "svg": "backs/khokhloma.svg",
+    "webp": "backs/khokhloma.webp"
+   },
+   "stitch": {
+    "en": "Rushnyk cross-stitch",
+    "ru": "Рушник",
+    "svg": "backs/stitch.svg",
+    "webp": "backs/stitch.webp"
+   }
+  }
+ },
+ "illustrations": {
+  "durak-ru": {
+   "svg": "illustrations/durak-ru.svg",
+   "webp": "illustrations/durak-ru.webp",
+   "size": [
+    640,
+    520
+   ]
+  },
+  "durak-en": {
+   "svg": "illustrations/durak-en.svg",
+   "webp": "illustrations/durak-en.webp",
+   "size": [
+    640,
+    520
+   ]
+  },
+  "safe-ru": {
+   "svg": "illustrations/safe-ru.svg",
+   "webp": "illustrations/safe-ru.webp",
+   "size": [
+    640,
+    520
+   ]
+  },
+  "safe-en": {
+   "svg": "illustrations/safe-en.svg",
+   "webp": "illustrations/safe-en.webp",
+   "size": [
+    640,
+    520
+   ]
+  },
+  "_note": "durak-*: game over, you are the durak (jester cap drops onto a woodcut stamp). safe-*: you escaped (sunflower medal in a rowan wreath). Suggested entrance: scale 0.4→1 with overshoot, cap drops from -120px."
+ },
+ "props": {
+  "samovar": {
+   "svg": "props/samovar.svg",
+   "note": "top-down brass samovar with Gzhel teapot; cast shadow baked in (sun upper-left)"
+  },
+  "tea": {
+   "svg": "props/tea.svg",
+   "note": "tea glass with lemon in a silver podstakannik + spoon"
+  },
+  "seeds": {
+   "svg": "props/seeds.svg",
+   "note": "Gzhel saucer of sunflower seeds + husks"
+  },
+  "rowan": {
+   "svg": "props/rowan.svg",
+   "note": "rowan (ryabina) sprig with berries"
+  },
+  "stool": {
+   "svg": "props/stool.svg",
+   "note": "wooden stool with crocheted doily (samovar stand)"
+  },
+  "leaves": {
+   "svg": "props/leaves.svg",
+   "note": "soft leaf shadow; use mix-blend-mode:multiply, opacity ~.1"
+  },
+  "sunlight": {
+   "svg": "props/sunlight.svg",
+   "note": "window light pools (2x2 panes); dark-on-transparent, use mix-blend-mode:screen, opacity ~.6"
+  },
+  "linen": {
+   "svg": "props/linen.svg",
+   "note": "tileable linen weave texture (320px), lay over --dacha-linen"
+  },
+  "embroidery-h": {
+   "svg": "props/embroidery-h.svg",
+   "note": "horizontal cross-stitch border, repeat-x, 57px tall"
+  },
+  "embroidery-v": {
+   "svg": "props/embroidery-v.svg",
+   "note": "vertical cross-stitch border, repeat-y, 57px wide"
+  },
+  "medallion": {
+   "svg": "props/medallion.svg",
+   "note": "round cross-stitch rosette for the cloth/table centre; use at ~.3 opacity"
+  }
+ },
+ "table": {
+  "desktop": {
+   "designSize": [
+    1380,
+    780
+   ],
+   "scale": 2,
+   "tableSize": [
+    1200,
+    600
+   ],
+   "rugWidth": 74,
+   "pad": 90,
+   "note": "Top-down oval card table (leather armrest, oak band, brass bead, baize) on a braided rag rug; RGBA with the soft drop shadow in alpha. Felt inner edge is 1200x600 minus rail (leather 34 + wood 17 + brass 2.4). Artboard placement used in the mockup: left 30, top 50 on 1440x900.",
+   "felts": {
+    "green": {
+     "webp": "table/table-desktop.webp",
+     "webp1x": "table/table-desktop@1x.webp",
+     "hex": "#3b8d5e"
+    },
+    "cobalt": {
+     "webp": "table/table-desktop-cobalt.webp",
+     "webp1x": "table/table-desktop-cobalt@1x.webp",
+     "hex": "#3f6fc4"
+    },
+    "vermilion": {
+     "webp": "table/table-desktop-vermilion.webp",
+     "webp1x": "table/table-desktop-vermilion@1x.webp",
+     "hex": "#c9553a"
+    }
+   }
+  },
+  "mobile": {
+   "designSize": [
+    438,
+    628
+   ],
+   "scale": 3,
+   "tableSize": [
+    350,
+    540
+   ],
+   "rugWidth": 26,
+   "pad": 44,
+   "note": "Vertical table for phones (rail: leather 22, wood 11, brass 1.8).",
+   "felts": {
+    "green": {
+     "webp": "table/table-mobile.webp",
+     "hex": "#3b8d5e"
+    },
+    "cobalt": {
+     "webp": "table/table-mobile-cobalt.webp",
+     "hex": "#3f6fc4"
+    },
+    "vermilion": {
+     "webp": "table/table-mobile-vermilion.webp",
+     "hex": "#c9553a"
+    }
+   }
+  },
+  "floor": {
+   "webp": "table/floor.webp",
+   "tile": 1024,
+   "displayTile": 512,
+   "note": "tileable honey-pine floorboards; show at 512px (2x)."
+  },
+  "baker": "concepts/dacha/tools/bake.py (numpy + Pillow); FELT env picks a variant, OUT env sets the folder."
+ },
+ "icons": {
+  "viewBox": "0 0 24 24",
+  "colour": "currentColor",
+  "sprite": "icons/sprite.svg",
+  "usage": "<svg><use href=\"/assets/dacha/icons/sprite.svg#i-take\"/></svg>",
+  "items": {
+   "log": "icons/log.svg",
+   "sound": "icons/sound.svg",
+   "sound-off": "icons/sound-off.svg",
+   "settings": "icons/settings.svg",
+   "menu": "icons/menu.svg",
+   "back": "icons/back.svg",
+   "close": "icons/close.svg",
+   "hint": "icons/hint.svg",
+   "take": "icons/take.svg",
+   "done": "icons/done.svg",
+   "attack": "icons/attack.svg",
+   "defend": "icons/defend.svg",
+   "throw-in": "icons/throw-in.svg",
+   "known": "icons/known.svg",
+   "cards": "icons/cards.svg",
+   "laurel": "icons/laurel.svg",
+   "play": "icons/play.svg",
+   "opponents": "icons/opponents.svg",
+   "watch": "icons/watch.svg",
+   "stats": "icons/stats.svg",
+   "rules": "icons/rules.svg",
+   "language": "icons/language.svg",
+   "continue": "icons/continue.svg",
+   "undo": "icons/undo.svg",
+   "suit-hearts": "icons/suit-hearts.svg",
+   "suit-diamonds": "icons/suit-diamonds.svg",
+   "suit-spades": "icons/suit-spades.svg",
+   "suit-clubs": "icons/suit-clubs.svg"
+  }
+ },
+ "fonts": {
+  "css": "fonts/fonts.css",
+  "files": [
+   "lato-Black.woff2",
+   "lato-Bold.woff2",
+   "lato-Italic.woff2",
+   "lato-Regular.woff2",
+   "lato-Semibold.woff2",
+   "playfair-display-cyrillic-400-italic.woff2",
+   "playfair-display-cyrillic-600-normal.woff2",
+   "playfair-display-cyrillic-700-italic.woff2",
+   "playfair-display-cyrillic-700-normal.woff2",
+   "playfair-display-cyrillic-900-normal.woff2",
+   "playfair-display-latin-400-italic.woff2",
+   "playfair-display-latin-600-normal.woff2",
+   "playfair-display-latin-700-italic.woff2",
+   "playfair-display-latin-700-normal.woff2",
+   "playfair-display-latin-900-normal.woff2"
+  ],
+  "licences": [
+   "fonts/OFL-PlayfairDisplay.txt",
+   "fonts/OFL-Lato.txt"
+  ]
+ }
+}

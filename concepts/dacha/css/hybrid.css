@@ -1,0 +1,77 @@
+/* ==========================================================================
+   DACHA × TABLETOP hybrid: the oval card table standing in the sunlit dacha room.
+   Loaded after table.css; only overrides the world + positions.
+   Table bake: 1200x600 design px table + 74px braided rug, pad 90 → image 1380x780,
+   centred at (720, 440) on the 1440x900 artboard.
+   ========================================================================== */
+
+.page-hybrid .scene {
+  background:
+    radial-gradient(70% 60% at 8% 0%, rgba(255, 236, 190, .35), rgba(255, 236, 190, 0) 60%),
+    radial-gradient(90% 80% at 100% 100%, rgba(150, 90, 40, .22), rgba(150, 90, 40, 0) 70%),
+    url(../img/floor.webp) 0 0 / 512px 512px,
+    #d9a86c;
+}
+.page-hybrid .scene::after { background: radial-gradient(140% 120% at 40% 35%, rgba(0,0,0,0) 55%, rgba(110, 60, 20, .22) 100%); }
+
+.tablebake { position: absolute; left: 30px; top: 50px; width: 1380px; height: 780px; }
+.tablebake img { width: 100%; height: 100%; }
+.page-hybrid .pools { left: -160px; top: -40px; width: 1320px; height: 990px; opacity: .62; }
+
+@media (min-width: 641px) {
+  /* props, with a little story */
+  .page-hybrid .prop--rowan { width: 210px; left: -14px; top: 64px; transform: rotate(-28deg); }
+  .prop--stool { width: 450px; left: -170px; top: 608px; }
+  .page-hybrid .prop--samovar { width: 330px; left: -110px; top: 668px; bottom: auto; transform: rotate(-24deg); }
+  .page-hybrid .prop--seeds { width: 132px; left: 238px; top: 500px; transform: rotate(-8deg); }   /* Kostya's seeds */
+  .page-hybrid .prop--tea { width: 146px; left: auto; right: 214px; top: 536px; transform: rotate(-16deg); } /* Sveta is out: tea time */
+
+  /* top bar floats over the floor */
+  .page-hybrid .topbar { top: 18px; }
+
+  /* seats straddle the leather rail */
+  .page-hybrid .seat--zina { left: 296px; top: 96px; }
+  .page-hybrid .seat--misha { left: 880px; top: 96px; }
+  .page-hybrid .seat--kostya { left: 34px; top: 404px; }
+  .page-hybrid .seat--kostya .bubble { left: 74px; top: -80px; }
+  .page-hybrid .seat--sveta { right: 34px; top: 404px; }
+
+  /* felt contents */
+  .page-hybrid .talon { left: 368px; top: 286px; }
+  .page-hybrid .battle { left: 574px; top: 282px; }
+  .page-hybrid .bito { left: 952px; top: 290px; }
+  .page-hybrid .bito__label { margin-top: 10px; }
+  .page-hybrid .bito__label { padding: 6px 14px 7px; border-radius: 12px; background: rgba(255, 252, 244, .93); box-shadow: var(--sh-1); width: max-content; margin-left: auto; margin-right: auto; }
+  .page-hybrid .me { top: 520px; }
+  .page-hybrid .status__sub { background: rgba(255, 252, 244, .95); box-shadow: var(--sh-1); }
+  .page-hybrid .actions { right: 40px; bottom: 36px; }
+  .page-hybrid .beatme { box-shadow: 0 2px 0 var(--vermilion-lo), 0 4px 10px rgba(0, 0, 0, .25); }
+  /* cards on baize: slightly crisper, cooler contact shadow */
+  .page-hybrid .battle .card, .page-hybrid .talon .card, .page-hybrid .bito .card { box-shadow: 1px 2px 1px rgba(10, 40, 20, .35), 6px 10px 16px rgba(10, 40, 20, .32); }
+  .page-hybrid .pair.is-open .target { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--vermilion), 0 0 0 14px rgba(255, 230, 190, .22), 6px 10px 16px rgba(10, 40, 20, .32); }
+  @keyframes target { 50% { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--vermilion), 0 0 0 22px rgba(255, 230, 190, .06), 6px 10px 16px rgba(10, 40, 20, .32); } }
+  .page-hybrid .dropslot { background: rgba(255, 250, 238, .74); border-color: var(--vermilion); }
+}
+
+/* ==========================================================================
+   PHONE: vertical table (350x540 design + 26 rug, pad 44 → 438x628)
+   ========================================================================== */
+@media (max-width: 640px) {
+  .page-hybrid .scene { background-size: auto, auto, 384px 384px, auto; }
+  .tablebake { position: absolute; left: 50%; top: 58px; width: 438px; height: 628px; margin-left: -219px; }
+  .page-hybrid .pools { left: -300px; top: -40px; width: 900px; height: 800px; opacity: .45; }
+  .page-hybrid .prop--rowan { width: 150px; left: -40px; top: auto; bottom: 64px; transform: rotate(160deg); }
+  .page-hybrid .prop--stool, .page-hybrid .prop--samovar, .page-hybrid .prop--seeds { display: none; }
+  .page-hybrid .prop--tea { display: none; }
+
+  .page-hybrid .seat--kostya .bubble { left: 8px; top: calc(100% + 14px); }
+  .page-hybrid .talon { right: 120px; top: 222px; }
+  .page-hybrid .bito { right: 30px; top: 222px; }
+  .page-hybrid .bito__label { position: absolute; left: auto; right: -6px; top: -12px; width: auto; margin: 0; padding: 4px 8px 5px; border-radius: 9px; flex-direction: row; gap: 5px; align-items: baseline; z-index: 3; background: rgba(255, 252, 244, .95); box-shadow: var(--sh-1); }
+  .page-hybrid .bito__label .ru { font-size: 13px; }
+  .page-hybrid .bito__label span:last-child { font-size: 0; }
+  .page-hybrid .bito__label span:last-child::after { content: "12"; font: 900 12px/1 var(--display); color: var(--ink); letter-spacing: 0; }
+  .page-hybrid .battle { padding-bottom: 14px; }
+  .page-hybrid .actions { right: auto; bottom: auto; }
+  .page-hybrid .me { top: auto; }
+}
