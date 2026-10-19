@@ -140,25 +140,56 @@ proven-lost endgames.
   - The legal mask is only read when `player` is the one to move.
   - A test checks that the real game and its determinizations give identical actions and evaluations.
 
-**Evaluation and gating (suite v2).** `gate.py` runs every 100 iterations in
-the background.
+**Evaluation and gating (gate v3, since 2026-10-19).** The trainer starts
+`gate.py` as a fresh subprocess for each checkpoint (every 100 iterations,
+skipped while the previous gate still runs), so edits to it take effect without
+a training restart.
 
-- Every match uses *paired deals*: each deal is played N times with our seat
-  rotating. CIs are deal-clustered 95% intervals.
-- Suite, per N = 2..6:
-  - `random`: greedy policy, played out.
+- All matches use *paired deals*: each deal is played N times with our seat
+  rotating. CIs are deal-clustered 95% intervals. Opponent families:
   - `heuristic`: the policy plus our seat's exact solver, as deployed.
   - `solver`: heuristic opponents, with every solvable 2-player endgame (≤16
     cards) scored exactly. Both sides then play perfect endgames, which is a
     cheap emulation of the `solver` bot.
-  - frozen **anchors** `checkpoints/frozen_it200.pt` and `frozen_it667.pt`.
-  - head-to-head against the champion.
-- Promotion requires two things:
-  - The combined head-to-head z must be > 1.28. Per N, z = (1/N − D)/SE; the per-N values are combined with the curriculum weights.
-  - The checkpoint must not be significantly worse than the champion against the heuristic or the solver (Δz < −1.645).
-- `runs/eval_summary.json` holds the champion's latest per-N results
-  (`{"updated", "iteration", "results": {opp: {"N": {"rate", "ci", "games"}}}}`).
-  `status.sh` prints a per-N **regression dashboard** across evaluations.
+  - **population**: frozen past networks `checkpoints/frozen_it{667,1500,50000,100000}.pt`.
+- **Dashboard** (candidate only): random; dashboard anchors (`frozen_it200`);
+  head-to-head vs the champion (`champ_*`, `vs_champion_z`).
+- **Stage 1 (screen)**, on a *fresh* deal set seeded by the iteration:
+  - The candidate **and the champion** play the same deals against heuristic, solver and every population network.
+  - Per family, the paired durak-rate differences are combined over N (curriculum weights).
+  - fixed_z = (z_heuristic + z_solver + z_population)/√3. The screen passes if fixed_z > 1.28 and head-to-head z > 0.
+- **Stage 2 (confirmation)**: the same comparison on a second, independent fresh
+  deal set.
+  - Promote only if stage-2 fixed_z > 1.645 and no family is significantly worse when pooled over both stages.
+  - For an equally strong candidate this is about a 0.5% false promotion per gate.
+- **Head-to-head is symmetric**: on the same deals, the candidate plays one
+  seat against a champion field and the champion plays one seat against a
+  candidate field; the per-N paired difference is combined (`champ_*` and
+  `champ_rev_*` keys). It must be > 0.
+- **Draw-corrected z everywhere** (`evaluate.summarize`). About 6% of 2p games
+  (simultaneous finish) and 3–5% of 3+p games (stall rule) are drawn, so every
+  seat's durak rate sits below 1/N. The fair null is P(decided)/N, and per-deal
+  results now record the decided games. With the old 1/N baseline, any
+  challenger "beat" the champion.
+- **Why.** Gate v2 had two flaws:
+  - It compared candidates against a *stored* heuristic/solver score of the
+    champion, measured once at promotion. That was the luckiest of many noisy
+    measurements (winner's curse), and it blocked every later candidate after
+    the it197800 promotion.
+  - The one-sided head-to-head compared the challenger's durak rate to 1/N.
+    Draws pull every seat below 1/N, so the test was biased *for the
+    challenger*. Over 1010 gates (iteration 100k→200k) the challenger averaged
+    a 2p durak rate of .469 vs .500 (h2h z ≈ 2.7), and 62% of gates
+    "promoted". The 2026-10-19 tournament showed that even the older it150000
+    "beat" the champion (z +2.5); draw-corrected, all candidates fall between
+    −1.6 and +0.3.
+- The champion is re-measured in every gate and never compared to a stored
+  number. Its measurements accumulate in `checkpoints/champion_stats.json`
+  (reset on promotion, seeded with its unselected stage-2 results).
+  `runs/eval_summary.json` (`{"updated", "iteration", "results": {opp: {"N": {"rate", "ci", "games"}}}}`)
+  is rewritten from that running estimate after every gate. `status.sh` prints
+  the dashboard and the running estimate.
+- `python -m durak.rl.tournament` ranks any set of checkpoints in the same paired way (see Results).
 - **Lesson from round 1.** The "2p regression vs the heuristic" (iteration 300
   → 500: .303 → .332) was mostly a moving yardstick, not forgetting. The
   heuristic was retuned and the engine changed while training ran. Re-measured
@@ -274,3 +305,31 @@ Full deployed agent (iteration 1500 + solver + belief-weighted PIMC) vs the **re
 - **Exploiter agents.** The league is PFSP plus the heuristic. Dedicated exploiters would cost a training slot the machine doesn't have.
 - **Expert iteration** (distilling search into the policy). PIMC at 0.3–0.8 s per decision is about 1000x too slow for the 30M decisions/hour pipeline.
 - **ISMCTS.** PIMC with belief determinizations and a value cutoff was the cheaper win.
+
+### Champion tournament (2026-10-19, `runs/tournament/`)
+
+The question was whether the newest networks are better than champion it197800, the last v2-gate promotion.
+
+Setup:
+
+- Every network is the network plus the exact endgame solver, on identical deals.
+- Fixed opponents: 4800 paired games per N against heuristic and solver, and 1200 per N against each of 4 frozen population networks.
+- `fixed_z` is the paired z vs the champion, combined over N and the three families; > 0 means better.
+- The round-robin is symmetric, 2400 games per N per direction.
+
+| network | fixed_z vs champ (heur / solver / pop) | one-sided h2h z (draw-corr.) | heuristic durak 2p / 4p / 5p | solver durak 2p / 4p |
+|---|---|---|---|---|
+| it197800 (champion) | — | — | .147 / .090 / .072 | .248 / .123 |
+| it201100 (newest) | +0.49 (−0.18 / +0.91 / +0.11) | −1.58 | .145 / .090 / .073 | .239 / .127 |
+| it200000 | +0.61 (+0.48 / +0.46 / +0.12) | −0.98 | .142 / .092 / .073 | .236 / .127 |
+| it199000 | +0.60 (+0.74 / +0.35 / −0.05) | +0.34 | .141 / .089 / .072 | .245 / .120 |
+| it195000 | −1.24 (−2.45 / −0.19 / +0.49) | −1.38 | .150 / .095 / .081 | .243 / .124 |
+| it190000 | +1.28 (−0.22 / +0.75 / +1.68) | −1.12 | .143 / .091 / .077 | .238 / .125 |
+| it180000 | −0.96 (−1.73 / −0.02 / +0.08) | −0.46 | .147 / .091 / .076 | .236 / .125 |
+| it150000 | **−2.29** (−1.98 / −1.50 / −0.48) | −1.49 | .153 / .094 / .074 | .247 / .129 |
+
+All rates have 95% CIs of about ±.010 (2p) and ±.008 (4p); the full per-N table is in `runs/tournament/2026-10-19.log`.
+
+- **Symmetric round-robin** (mean z): it199000 +0.96, it200000 +0.07, it190000 −0.12, champion −0.91. Champion vs it199000 was z −2.39.
+- **Confirmation on fresh deals** (`--seed-offset 500000`): it199000 vs the champion gave fixed_z +0.05 and round-robin z +0.86 (2p .469 vs .472). The earlier edge was selection noise.
+- **Verdict.** Since about iteration 190k the network has plateaued against fixed opponents; it150000 is significantly worse, so it did improve up to then. No newer network is significantly better, so **it197800 remains the champion**.

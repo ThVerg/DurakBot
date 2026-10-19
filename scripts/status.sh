@@ -30,8 +30,8 @@ if os.path.exists(ev):
     lines = [json.loads(l) for l in open(ev) if l.strip()]
     print(f"\nevals: {len(lines)}. Regression dashboard: durak rate per N of each checkpoint (baseline 1/N:"
           " .500 .333 .250 .200 .167); lower is better")
-    v2 = [e for e in lines if e.get("suite_version") == 2]
-    old = [e for e in lines if e.get("suite_version") != 2]
+    v2 = [e for e in lines if (e.get("suite_version") or 0) >= 2]
+    old = [e for e in lines if (e.get("suite_version") or 0) < 2]
     for e in old[-3:]:
         z = e.get("vs_champion_z")
         row = "  ".join(f"{n}p {e[f'heuristic_{n}p_durak']:.3f}" for n in range(2, 7) if f"heuristic_{n}p_durak" in e)
@@ -45,13 +45,25 @@ if os.path.exists(ev):
                 extra = ""
                 if name == "champ":
                     z = e.get("vs_champion_z")
-                    extra = f"  z={z if z is None else round(z, 2)} promoted={e.get('promoted')} {e.get('rejected', '')}"
+                    extra = f"  h2h z={z if z is None else round(z, 2)}"
+                    if "fixed_z1" in e:
+                        z2 = e.get("fixed_z2")
+                        extra += f" paired fixed_z1={e['fixed_z1']:.2f} z2={'-' if z2 is None else round(z2, 2)}"
+                    extra += f" promoted={e.get('promoted')} {e.get('decision', e.get('rejected', ''))}"
                 print(f"    it {e['iter']:>5} [{e['time'][5:16]}]  {vals}{extra}")
 lg = os.path.join(run, "league.json")
 if os.path.exists(lg):
     L = json.load(open(lg)).get("snapshots", {})
     hard = sorted(((e["durak"] + 2) / (e["base"] + 2), k) for k, e in L.items())
     print(f"\nleague: {len(L)} members; hardest (durak/baseline): " + ", ".join(f"{k} {h:.2f}" for h, k in hard[-4:][::-1]))
+cs = "checkpoints/champion_stats.json"
+if os.path.exists(cs):
+    st = json.load(open(cs))
+    print(f"\nchampion running estimate (it {st.get('iter')}, {st.get('gates')} gates):")
+    for opp in ("heuristic", "solver"):
+        per = st.get("results", {}).get(opp, {})
+        if per:
+            print(f"  vs {opp:<9} " + "  ".join(f"{n}p {d / g:.3f} ({g})" for n, (d, g) in sorted(per.items()) if g))
 cj = "checkpoints/champion.json"
 if os.path.exists(cj):
     c = json.load(open(cj))

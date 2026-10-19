@@ -133,9 +133,11 @@ def play_games(me: str, opp: str, n_players: int, n_games: int, seed: int, concu
         results["draws"] += 1 if loser is None else 0
         results["ret"] += r
         results["ret2"] += r * r
-        e = results["deals"].setdefault(f"{seed}:{deal}", [0, 0])
+        # per deal: [our durak count, games, games with a durak (not drawn)]
+        e = results["deals"].setdefault(f"{seed}:{deal}", [0, 0, 0])
         e[0] += d
         e[1] += 1
+        e[2] += 1 if loser is not None else 0
 
     for i in range(len(slots)):
         start(i)
@@ -190,6 +192,14 @@ def _job(args):
 
 def run_match(me: str, opp: str, n_players: int, n_games: int, seed: int, workers: int, **kw) -> dict:
     """Split ``n_games`` (rounded up to whole deals) over ``workers`` processes."""
+    return summarize(raw_match(me, opp, n_players, n_games, seed, workers, **kw), n_players)
+
+
+def raw_match(me: str, opp: str, n_players: int, n_games: int, seed: int, workers: int, **kw) -> dict:
+    """Like :func:`run_match` but returns the raw totals including per-deal
+    results (``deals``: {key: [durak count, games]}). Two calls with the same
+    ``seed``, ``n_games``, ``n_players`` and ``workers`` play the *same deals*,
+    so their results can be compared pairwise (:func:`paired_diff`)."""
     deals = -(-n_games // n_players)
     per = [deals // workers + (1 if i < deals % workers else 0) for i in range(workers)]
     jobs = [(me, opp, n_players, k * n_players, seed + 7919 * i, kw) for i, k in enumerate(per) if k]
@@ -205,35 +215,75 @@ def run_match(me: str, opp: str, n_players: int, n_games: int, seed: int, worker
                 tot[k].update(r[k])
             else:
                 tot[k] += r[k]
-    return summarize(tot, n_players)
+    return tot
+
+
+def paired_diff(a: dict, b: dict, n_players: int) -> dict:
+    """Durak-rate difference ``a - b`` of two raw results on the same deals,
+    with a deal-clustered standard error. ``z`` > 0 means ``a`` is better
+    (lower durak rate)."""
+    keys = [k for k in a["deals"] if k in b["deals"]]
+    if not keys:
+        raise ValueError("no common deals: use the same seed / games / workers")
+    xs, cs = [], []
+    for k in keys:
+        da, ga = a["deals"][k][:2]
+        db, gb = b["deals"][k][:2]
+        if ga != gb:
+            continue
+        xs.append(da - db)
+        cs.append(ga)
+    n = sum(cs)
+    m = len(xs)
+    diff = sum(xs) / n
+    var = m / max(m - 1, 1) * sum((x - diff * c) ** 2 for x, c in zip(xs, cs)) / (n * n)
+    se = max(math.sqrt(var), 0.25 / n)
+    return {"N": n_players, "diff": diff, "se": se, "z": -diff / se, "games": n, "deals": m}
 
 
 def summarize(tot: dict, n_players: int) -> dict:
     """Durak rate with a deal-clustered 95% CI (normal approx.; Wilson if no
-    deal info) and the standardized score z of E[1 - N*D] (0 = equal strength)."""
+    deal info) and a standardized score ``z`` (> 0 = better than an equal-strength
+    seat).
+
+    The null is *draw-corrected*: with draws (2p simultaneous finish ~6%, 3+p
+    stall rule ~4-5%) every seat's durak rate is below 1/N, so the fair baseline
+    is P(game decided) / N. (Before 2026-10-19 z used 1/N, which made any
+    challenger look significantly better than its opponents.) ``baseline``
+    stays 1/N for display; ``fair_baseline`` is the corrected one."""
     n = tot["games"]
     d = tot["durak"]
     base = 1.0 / n_players
     rate = d / max(n, 1)
     deals = list(tot.get("deals", {}).values())
+    has_dec = bool(deals) and all(len(e) > 2 for e in deals)
+    decided = sum(e[2] for e in deals) if has_dec else n - tot.get("draws", 0)
+    fair = decided / max(n, 1) / n_players
     if len(deals) >= 10:
         # cluster-robust variance of the mean over deals
         m = len(deals)
-        dev = [(dd - rate * c) for dd, c in deals]
+        dev = [(e[0] - rate * e[1]) for e in deals]
         var = m / (m - 1) * sum(x * x for x in dev) / (n * n)
         pf = max(rate, 1.0 / n)
         se = max(math.sqrt(max(var, 0.0)), 0.5 * math.sqrt(pf * (1 - pf) / n))  # floor for rate ~ 0
         lo, hi = max(0.0, rate - 1.96 * se), min(1.0, rate + 1.96 * se)
         if d == 0 or d == n:  # degenerate: use the Wilson interval
             lo, hi = wilson(d, n)
-        z = (base - rate) / se if se > 0 else 0.0
+        if has_dec:  # paired with the deal's own draw count: y = d - decided/N
+            ys = [e[0] - e[2] / n_players for e in deals]
+            ybar = sum(ys) / n
+            vy = m / (m - 1) * sum((y - ybar * e[1]) ** 2 for y, e in zip(ys, deals)) / (n * n)
+            sz = max(math.sqrt(max(vy, 0.0)), 0.5 * math.sqrt(pf * (1 - pf) / n))
+            z = -ybar / sz
+        else:
+            z = (fair - rate) / se if se > 0 else 0.0
     else:
         lo, hi = wilson(d, n)
-        mean_y = (n - n_players * d) / max(n, 1)
-        z = mean_y / math.sqrt((n_players - 1) / max(n, 1)) if n else 0.0
+        z = (fair - rate) / math.sqrt(max(fair * (1 - fair), 1e-9) / max(n, 1)) if n else 0.0
     return {
         "N": n_players, "games": n, "durak_rate": rate, "ci_lo": lo, "ci_hi": hi,
-        "baseline": base, "draws": tot["draws"], "mean_return": tot["ret"] / max(n, 1), "z": z,
+        "baseline": base, "fair_baseline": fair, "draws": tot["draws"], "mean_return": tot["ret"] / max(n, 1),
+        "z": z,
     }
 
 
