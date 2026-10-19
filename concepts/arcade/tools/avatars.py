@@ -1,9 +1,11 @@
 import sys
+from pathlib import Path
 from collections import deque
 import numpy as np
 from PIL import Image, ImageFilter
-SRC='/home/theofanis/DurakBot/concepts/assets/avatars/'
-DST='/home/theofanis/DurakBot/concepts/arcade/img/'
+_HERE = Path(__file__).resolve().parent
+SRC = str(_HERE.parent.parent / 'assets' / 'avatars') + '/'
+DST = str(_HERE.parent / 'img') + '/'
 # bright arcade backgrounds: (top colour, bottom colour)
 BG={'kostya':((120,214,255),(40,140,255)),
     'zina':((255,214,110),(255,150,60)),

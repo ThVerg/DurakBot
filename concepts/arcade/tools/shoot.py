@@ -1,8 +1,9 @@
 """Screenshot the Arcade concept pages. usage: shoot.py [name:page?query:device ...]"""
 import sys, asyncio
+from pathlib import Path
 from playwright.async_api import async_playwright
 ROOT = 'http://127.0.0.1:8765/arcade/'
-OUT = '/home/theofanis/DurakBot/concepts/arcade/shots/'
+OUT = str(Path(__file__).resolve().parent.parent / 'shots') + '/'
 DEV = {'d': dict(viewport={'width': 1440, 'height': 900}, device_scale_factor=1),
        'm': dict(viewport={'width': 390, 'height': 844}, device_scale_factor=2, is_mobile=True, has_touch=True)}
 async def main(jobs):
