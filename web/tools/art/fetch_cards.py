@@ -68,14 +68,18 @@ def fetch(dest: Path) -> dict[str, Path]:
             info = meta[t]
             if info["license"] != "CC0":
                 raise SystemExit(f"Unexpected licence for {t}: {info['license']}")
-            for attempt in range(8):
+            for attempt in range(6):
                 try:
                     req = urllib.request.Request(info["url"], headers={"User-Agent": UA})
                     fn.write_bytes(urllib.request.urlopen(req, timeout=60).read())
                     break
-                except urllib.error.HTTPError as e:  # Commons rate-limits bursts (429)
-                    print(f"  HTTP {e.code} for {t}, retrying")
-                    time.sleep(5 * (attempt + 1))
+                except urllib.error.HTTPError as e:  # Commons rate-limits bursts (429 + Retry-After)
+                    wait = min(int(e.headers.get("Retry-After") or 0) or 5 * (attempt + 1), 900)
+                    print(f"  HTTP {e.code} for {t}, retrying in {wait}s", flush=True)
+                    time.sleep(wait)
+            else:
+                raise SystemExit(f"Could not download {t}; re-run later (Commons rate limit). "
+                                 f"Hash-verified copies may also be placed in {dest} by hand.")
             time.sleep(1.5)
         digest = hashlib.sha256(fn.read_bytes()).hexdigest()
         want = pinned.get("files", {}).get(t, {}).get("sha256")

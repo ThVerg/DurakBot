@@ -169,20 +169,36 @@
     "en": "Gzhel",
     "ru": "Гжель",
     "svg": "backs/gzhel.svg",
-    "webp": "backs/gzhel.webp"
+    "webp": "backs/gzhel.webp",
+    "webp2x": "backs/gzhel@2x.webp",
+    "webp3x": "backs/gzhel@3x.webp"
    },
    "khokhloma": {
     "en": "Khokhloma",
     "ru": "Хохлома",
     "svg": "backs/khokhloma.svg",
-    "webp": "backs/khokhloma.webp"
+    "webp": "backs/khokhloma.webp",
+    "webp2x": "backs/khokhloma@2x.webp",
+    "webp3x": "backs/khokhloma@3x.webp"
    },
    "stitch": {
     "en": "Rushnyk cross-stitch",
     "ru": "Рушник",
     "svg": "backs/stitch.svg",
-    "webp": "backs/stitch.webp"
+    "webp": "backs/stitch.webp",
+    "webp2x": "backs/stitch@2x.webp",
+    "webp3x": "backs/stitch@3x.webp"
    }
+  },
+  "hiresSizes": {
+   "2x": [
+    1024,
+    1432
+   ],
+   "3x": [
+    1536,
+    2148
+   ]
   }
  },
  "illustrations": {

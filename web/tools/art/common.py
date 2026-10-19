@@ -63,8 +63,13 @@ class Renderer:
         return self._pages[key]
 
     def render(self, svg: str, w: int, h: int, ss: float = 2.0, css: str = "",
-               wait_fonts: bool = False) -> Image.Image:
-        """Render at ss× supersampling and downsample with Lanczos."""
+               wait_fonts: bool = False, down: str = "lanczos", wait_img: bool = False) -> Image.Image:
+        """Render at ss× supersampling, then downsample.
+
+        down="lanczos": the original 1× pipeline (kept so 512 px outputs stay identical).
+        down="box": premultiplied-alpha area average over integer ss×ss blocks:
+                    exact coverage antialiasing with no ringing (used for @2x/@3x).
+        """
         pg = self.page(w, h, ss)
         html = (
             "<!doctype html><html><head><style>html,body{margin:0;padding:0;"
@@ -74,13 +79,18 @@ class Renderer:
         pg.set_content(html)
         if wait_fonts:
             pg.evaluate("document.fonts.ready.then(()=>1)")
+        if wait_img:
+            pg.evaluate("Promise.all([...document.images].map(i => i.decode())).then(()=>1)")
         png = pg.screenshot(omit_background=True, type="png",
                             clip={"x": 0, "y": 0, "width": w, "height": h})
         import io
 
         im = Image.open(io.BytesIO(png)).convert("RGBA")
         if im.size != (w, h):
-            im = im.resize((w, h), Image.LANCZOS)
+            if down == "box" and float(ss).is_integer():
+                im = box_reduce(im, int(ss))
+            else:
+                im = im.resize((w, h), Image.LANCZOS)
         return im
 
     def evaluate(self, html: str, js: str, w: int = 360, h: int = 540):
@@ -91,6 +101,36 @@ class Renderer:
     def close(self):
         self._browser.close()
         self._pw.stop()
+
+
+def scale_hairlines(svg: str, k: float) -> str:
+    """vector-effect="non-scaling-stroke" widths are in CSS px, not user units, so they would
+    stay thin when the same SVG is rasterised k× larger. Multiply them by k to keep the look."""
+    if k == 1:
+        return svg
+    import re as _re
+
+    def fix(m):
+        tag = m.group(0)
+        if "non-scaling-stroke" not in tag:
+            return tag
+        return _re.sub(r'stroke-width="([0-9.]+)"', lambda w: f'stroke-width="{float(w.group(1)) * k:g}"', tag)
+
+    return _re.sub(r"<[a-zA-Z][^<>]*>", fix, svg)
+
+
+def box_reduce(im: Image.Image, k: int) -> Image.Image:
+    """Downsample RGBA by an integer factor, averaging in premultiplied alpha (no dark fringes)."""
+    a = np.asarray(im, dtype=np.float64) / 255.0
+    h, w = a.shape[0] // k, a.shape[1] // k
+    a = a[: h * k, : w * k]
+    alpha = a[..., 3:4]
+    pre = np.concatenate([a[..., :3] * alpha, alpha], -1)
+    pre = pre.reshape(h, k, w, k, 4).mean(axis=(1, 3))
+    al = pre[..., 3:4]
+    rgb = np.where(al > 1e-6, pre[..., :3] / np.maximum(al, 1e-6), 0)
+    out = np.concatenate([rgb, al], -1)
+    return Image.fromarray(np.uint8(np.clip(out * 255 + 0.5, 0, 255)), "RGBA")
 
 
 # --------------------------------------------------------------------------

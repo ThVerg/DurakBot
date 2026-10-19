@@ -16,7 +16,7 @@ import numpy as np
 from PIL import Image, ImageFilter
 
 from cards import RADIUS, rounded_mask, suit_symbol
-from common import Renderer, band_noise, fbm, font_css, save
+from common import Renderer, band_noise, fbm, font_css, save, scale_hairlines
 from svgkit import (cubic, f, gold_defs, guilloche_oval, guilloche_ring, hypotrochoid, mirror_x,
                     path_d, poly, rect_frame, rot180, spiral, taper_both, taper_tip, tapered, wave_field)
 
@@ -457,34 +457,89 @@ def back_gzhel(shapes) -> str:
 
 
 # ----------------------------------------------------------------- post-process
-def finish(im: Image.Image, seed: int, gloss: float = 0.05) -> Image.Image:
+def finish(im: Image.Image, seed: int, gloss: float = 0.05, scale: int = 1) -> Image.Image:
+    """Print grain, lacquer sheen, rim and rounded corners, generated natively at scale×512."""
+    w, h, k = W * scale, H * scale, scale
     a = np.asarray(im, dtype=np.float64) / 255.0
     rgb = a[..., :3]
-    yy, xx = np.mgrid[0:H, 0:W]
-    u, v = xx / (W - 1), yy / (H - 1)
-    grain = band_noise(H, W, 2.0, seed) * 0.010 + fbm(H, W, 120, 3, seed + 3) * 0.012
+    yy, xx = np.mgrid[0:h, 0:w]
+    u, v = xx / (w - 1), yy / (h - 1)
+    grain = band_noise(h, w, 2.0 * k, seed) * 0.010 + fbm(h, w, 120 * k, 3, seed + 3) * 0.012
     rgb = rgb * (1 + grain[..., None])
     # broad soft specular sheen (lacquered stock)
     sheen = gloss * np.exp(-(((u - 0.3) * 1.2 + (v - 0.2) * 0.9) ** 2) / 0.05)
     rgb = rgb + sheen[..., None] * (1 - rgb) * 0.9
-    mask = rounded_mask(W, H, RADIUS)
+    mask = rounded_mask(w, h, RADIUS * k)
     m = np.asarray(mask, dtype=np.float64) / 255.0
-    inner = np.asarray(mask.filter(ImageFilter.GaussianBlur(2.0)), dtype=np.float64) / 255.0
+    inner = np.asarray(mask.filter(ImageFilter.GaussianBlur(2.0 * k)), dtype=np.float64) / 255.0
     rim = np.clip((m - inner) * 3.0, 0, 1)
     rgb = rgb * (1 - 0.25 * rim[..., None])
     out = np.dstack([np.clip(rgb, 0, 1) * 255, m * 255])
     return Image.fromarray(np.uint8(out + 0.5), "RGBA")
 
 
-def build(r: Renderer, shapes: dict) -> list[dict]:
+def scaled_root(svg: str, k: int) -> str:
+    """Same vector document, rasterised at k× size (viewBox stays 512×716)."""
+    return scale_hairlines(svg.replace(f'width="{W}" height="{H}" viewBox', f'width="{W * k}" height="{H * k}" viewBox', 1), k)
+
+
+HIRES_Q = 88
+SCALES = (1, 2, 3)
+
+
+def build(r: Renderer, shapes: dict, scales=SCALES, only=None) -> list[dict]:
+    """scale 1 → backs/{id}.webp/.png + backs_sm/ (unchanged 512 px pipeline);
+    scale 2/3 → backs/{id}@2x.webp (1024×1432), @3x.webp (1536×2148)."""
     makers = {"red": back_red, "navy": back_navy, "khokhloma": back_khokhloma, "gzhel": back_gzhel}
     css = font_css("garamond")
     out = []
     for i, (bid, fn) in enumerate(makers.items()):
+        if only and bid not in only:
+            continue
         svg = fn(shapes)
-        im = r.render(svg, W, H, ss=2.0, css=css, wait_fonts=True)
-        im = finish(im, 100 + i, gloss=0.06 if bid != "gzhel" else 0.03)
-        files = save(im, f"backs/{bid}", webp_q=88, png=True)
-        save(im.resize((256, 358), Image.LANCZOS), f"backs_sm/{bid}", webp_q=88)
+        files = []
+        for k in scales:
+            gloss = 0.06 if bid != "gzhel" else 0.03
+            if k == 1:
+                im = r.render(svg, W, H, ss=2.0, css=css, wait_fonts=True)
+                im = finish(im, 100 + i, gloss=gloss)
+                files += save(im, f"backs/{bid}", webp_q=88, png=True)
+                save(im.resize((256, 358), Image.LANCZOS), f"backs_sm/{bid}", webp_q=88)
+            else:
+                im = r.render(scaled_root(svg, k), W * k, H * k, ss=2.0, css=css, wait_fonts=True, down="box")
+                im = finish(im, 100 + i, gloss=gloss, scale=k)
+                files += save(im, f"backs/{bid}@{k}x", webp_q=HIRES_Q)
         out.append({"id": bid, "files": files, **BACKS[bid]})
+    return out
+
+
+# ------------------------------------------------------- dacha kit backs (hi-res)
+DACHA_BACKS = ("gzhel", "khokhloma", "stitch")  # "stitch" = rushnyk cross-stitch
+
+
+def build_dacha(r: Renderer, scales=(2, 3)) -> dict:
+    """@2x/@3x rasters of the dacha kit's vector backs (web/public/assets/dacha/backs/*.svg).
+
+    Rendered like the kit's own 512 px pipeline (SVG as an <img>, i.e. static, no scripts
+    or external loads) but 2×2 supersampled and box-filtered. preserveAspectRatio="none"
+    fills the 250:350 viewBox exactly (0.1 % stretch) so no half-transparent sliver
+    appears along the long edges.
+    """
+    import base64
+
+    from common import OUT
+
+    out = {}
+    for bid in DACHA_BACKS:
+        src = (OUT / "dacha" / "backs" / f"{bid}.svg").read_text(encoding="utf-8")
+        if "<script" in src or "<foreignObject" in src:
+            raise ValueError(f"unexpected active content in dacha/backs/{bid}.svg")
+        src = src.replace("<svg ", '<svg preserveAspectRatio="none" ', 1)
+        uri = "data:image/svg+xml;base64," + base64.b64encode(src.encode()).decode()
+        out[bid] = {}
+        for k in scales:
+            w, h = W * k, H * k
+            im = r.render(f'<img src="{uri}" style="display:block;width:{w}px;height:{h}px">', w, h, ss=2.0, down="box",
+                          wait_img=True)
+            out[bid][k] = save(im, f"dacha/backs/{bid}@{k}x", webp_q=HIRES_Q)
     return out

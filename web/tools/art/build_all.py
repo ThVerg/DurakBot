@@ -1,6 +1,12 @@
 """Rebuild every DurakBot art asset into web/public/assets/.
 
-    .venv/bin/python web/tools/art/build_all.py
+    .venv/bin/python web/tools/art/build_all.py                  # everything (1x + @2x/@3x)
+    .venv/bin/python web/tools/art/build_all.py --scales 2,3     # only the hi-res card faces/backs
+    .venv/bin/python web/tools/art/build_all.py --manifest-only  # re-index existing files
+
+Hi-res outputs (for srcset): cards/{code}@2x.webp (1024×1432) and @3x.webp (1536×2148),
+the same for cards4/, backs/ and dacha/backs/. They are rasterised from the vector sources
+at the target size; the paper stock is generated natively (never upscaled).
 
 Card SVGs are fetched (once) into $DURAK_ART_SRC (default /tmp/durakbot-art-src/fomin)
 and verified against the SHA-256 hashes pinned in sources.json.
@@ -214,28 +220,104 @@ def contact_sheet():
     sheet.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.FLOYDSTEINBERG).save(OUT / "preview.png", optimize=True)
 
 
+HIRES = {2: [cards.W * 2, cards.H * 2], 3: [cards.W * 3, cards.H * 3]}
+
+
+def add_hires(m: dict) -> dict:
+    """Add @2x/@3x paths for whatever hi-res files exist on disk (idempotent)."""
+    def have(rel):
+        return (OUT / rel).exists()
+
+    m["cards"]["hiresSizes"] = {f"{k}x": v for k, v in HIRES.items()}
+    m["cards"]["srcsetNote"] = ("1x = 512×716, 2x = 1024×1432, 3x = 1536×2148; prefix each path with `base` "
+                                "and use e.g. <img src=1x srcset='1x 1x, @2x 2x, @3x 3x'>")
+    for code, face in m["cards"]["faces"].items():
+        for k in HIRES:
+            if have(f"cards/{code}@{k}x.webp"):
+                face[f"webp{k}x"] = f"cards/{code}@{k}x.webp"
+            if have(f"cards4/{code}@{k}x.webp"):
+                face[f"fourColour{k}x"] = f"cards4/{code}@{k}x.webp"
+        face["srcset"] = ", ".join([f"{face['webp']} 1x"] + [f"{face[f'webp{k}x']} {k}x" for k in HIRES if f"webp{k}x" in face])
+        face["fourColourSrcset"] = ", ".join([f"{face['fourColour']} 1x"] + [f"{face[f'fourColour{k}x']} {k}x" for k in HIRES
+                                                                                if f"fourColour{k}x" in face])
+    for b in m["backs"]:
+        for k in HIRES:
+            if have(f"backs/{b['id']}@{k}x.webp"):
+                b[f"webp{k}x"] = f"backs/{b['id']}@{k}x.webp"
+        b["srcset"] = ", ".join([f"{b['webp']} 1x"] + [f"{b[f'webp{k}x']} {k}x" for k in HIRES if f"webp{k}x" in b])
+    # dacha kit backs: listed here and patched (additively) into the kit's own manifest
+    dm_path = OUT / "dacha" / "manifest.json"
+    dacha = {}
+    if dm_path.exists():
+        dm = json.loads(dm_path.read_text())
+        items = dm.get("backs", {}).get("items", {})
+        for bid, it in items.items():
+            entry = {"en": it.get("en"), "ru": it.get("ru"), "webp": f"dacha/{it['webp']}"}
+            for k in HIRES:
+                rel = f"backs/{bid}@{k}x.webp"
+                if (OUT / "dacha" / rel).exists():
+                    it[f"webp{k}x"] = rel
+                    entry[f"webp{k}x"] = f"dacha/{rel}"
+            dacha[bid] = entry
+        if "backs" in dm:
+            dm["backs"]["hiresSizes"] = {f"{k}x": v for k, v in HIRES.items()}
+        # keep the kit's own formatting (indent=1, see concepts/dacha/tools/build_kit.py)
+        with open(dm_path, "w") as fh:
+            json.dump(dm, fh, ensure_ascii=False, indent=1)
+    if dacha:
+        m["dachaBacks"] = {"size": [cards.W, cards.H], "hiresSizes": {f"{k}x": v for k, v in HIRES.items()},
+                           "note": "hi-res rasters of web/public/assets/dacha/backs/*.svg (stitch = rushnyk)",
+                           "items": dacha}
+    sizes = {}
+    for pat in ("cards/*@*x.webp", "cards4/*@*x.webp", "backs/*@*x.webp", "dacha/backs/*@*x.webp"):
+        sizes[pat] = sum(p.stat().st_size for p in OUT.glob(pat))
+    m["hiresBytes"] = sizes
+    return m
+
+
 def main():
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--scales", default="1,2,3", help="comma list: 1 = 512 px set (+ everything else), 2/3 = @2x/@3x")
+    ap.add_argument("--manifest-only", action="store_true")
+    a = ap.parse_args()
+    scales = tuple(int(x) for x in a.scales.split(","))
     t0 = time.time()
+    if a.manifest_only:
+        m = json.loads((OUT / "manifest.json").read_text())
+        write_json(OUT / "manifest.json", add_hires(m))
+        print("manifest updated")
+        return
     r = Renderer()
     print("cards …", flush=True)
-    res = cards.build(r)
+    res = cards.build(r, scales=scales)
     shapes = res["shapes"]
     print("backs …", flush=True)
-    back_list = backs.build(r, shapes)
-    print("materials …", flush=True)
-    mat = materials.build(r)
-    print("avatars …", flush=True)
-    avs = avatars.build(r)
-    print("env …", flush=True)
-    env_files = env.build()
-    print("ui …", flush=True)
-    ui_res = ui.build(r, shapes)
-    r.close()
-    write_json(OUT / "manifest.json", manifest(res["codes"], back_list, mat, avs, env_files, ui_res))
-    (OUT / "LICENSES.md").write_text(LICENSES_MD.replace("{date}", datetime.date.today().isoformat()))
-    contact_sheet()
-    total = sum(p.stat().st_size for p in OUT.rglob("*") if p.is_file())
-    print(f"done in {time.time() - t0:.0f}s, total {total / 1e6:.1f} MB")
+    back_list = backs.build(r, shapes, scales=scales)
+    hi = tuple(k for k in scales if k > 1)
+    if hi:
+        print("dacha backs (hi-res) …", flush=True)
+        backs.build_dacha(r, scales=hi)
+    if 1 in scales:
+        print("materials …", flush=True)
+        mat = materials.build(r)
+        print("avatars …", flush=True)
+        avs = avatars.build(r)
+        print("env …", flush=True)
+        env_files = env.build()
+        print("ui …", flush=True)
+        ui_res = ui.build(r, shapes)
+        r.close()
+        m = manifest(res["codes"], back_list, mat, avs, env_files, ui_res)
+        (OUT / "LICENSES.md").write_text(LICENSES_MD.replace("{date}", datetime.date.today().isoformat()))
+        contact_sheet()
+    else:
+        r.close()
+        m = json.loads((OUT / "manifest.json").read_text())
+    write_json(OUT / "manifest.json", add_hires(m))
+    total = sum(p.stat().st_size for p in OUT.rglob("*") if p.is_file() and "dacha" not in p.parts)
+    print(f"done in {time.time() - t0:.0f}s, art set total {total / 1e6:.1f} MB (excl. dacha kit)")
 
 
 if __name__ == "__main__":

@@ -18,7 +18,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
-from common import Renderer, band_noise, fbm, font_css, gauss_blur, save
+from common import Renderer, band_noise, fbm, font_css, gauss_blur, save, scale_hairlines
 from fetch_cards import RANKS, SUITS, default_dest, fetch, title
 
 W, H = 512, 716
@@ -212,12 +212,14 @@ def ace_of_spades_svg(shape: dict) -> str:
     return "".join(parts)
 
 
-def card_svg(art_svg: str, rank: str, suit: str, shape: dict, ink: str, extra: str = "") -> str:
+def card_svg(art_svg: str, rank: str, suit: str, shape: dict, ink: str, extra: str = "", scale: int = 1) -> str:
+    """Full face as one vector SVG in 512×716 user units, rasterised at scale× that size."""
     art = art_svg.replace("<svg", f'<svg x="{ART_X:.2f}" y="{ART_Y:.2f}" width="{ART_W:.2f}" height="{ART_H:.2f}" overflow="visible"', 1)
     art = re.sub(r'(<svg[^>]*?)\swidth="360"', r"\1", art, count=1)
     art = re.sub(r'(<svg[^>]*?)\sheight="540"', r"\1", art, count=1)
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">'
-            f"{art}{extra}{index_svg(rank, shape, ink)}</svg>")
+    return scale_hairlines(
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{W * scale}" height="{H * scale}" viewBox="0 0 {W} {H}">'
+        f"{art}{extra}{index_svg(rank, shape, ink)}</svg>", scale)
 
 
 # Card stock -------------------------------------------------------------------
@@ -227,23 +229,29 @@ def rounded_mask(w: int, h: int, r: int, ss: int = 4) -> Image.Image:
     return m.resize((w, h), Image.LANCZOS)
 
 
-def stock(seed: int = 7) -> tuple[np.ndarray, Image.Image]:
-    """Ivory card stock RGB (float) with paper grain, faint linen and gloss."""
+def stock(seed: int = 7, scale: int = 1) -> tuple[np.ndarray, Image.Image]:
+    """Ivory card stock RGB (float) with paper grain, faint linen and gloss.
+
+    Generated natively at (W·scale)×(H·scale): every feature size (grain period,
+    corner radius, rim width) is multiplied by `scale`, so @2x/@3x faces have the
+    same physical look as the 512 px face without any upscaling.
+    """
+    w, h, k = W * scale, H * scale, scale
     base = np.array([250, 246, 236], dtype=np.float64) / 255.0
-    grain = band_noise(H, W, 2.2, seed) * 0.006 + fbm(H, W, 90, 4, seed + 5) * 0.008
-    linen = (band_noise(H, W, 3, seed + 9, (6, 0.25)) + band_noise(H, W, 3, seed + 11, (0.25, 6))) * 0.0035
-    yy, xx = np.mgrid[0:H, 0:W]
-    u, v = xx / (W - 1), yy / (H - 1)
+    grain = band_noise(h, w, 2.2 * k, seed) * 0.006 + fbm(h, w, 90 * k, 4, seed + 5) * 0.008
+    linen = (band_noise(h, w, 3 * k, seed + 9, (6, 0.25)) + band_noise(h, w, 3 * k, seed + 11, (0.25, 6))) * 0.0035
+    yy, xx = np.mgrid[0:h, 0:w]
+    u, v = xx / (w - 1), yy / (h - 1)
     sheen = 0.018 * np.exp(-(((u - 0.25) * 1.4 + (v - 0.15)) ** 2) / 0.08)  # soft diagonal gloss
     vign = -0.025 * (((u - 0.5) * 2) ** 4 + ((v - 0.5) * 2) ** 4)
     lum = 1 + grain + linen + sheen + vign
     rgb = base[None, None, :] * lum[..., None]
-    mask = rounded_mask(W, H, RADIUS)
+    mask = rounded_mask(w, h, RADIUS * k)
     # edge: thin darker rim + faint inner bevel so the card reads on felt
     m = np.asarray(mask, dtype=np.float64) / 255.0
-    inner = np.asarray(mask.filter(ImageFilter.GaussianBlur(2.2)), dtype=np.float64) / 255.0
+    inner = np.asarray(mask.filter(ImageFilter.GaussianBlur(2.2 * k)), dtype=np.float64) / 255.0
     rim = np.clip((m - inner) * 3.0, 0, 1)
-    rgb = rgb * (1 - 0.16 * rim[..., None]) + np.array([0.78, 0.74, 0.66]) * 0.0
+    rgb = rgb * (1 - 0.16 * rim[..., None])
     return rgb, mask
 
 
@@ -258,12 +266,17 @@ def composite(art: Image.Image, stock_rgb: np.ndarray, mask: Image.Image) -> Ima
 
 
 # Main -------------------------------------------------------------------------
-def build(r: Renderer | None = None, src_dir: Path | None = None) -> dict:
+HIRES_Q = 88
+SCALES = (1, 2, 3)
+
+
+def build(r: Renderer | None = None, src_dir: Path | None = None, scales=SCALES, only=None) -> dict:
+    """scales: which outputs to write. 1 = cards/, cards4/, cards_sm/ (512 px, .webp + .png);
+    2, 3 = cards/{code}@2x.webp (1024×1432) and @3x.webp (1536×2148), same for cards4/."""
     own = r is None
     r = r or Renderer()
     files = fetch(src_dir or default_dest())
     css = font_css("idx", "garamond", "garamond-i")
-    st_rgb, mask = stock()
     cards = []
 
     # pass 1: sanitise + extract suit shapes from the aces (classic colours)
@@ -293,28 +306,38 @@ def build(r: Renderer | None = None, src_dir: Path | None = None) -> dict:
                 if rk == "A" and variant == "cards":
                     shapes[s] = res["shape"]
 
-    for variant in ("cards", "cards4"):
-        inks = INK if variant == "cards" else INK4
-        for s in SUIT_ORDER:
-            for rk in RANK_ORDER:
-                code = f"{rk}{s}"
-                extra = ace_of_spades_svg(shapes["S"]) if code == "AS" else ""
-                svg = card_svg(edited[(variant, rk, s)], rk, s, shapes[s], inks[s], extra)
-                art = r.render(svg, W, H, ss=2.0, css=css, wait_fonts=True)
-                im = composite(art, st_rgb, mask)
-                save(im, f"{variant}/{code}", png=(variant == "cards"))
-                if variant == "cards":
-                    sm = im.resize((256, 358), Image.LANCZOS)
-                    save(sm, f"cards_sm/{code}", webp_q=88)
-                    cards.append(code)
+    for scale in scales:
+        st_rgb, mask = stock(scale=scale)
+        for variant in ("cards", "cards4"):
+            inks = INK if variant == "cards" else INK4
+            for s in SUIT_ORDER:
+                for rk in RANK_ORDER:
+                    code = f"{rk}{s}"
+                    if variant == "cards" and scale == scales[0]:
+                        cards.append(code)
+                    if only and code not in only:
+                        continue
+                    extra = ace_of_spades_svg(shapes["S"]) if code == "AS" else ""
+                    svg = card_svg(edited[(variant, rk, s)], rk, s, shapes[s], inks[s], extra, scale=scale)
+                    if scale == 1:
+                        # original 512 px pipeline, unchanged
+                        art = r.render(svg, W, H, ss=2.0, css=css, wait_fonts=True)
+                        im = composite(art, st_rgb, mask)
+                        save(im, f"{variant}/{code}", png=(variant == "cards"))
+                        if variant == "cards":
+                            sm = im.resize((256, 358), Image.LANCZOS)
+                            save(sm, f"cards_sm/{code}", webp_q=88)
+                    else:
+                        # @2x / @3x: rasterised from the vector at the target size with 2×2
+                        # supersampling + premultiplied box filter (crisp, no ringing)
+                        art = r.render(svg, W * scale, H * scale, ss=2.0, css=css, wait_fonts=True, down="box")
+                        im = composite(art, st_rgb, mask)
+                        save(im, f"{variant}/{code}@{scale}x", webp_q=HIRES_Q)
     if own:
         r.close()
     return {"codes": cards, "shapes": shapes}
 
 
-if __name__ == "__main__":
-    out = build()
-    print("built", len(out["codes"]), "cards")
 
 
 def suit_shapes(r: Renderer, src_dir: Path | None = None) -> dict:
@@ -327,3 +350,11 @@ def suit_shapes(r: Renderer, src_dir: Path | None = None) -> dict:
         res = r.evaluate(f"<html><body style='margin:0'>{svg}</body></html>", f"() => ({EDIT_JS})([true, 1, false, null])")
         shapes[s] = res["shape"]
     return shapes
+
+
+if __name__ == "__main__":
+    import sys as _sys
+
+    sc = tuple(int(a) for a in _sys.argv[1:]) or SCALES
+    out = build(scales=sc)
+    print("built", len(out["codes"]), "cards at scales", sc)
