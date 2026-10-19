@@ -173,7 +173,7 @@ The research log of the training rounds, with A/B experiments and throughput mea
 
 DurakBot is released under the [MIT licence](LICENSE), copyright (c) 2026 ThVerg.
 
-Third-party assets keep their own licences; [web/public/assets/LICENSES.md](web/public/assets/LICENSES.md) and [docs/ART.md](docs/ART.md) list them in full:
+Third-party assets keep their own licences ([THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)); [web/public/assets/LICENSES.md](web/public/assets/LICENSES.md) and [docs/ART.md](docs/ART.md) list them in full:
 
 - **Card faces**: derived from the *English pattern* SVG playing cards by **Dmitry Fomin** ([Wikimedia Commons](https://commons.wikimedia.org/wiki/User:Dmitry_Fomin)), dedicated to the public domain under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). Attribution is not required and is given with thanks.
 - **Fonts**: [Playfair Display](https://github.com/clauseggers/Playfair-Display) (The Playfair Display Project Authors) and Lato (Łukasz Dziedzic) are bundled with the web app under the [SIL Open Font License 1.1](https://openfontlicense.org/); the licence texts are in `web/public/assets/dacha/fonts/`. The design concepts also bundle Nunito and Inter (OFL 1.1). EB Garamond (OFL 1.1) appears only as glyph outlines in the logo artwork, and URW P052 (AGPL-3.0 with the font exception) only as rasterised card indices; no files of these two fonts are distributed.
