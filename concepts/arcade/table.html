@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Durak · Arcade table</title>
+<link rel="stylesheet" href="css/arcade.css">
+<style>
+/* ===================================================================
+   TABLE — desktop: a 1440×900 stage, scaled to fit any landscape view.
+   Phone portrait: its own composition (see bottom media query).
+   =================================================================== */
+body {
+  background:
+    radial-gradient(60% 50% at 50% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%),
+    linear-gradient(180deg, #a3dfff 0%, #74b6ff 42%, #7186f6 100%);
+}
+body::before { /* faint suit wallpaper on the backdrop */
+  content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .16;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%23ffffff'%3E%3Cpath transform='translate(14 14) scale(.22)' d='M50 92C47 88 7 62 4 36 2 19 13 6 28 6c10 0 18 6 22 15C54 12 62 6 72 6c15 0 26 13 24 30C93 62 53 88 50 92Z'/%3E%3Cpath transform='translate(74 74) scale(.22)' d='M50 4C56 18 94 36 94 62c0 14-10 23-22 23-8 0-14-3-18-9 1 9 5 15 12 20H34c7-5 11-11 12-20-4 6-10 9-18 9C16 85 6 76 6 62 6 36 44 18 50 4Z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.stage {
+  --k: 1; --cw: 124px; --hw: 128px; --dw: 96px;
+  position: fixed; left: 50%; top: 50%; width: 1440px; height: 900px;
+  transform: translate(-50%, -50%) scale(var(--k)); transform-origin: 50% 50%;
+}
+
+/* ---------------- HUD ---------------- */
+.hud { position: absolute; z-index: 40; left: 24px; right: 24px; top: 16px; height: 60px; display: flex; align-items: center; gap: 14px; }
+.hud .spacer { flex: 1; }
+.chip {
+  height: 48px; padding: 0 18px 0 8px; border-radius: 16px; display: inline-flex; align-items: center; gap: 10px;
+  background: linear-gradient(180deg, #ffffff, #eef2ff);
+  box-shadow: inset 0 2px 0 #fff, 0 0 0 2px #8e9bd8, 0 4px 0 2px #8e9bd8, 0 10px 16px rgba(16,30,110,.22);
+  font-size: 17px; color: var(--navy); white-space: nowrap;
+}
+.chip .tag {
+  height: 32px; padding: 0 10px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: #fff;
+  background: linear-gradient(180deg, #b48bff, #7b4dff); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 2px 0 #5a2fd6;
+}
+.chip .tag svg { width: 16px; height: 16px; }
+.chip .muted { color: var(--navy-3); font-weight: 800; }
+.trump-chip { padding: 0 16px 0 6px; }
+.trump-chip .suit-ball {
+  width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center;
+  background: linear-gradient(180deg, #ff8a95, var(--cherry-lo)); box-shadow: inset 0 2px 0 rgba(255,255,255,.5), 0 2px 0 var(--cherry-lip);
+}
+.trump-chip .suit-ball svg { width: 22px; height: 22px; fill: #fff; filter: drop-shadow(0 1px 0 rgba(0,0,0,.2)); }
+.trump-chip b { font-size: 17px; }
+.trump-chip small { display: block; font-size: 11px; letter-spacing: .12em; color: var(--navy-3); text-transform: uppercase; line-height: 1; margin-bottom: 2px; }
+.meter { padding: 0 16px 0 8px; gap: 12px; }
+.meter .cup {
+  width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; color: #fff;
+  background: linear-gradient(180deg, #8ff0b2, var(--mint-lo)); box-shadow: inset 0 2px 0 rgba(255,255,255,.55), 0 2px 0 var(--mint-lip);
+}
+.meter .cup svg { width: 22px; height: 22px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.2)); }
+.meter .txt { display: flex; flex-direction: column; gap: 5px; }
+.meter .row { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; line-height: 1; }
+.meter .row small { font-size: 11px; letter-spacing: .12em; color: var(--navy-3); text-transform: uppercase; }
+.meter .row b { font-size: 20px; color: var(--mint-lip); font-weight: 900; }
+.meter .row b em { font-style: normal; font-size: 12px; color: var(--mint-lo); margin-left: 4px; }
+.meter .bar { width: 150px; height: 10px; border-radius: 6px; background: #dfe5f7; box-shadow: inset 0 2px 0 rgba(0,0,0,.08); overflow: hidden; position: relative; }
+.meter .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 58%; border-radius: 6px; background: linear-gradient(90deg, #ffd23f, #7ee36f 60%, #2fcf7e); box-shadow: inset 0 2px 0 rgba(255,255,255,.55); }
+.meter .bar::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 2px; background: rgba(24,34,94,.25); }
+
+/* ---------------- TABLE ---------------- */
+.table {
+  position: absolute; left: 40px; top: 92px; width: 1360px; height: 786px; border-radius: 230px;
+  background: linear-gradient(180deg, #6f8fff 0%, var(--royal) 16%, #2b45d4 72%, #2338bd 100%);
+  box-shadow: inset 0 3px 0 rgba(255,255,255,.45), inset 0 -4px 0 rgba(0,0,0,.12), 0 10px 0 #1b2a99, 0 30px 50px rgba(20, 30, 120, .35);
+}
+.table::before { /* gold trim */
+  content: ""; position: absolute; inset: 20px; border-radius: 210px;
+  background: linear-gradient(180deg, #fff2a6, var(--gold) 40%, var(--gold-lo));
+}
+.felt {
+  position: absolute; inset: 25px; border-radius: 205px; overflow: hidden;
+  background: radial-gradient(70% 62% at 50% 40%, var(--felt-hi) 0%, var(--felt) 46%, var(--felt-lo) 86%, var(--felt-edge) 100%);
+  box-shadow: inset 0 14px 26px rgba(4, 70, 60, .45), inset 0 -6px 18px rgba(4, 70, 60, .25);
+}
+.felt::before { /* fibre */
+  content: ""; position: absolute; inset: 0; opacity: .3; mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.felt::after { content: ""; position: absolute; inset: 16px; border-radius: 190px; border: 2.5px dashed rgba(255,255,255,.26); }
+.watermark {
+  position: absolute; z-index: 1; left: 646px; top: 300px; width: 500px; height: 290px; transform: translate(-50%, -50%);
+  border-radius: 145px; border: 3px solid rgba(255,255,255,.15);
+}
+.watermark::before { content: ""; position: absolute; inset: 12px; border-radius: 133px; border: 1.5px solid rgba(255,255,255,.11); }
+.watermark .wm-top { position: absolute; left: 50%; top: -15px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 0 14px; }
+.watermark .wm-top span { font-size: 22px; font-weight: 900; letter-spacing: .5em; margin: 0 6px 0 14px; color: rgba(255,255,255,.32); line-height: 1; }
+.watermark .wm-top svg { width: 20px; height: 20px; fill: rgba(255,255,255,.26); }
+
+/* ---------------- SEATS (anchor = avatar centre) ---------------- */
+.seat { position: absolute; z-index: 20; width: 0; height: 0; }
+.seat > * { position: absolute; }
+.seat .ava { --s: 90px; left: calc(var(--s) / -2); top: calc(var(--s) / -2); animation: bob 3.6s ease-in-out infinite; }
+.seat.zina .ava { animation-delay: -.9s; } .seat.misha .ava { animation-delay: -1.8s; } .seat.sveta .ava { animation-delay: -2.7s; }
+@keyframes bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+.seat .plate { left: 50%; top: 62px; transform: translateX(-50%); }
+.plate {
+  z-index: 3; padding: 6px 14px 7px; border-radius: 14px; text-align: center; white-space: nowrap;
+  background: linear-gradient(180deg, #fff, #eef2ff);
+  box-shadow: 0 0 0 2px rgba(24, 34, 94, .10), 0 4px 0 rgba(24, 34, 94, .18), 0 10px 18px rgba(4, 60, 60, .25);
+  line-height: 1.05;
+}
+.plate b { display: block; font-size: 17px; font-weight: 900; }
+.plate small { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--navy-3); }
+.plate small i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.plate .st-atk { color: var(--cherry-lo); }
+.plate .st-thr { color: #e07800; }
+.plate .st-win { color: #c98200; }
+.plate .st-me { color: var(--royal); }
+
+/* opponent hand: tidy fan of small backs + count */
+.mini { top: -46px; width: 120px; height: 70px; z-index: 1; }
+.seat.fan-right .mini { left: 58px; }
+.seat.fan-left .mini { right: 58px; }
+.mini .card { --w: 38px; position: absolute; top: 8px; transform-origin: 50% 140%; }
+.mini .count {
+  position: absolute; z-index: 5; top: 50px; min-width: 30px; height: 30px; padding: 0 8px; border-radius: 15px; translate: -50% 0;
+  display: grid; place-items: center; font-size: 16px; font-weight: 900; color: var(--navy); background: #fff;
+  box-shadow: 0 0 0 2.5px var(--royal), 0 3px 0 2.5px var(--royal-lip), 0 6px 10px rgba(0,0,0,.2);
+}
+.known-card { z-index: 21; }
+.known-card .card { --w: 58px; transform: rotate(-8deg); box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--sun), 0 10px 16px rgba(0,0,0,.3); }
+.known-card .tag {
+  position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); white-space: nowrap;
+  height: 24px; padding: 0 9px 0 5px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #7a4300;
+  background: linear-gradient(180deg, #fff3a3, var(--sun)); box-shadow: 0 0 0 2px #fff, 0 3px 6px rgba(0,0,0,.2);
+}
+.known-card .tag svg { width: 16px; height: 16px; color: #b86200; --hole: #ffe27a; }
+.seat.fan-right .mini .count { left: var(--cx); }
+.seat.fan-left .mini .count { right: var(--cx); translate: 50% 0; }
+.seat.misha .known-card { right: 64px; top: -34px; }
+.seat.misha .mini { right: 104px; }
+
+.thinking {
+  z-index: 6; left: 50%; top: 110px; transform: translateX(-50%);
+  height: 26px; padding: 0 11px 0 10px; border-radius: 13px; display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(10, 60, 70, .55); color: #fff; font-size: 12px; letter-spacing: .06em; white-space: nowrap;
+}
+.thinking i { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: dot 1.1s ease-in-out infinite; }
+.thinking i:nth-of-type(2) { animation-delay: .15s; } .thinking i:nth-of-type(3) { animation-delay: .3s; }
+@keyframes dot { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+.bubble {
+  z-index: 30; left: 40px; top: -122px;
+  padding: 10px 18px 11px; border-radius: 20px 20px 20px 6px;
+  background: #fff; color: var(--navy); font-size: 22px; font-weight: 900; white-space: nowrap;
+  box-shadow: 0 0 0 3px var(--cherry), 0 6px 0 3px var(--cherry-lip), 0 14px 22px rgba(10, 40, 70, .3);
+  transform-origin: 0 100%; animation: pop-in .6s var(--ease-pop) both .2s, sway 4s ease-in-out infinite 1s;
+}
+.bubble::after {
+  content: ""; position: absolute; left: 4px; bottom: -17px; width: 20px; height: 17px; background: var(--cherry);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+.bubble::before {
+  content: ""; position: absolute; z-index: 1; left: 7px; bottom: -9px; width: 13px; height: 12px; background: #fff;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+@keyframes pop-in { 0% { transform: scale(.2) rotate(-12deg); opacity: 0; } 100% { transform: scale(1) rotate(-3deg); opacity: 1; } }
+@keyframes sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(1deg) translateY(-2px); } }
+
+.seat.out .plate { background: linear-gradient(180deg, #fffbe6, #fff1bd); box-shadow: 0 0 0 2px rgba(220,150,0,.35), 0 4px 0 rgba(200,130,0,.35), 0 10px 18px rgba(4,60,60,.25); }
+.medal {
+  z-index: 4; left: 50%; top: -84px; transform: translateX(-50%) rotate(-6deg);
+  height: 30px; padding: 0 12px 0 10px; border-radius: 15px; display: inline-flex; align-items: center; gap: 5px;
+  background: linear-gradient(180deg, #fff3a3, var(--gold) 55%, var(--gold-lo)); color: #7a4300; font-size: 15px; font-weight: 900; white-space: nowrap;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.7), 0 0 0 2.5px #fff, 0 4px 0 2.5px #c07800, 0 8px 14px rgba(0,0,0,.2);
+}
+.medal svg { width: 18px; height: 18px; }
+.seat .crown { display: none; }
+
+.seat.kostya { left: 226px; top: 306px; }
+.seat.zina   { left: 466px; top: 178px; }
+.seat.misha  { left: 974px; top: 178px; }
+.seat.sveta  { left: 1214px; top: 306px; }
+
+/* ---------------- DECK + TRUMP ---------------- */
+.deck, .bito { position: absolute; z-index: 10; width: var(--dw); height: calc(var(--dw) * 1.4); }
+.deck { left: 214px; top: 486px; }
+.bito { left: 1130px; top: 486px; }
+.deck .card, .bito .card { --w: var(--dw); position: absolute; left: 0; top: 0; }
+.deck .trump { left: 46px; top: calc(var(--dw) * .2); transform: rotate(-2deg); }
+.deck .stack-1 { transform: translate(-6px, 6px); } .deck .stack-2 { transform: translate(-3px, 3px); }
+.deck .count, .bito .count {
+  position: absolute; z-index: 5; left: -16px; top: -16px; min-width: 40px; height: 40px; padding: 0 8px; border-radius: 20px;
+  display: grid; place-items: center; font-size: 20px; font-weight: 900; color: var(--navy); background: #fff;
+  box-shadow: 0 0 0 3px var(--royal), 0 4px 0 3px var(--royal-lip), 0 8px 12px rgba(0,0,0,.25);
+}
+.bito .count { left: auto; right: -16px; box-shadow: 0 0 0 3px #8a95c4, 0 4px 0 3px #5b6699, 0 8px 12px rgba(0,0,0,.25); }
+.felt-label {
+  position: absolute; z-index: 5; left: 50%; top: calc(100% + 22px); transform: translateX(-50%); white-space: nowrap;
+  height: 28px; padding: 0 13px; border-radius: 14px; display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(4, 70, 62, .42); color: #fff; font-size: 13px; letter-spacing: .1em; text-transform: uppercase;
+}
+.felt-label b { color: #c9fff0; }
+.felt-label .l-phone { display: none; align-items: center; gap: 5px; }
+.felt-label svg { width: 14px; height: 14px; fill: #ff8b98; }
+.deck .felt-label { left: calc(50% + 22px); }
+
+/* ---------------- BATTLE ---------------- */
+.battle { position: absolute; z-index: 12; left: 720px; top: 404px; transform: translate(-58%, -50%); display: flex; gap: 92px; }
+.pair { position: relative; width: var(--cw); height: calc(var(--cw) * 1.4); }
+.pair .card { --w: var(--cw); position: absolute; left: 0; top: 0; }
+.pair .atk { transform: rotate(-4deg); }
+.pair .def { transform: translate(30%, 21%) rotate(8deg); }
+.pair.open .atk { transform: rotate(3deg); animation: target-pulse 1.6s ease-in-out infinite; }
+@keyframes target-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px #fff, 0 0 0 9px var(--sun), 0 0 34px 10px rgba(255, 230, 120, .7), 0 30px 40px -10px rgba(8,40,70,.4); }
+  50%      { box-shadow: 0 0 0 4px #fff, 0 0 0 9px var(--sun), 0 0 60px 24px rgba(255, 230, 120, .25), 0 30px 40px -10px rgba(8,40,70,.4); }
+}
+.slot {
+  position: absolute; left: 0; top: 0; width: var(--cw); height: calc(var(--cw) * 1.4); border-radius: calc(var(--cw) * .09);
+  transform: translate(30%, 21%) rotate(8deg);
+  border: 3px dashed #fff; background: rgba(6, 110, 96, .38);
+  display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 12px 14px 0;
+  color: #fff; text-align: center; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; line-height: 1.15;
+  animation: slot-breathe 1.6s ease-in-out infinite;
+}
+.slot > div { width: 56px; }
+.slot svg { width: 26px; height: 26px; fill: #fff; display: block; margin: 0 auto 4px; }
+@keyframes slot-breathe { 0%, 100% { opacity: .7; } 50% { opacity: 1; } }
+
+/* ---------------- STATUS ---------------- */
+.status {
+  position: absolute; z-index: 25; left: 720px; top: 590px; transform: translate(-50%, -50%);
+  display: inline-flex; align-items: center; gap: 14px; height: 60px; padding: 0 22px 0 9px; border-radius: 30px;
+  background: linear-gradient(180deg, #ffffff, #eef2ff); color: var(--navy); white-space: nowrap;
+  box-shadow: 0 0 0 3px var(--sun), 0 6px 0 3px #d98c00, 0 16px 26px rgba(4, 60, 60, .35);
+  animation: status-in .7s var(--ease-pop) both;
+}
+@keyframes status-in { from { scale: .8; opacity: 0; } }
+.status .shield {
+  width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: #fff;
+  background: linear-gradient(180deg, #7fb0ff, var(--royal)); box-shadow: inset 0 2px 0 rgba(255,255,255,.5), 0 2px 0 var(--royal-lip);
+}
+.status .shield svg { width: 24px; height: 24px; }
+.status .msg { font-size: 26px; font-weight: 900; }
+.status .msg .c8 {
+  display: inline-flex; align-items: center; gap: 1px; padding: 0 8px 0 7px; margin: 0 2px; height: 34px; vertical-align: 2px; border-radius: 9px;
+  color: var(--ink-red); background: #fff; box-shadow: 0 0 0 2px #ffd0d6, 0 2px 0 2px #ffb3bd; font-size: 24px;
+}
+.status .msg .c8 svg { width: 20px; height: 20px; fill: currentColor; }
+.status .msg em { font-style: normal; color: var(--orange-lip); }
+.status .timer { position: relative; width: 38px; height: 38px; border-radius: 50%; margin-left: 2px;
+  background: conic-gradient(var(--orange) 0 var(--t, 62%), #e2e7f8 0); display: grid; place-items: center; animation: tick 14s linear infinite; }
+.status .timer::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: #fff; }
+.status .timer b { position: relative; font-size: 14px; font-weight: 900; color: var(--orange-lip); }
+@property --t { syntax: "<percentage>"; inherits: false; initial-value: 62%; }
+@keyframes tick { from { --t: 62%; } to { --t: 0%; } }
+
+/* ---------------- ME ---------------- */
+.me-info { position: absolute; z-index: 30; left: 190px; top: 768px; width: 0; height: 0; }
+.me-info > * { position: absolute; }
+.me-info .ava { --s: 92px; left: -46px; top: -46px; }
+.me-info .timer-ring {
+  left: -64px; top: -64px; width: 128px; height: 128px; border-radius: 50%;
+  background: conic-gradient(var(--sun) 0 223deg, rgba(255,255,255,.28) 223deg 360deg);
+  -webkit-mask: radial-gradient(circle, transparent 58px, #000 59px); mask: radial-gradient(circle, transparent 58px, #000 59px);
+  animation: ring-glow 1.6s ease-in-out infinite;
+}
+@keyframes ring-glow { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255,214,63,0)); } 50% { filter: drop-shadow(0 0 8px rgba(255,230,120,1)); } }
+.me-info .plate { left: 50%; top: 64px; transform: translateX(-50%); }
+
+.hand { position: absolute; z-index: 32; left: 712px; top: 866px; width: 0; height: 0; }
+.hand .card {
+  --w: var(--hw); position: absolute; left: 0; bottom: 0; cursor: pointer;
+  transform-origin: 50% 140%;
+  transition: transform .3s var(--ease-pop), filter .2s, box-shadow .2s;
+}
+.hand .card.dim { filter: saturate(.7) brightness(.97); cursor: not-allowed; }
+.hand .card.dim::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(40, 80, 130, .05), rgba(40, 80, 130, .2)); }
+.hand .card.legal { box-shadow: 0 0 0 3px #fff, 0 0 0 7px var(--sun), 0 0 24px 6px rgba(255, 220, 90, .5), 0 4em 7em -1em rgba(8, 40, 70, .35); }
+.hand .trump-tag {
+  position: absolute; z-index: 3; right: 7%; top: 5%; width: 24%; aspect-ratio: 1; border-radius: 50%;
+  display: grid; place-items: center; background: linear-gradient(180deg, #ffe680, var(--gold-lo));
+  box-shadow: 0 0 0 2px #fff, 0 2px 4px rgba(150, 60, 0, .4);
+}
+.hand .trump-tag svg { width: 60%; height: 60%; fill: #fff; filter: drop-shadow(0 1px 0 rgba(150,60,0,.4)); }
+.hand .play-tip {
+  position: absolute; z-index: 50; left: 50%; bottom: calc(100% + 16px); transform: translateX(-50%);
+  height: 30px; padding: 0 12px; border-radius: 15px; display: none; align-items: center; white-space: nowrap;
+  background: var(--navy); color: #fff; font-size: 13px; letter-spacing: .04em;
+}
+.hand .play-tip::after { content: ""; position: absolute; left: 50%; bottom: -6px; width: 12px; height: 12px; background: var(--navy); transform: translateX(-50%) rotate(45deg); border-radius: 2px; }
+.slot.previewing { border-color: var(--sun); background: rgba(255,255,255,.18); padding: 0; animation: none; opacity: 1; }
+.slot.previewing > div:not(.ghost) { display: none; }
+.slot .ghost { --w: calc(var(--cw) - 6px); position: absolute; left: 0; top: 0; opacity: .82; border-radius: calc(var(--cw) * .085); box-shadow: 0 0 0 3px var(--sun), 0 0 24px 6px rgba(255,230,120,.6); animation: ghost-in .25s var(--ease-pop); }
+@keyframes ghost-in { from { transform: scale(.85); opacity: 0; } }
+
+.actions { position: absolute; z-index: 30; left: 1046px; top: 762px; display: flex; align-items: flex-start; gap: 16px; }
+.act-col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.act-col .key { font-size: 11px; letter-spacing: .1em; color: rgba(255,255,255,.9); text-transform: uppercase; }
+.act-col .key kbd { font: inherit; padding: 2px 6px; border-radius: 5px; background: rgba(10, 30, 110, .35); }
+.take { --h: 80px; --r: 24px; padding: 0 30px 0 24px; font-size: 32px; min-width: 228px; }
+.take .lbl small { font-size: 13px; margin-top: 4px; letter-spacing: .16em; }
+.take svg { width: 34px; height: 34px; }
+.take::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.55) 48%, transparent 60%) no-repeat; background-size: 250% 100%; animation: shine 3.2s ease-in-out infinite 1s; }
+@keyframes shine { 0% { background-position: 130% 0; } 40%, 100% { background-position: -130% 0; } }
+.hint-btn { --h: 80px; --r: 24px; width: 84px; padding: 0; flex-direction: column; gap: 2px; font-size: 15px; letter-spacing: .06em; }
+.hint-btn svg { width: 34px; height: 34px; color: var(--gold-lo); }
+
+/* ---------------- COACH ---------------- */
+.coach {
+  position: absolute; z-index: 50; left: 720px; top: 626px; transform: translate(-50%, -100%) scale(.6); opacity: 0; pointer-events: none;
+  display: flex; align-items: center; gap: 14px; padding: 12px 22px 12px 12px; border-radius: 22px; width: 500px;
+  background: #fff; box-shadow: 0 0 0 3px var(--mint-lo), 0 6px 0 3px var(--mint-lip), 0 18px 30px rgba(4, 50, 60, .35);
+  transition: transform .4s var(--ease-pop), opacity .2s;
+}
+.coach::after { content: ""; position: absolute; left: 50%; bottom: -12px; width: 22px; height: 22px; background: #fff; transform: translateX(-50%) rotate(45deg); box-shadow: 3px 3px 0 var(--mint-lo); }
+.coach .ava { --s: 58px; --ring2: var(--mint-lo); }
+.coach p { margin: 0; font-size: 18px; line-height: 1.28; }
+.coach p b { color: var(--mint-lip); }
+.coach .red { color: var(--ink-red); white-space: nowrap; }
+.show-hint .coach { transform: translate(-50%, -100%) scale(1); opacity: 1; }
+.show-hint .status { opacity: 0; }
+.show-hint .hand .card[data-card="QD"] { box-shadow: 0 0 0 3px #fff, 0 0 0 8px var(--mint), 0 0 34px 10px rgba(92, 227, 154, .85); }
+
+/* ---------------- LOG DRAWER ---------------- */
+.scrim { position: fixed; inset: 0; z-index: 60; background: rgba(30, 50, 140, .3); opacity: 0; pointer-events: none; transition: opacity .25s; }
+.drawer {
+  position: fixed; z-index: 61; top: 16px; right: 16px; bottom: 16px; width: 390px; border-radius: 28px;
+  background: #f3f6ff; transform: translateX(115%); transition: transform .45s var(--ease-pop);
+  box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--royal), 0 20px 50px rgba(16, 30, 110, .45);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.show-log .scrim { opacity: 1; pointer-events: auto; }
+.show-log .drawer { transform: none; }
+.drawer header { padding: 16px 16px 16px 22px; display: flex; align-items: center; gap: 12px; color: #fff; background: linear-gradient(180deg, #6f8fff, var(--royal)); box-shadow: inset 0 -3px 0 rgba(0,0,0,.12); }
+.drawer header svg.h { width: 28px; height: 28px; }
+.drawer header h2 { margin: 0; font-size: 24px; font-weight: 900; flex: 1; text-shadow: 0 2px 0 rgba(0,0,0,.18); }
+.drawer header .icon-btn { --s: 40px; }
+.drawer .scroll { overflow: auto; padding-bottom: 16px; }
+.drawer .round { padding: 16px 22px 8px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--navy-3); }
+.drawer ol { list-style: none; margin: 0; padding: 0 14px; display: flex; flex-direction: column; gap: 8px; }
+.drawer li { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 16px; background: #fff; box-shadow: 0 2px 0 rgba(24,34,94,.08); font-size: 15px; font-weight: 800; }
+.drawer li img { width: 38px; height: 38px; border-radius: 50%; box-shadow: 0 0 0 2px #fff, 0 0 0 4.5px var(--rc, #9aa6d6); flex: none; }
+.drawer li .what { flex: 1; line-height: 1.2; }
+.drawer li .what small { display: block; font-size: 12px; color: var(--navy-3); font-weight: 700; }
+.drawer li .mc { --w: 36px; box-shadow: 0 0 0 1px rgba(20,30,80,.15), 0 2px 4px rgba(0,0,0,.15); }
+.drawer li.now { background: #fff7d1; box-shadow: 0 0 0 2px var(--sun); }
+.drawer li.gold { background: #fff6cf; }
+
+/* ===================================================================
+   PHONE PORTRAIT
+   =================================================================== */
+@media (max-width: 640px), (orientation: portrait) and (max-width: 900px) {
+  body { background: var(--felt-lo); }
+  body::before { display: none; }
+  .stage { --cw: 80px; --hw: 92px; --dw: 58px; left: 0; top: 0; transform: scale(var(--k)); transform-origin: 0 0; }
+
+  .hud { left: 0; right: 0; top: 0; height: 62px; padding: 8px 12px 0; gap: 8px; }
+  .hud::before { content: ""; position: absolute; inset: 0 0 -4px; z-index: -1; border-radius: 0 0 24px 24px;
+    background: linear-gradient(180deg, #7aa2ff, var(--royal)); box-shadow: inset 0 -3px 0 rgba(0,0,0,.12), 0 5px 0 var(--royal-lip), 0 12px 20px rgba(4,40,60,.3); }
+  .icon-btn { --s: 40px; border-radius: 13px; }
+  .hud .table-chip, .hud .sound-btn, .hud .spacer, .hud .trump-chip { display: none; }
+  .felt-label .l-desk { display: none; } .felt-label .l-phone { display: inline-flex; }
+  .trump-chip { height: 42px; padding: 0 6px; border-radius: 14px; }
+  .trump-chip .suit-ball { width: 30px; height: 30px; border-radius: 10px; }
+  .trump-chip .suit-ball svg { width: 18px; height: 18px; }
+  .trump-chip > span:last-child { display: none; }
+  .meter { height: 42px; padding: 0 12px 0 6px; gap: 8px; border-radius: 14px; flex: 1; min-width: 0; }
+  .meter .cup { width: 30px; height: 30px; border-radius: 10px; }
+  .meter .cup svg { width: 18px; height: 18px; }
+  .meter .bar { width: 100%; height: 8px; }
+  .meter .txt { flex: 1; gap: 4px; }
+  .meter .row small { font-size: 9.5px; letter-spacing: .1em; }
+  .meter .row b { font-size: 16px; }
+  .meter .row b em { display: none; }
+
+  .table { left: 0; top: 0; width: 100%; height: 100%; border-radius: 0; background: none; box-shadow: none; }
+  .table::before { display: none; }
+  .felt { inset: 0; border-radius: 0; background: radial-gradient(95% 52% at 50% 46%, var(--felt-hi) 0%, var(--felt) 50%, var(--felt-lo) 90%, var(--felt-edge) 100%); box-shadow: none; }
+  .felt::after { inset: 78px 10px 104px; border-radius: 28px; }
+  .watermark { left: 50%; top: 428px; width: 330px; height: 200px; border-radius: 100px; }
+  .watermark::before { border-radius: 95px; }
+  .watermark .wm-top { top: -11px; gap: 6px; }
+  .watermark .wm-top span { font-size: 15px; }
+  .watermark .wm-top svg { width: 14px; height: 14px; }
+
+  .seat { top: 116px !important; }
+  .seat .ava { --s: 58px; }
+  .seat.kostya { left: 12.8%; } .seat.zina { left: 37.6%; } .seat.misha { left: 62.4%; } .seat.sveta { left: 87.2%; }
+  .seat .plate { top: 40px; }
+  .plate { padding: 4px 10px 5px; border-radius: 11px; }
+  .plate b { font-size: 14px; }
+  .plate b .ttl { display: none; }
+  .plate small { font-size: 9px; letter-spacing: .05em; gap: 3px; }
+  .plate small i { width: 6px; height: 6px; }
+  .ava .lvl { font-size: 11px; height: 18px; min-width: 22px; padding: 0 4px; box-shadow: 0 0 0 2px #fff, 0 2px 0 2px rgba(20,30,110,.35); }
+  .ava .role { box-shadow: 0 0 0 2px #fff, 0 3px 0 2px rgba(20,30,110,.25); }
+
+  .mini { top: 8px; left: 14px !important; right: auto !important; width: 0; height: 0; z-index: 4; }
+  .seat.fan-right .mini .count, .seat.fan-left .mini .count { left: 0; right: auto; translate: 0 0; }
+  .mini .card { display: none; }
+  .mini .count { top: 0; left: 0; min-width: 26px; height: 24px; font-size: 13px; padding: 0 6px 0 17px; border-radius: 12px;
+    box-shadow: 0 0 0 2px var(--royal), 0 3px 0 2px var(--royal-lip), 0 4px 8px rgba(0,0,0,.2); }
+  .mini .count::before { content: ""; position: absolute; left: 4px; top: 4px; width: 11px; height: 15px; border-radius: 2.5px; transform: rotate(-10deg);
+    background: repeating-linear-gradient(45deg, rgba(255,255,255,.3) 0 2px, transparent 2px 4px), linear-gradient(#ff6b75, #d8264d); box-shadow: inset 0 0 0 1.5px #fff, 0 1px 2px rgba(0,0,0,.3); }
+  .seat.misha .known-card { right: auto; left: -22px; top: 80px; display: flex; align-items: center; gap: 0; }
+  .known-card .card { --w: 34px; transform: rotate(-6deg); box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--sun), 0 5px 8px rgba(0,0,0,.3); }
+  .known-card .tag { position: relative; left: auto; bottom: auto; transform: none; margin-left: 6px; height: 22px; font-size: 10px; padding: 0 8px 0 4px; }
+  .known-card .tag svg { width: 14px; height: 14px; }
+
+  .thinking { left: -30px; top: -26px; transform: none; height: 20px; padding: 0 6px; gap: 3px; font-size: 0; background: #fff; box-shadow: 0 0 0 2px var(--cherry), 0 3px 6px rgba(0,0,0,.2); z-index: 7; }
+  .thinking i { width: 5px; height: 5px; background: var(--navy); }
+  .bubble { left: 56px; top: 90px; font-size: 16px; padding: 8px 13px 9px; border-radius: 6px 18px 18px 18px; transform-origin: 0 0; }
+  .bubble::after { left: 10px; top: -14px; bottom: auto; width: 16px; height: 14px; clip-path: polygon(0 0, 0 100%, 100% 100%); }
+  .bubble::before { left: 13px; top: -6px; bottom: auto; width: 10px; height: 9px; clip-path: polygon(0 0, 0 100%, 100% 100%); }
+  .medal { display: none; }
+  .seat .crown { display: block; z-index: 5; left: -16px; top: -54px; width: 32px; height: 26px; color: var(--gold); transform: rotate(-12deg);
+    filter: drop-shadow(0 2px 0 #c07800) drop-shadow(0 0 2px #fff); }
+
+  .deck { left: 32px; top: 246px; }
+  .bito { left: auto; right: 34px; top: 246px; }
+  .deck .trump { left: 26px; }
+  .deck .count, .bito .count { min-width: 30px; height: 30px; font-size: 15px; left: -12px; top: -12px; }
+  .bito .count { left: auto; right: -12px; }
+  .felt-label { font-size: 10px; height: 22px; padding: 0 9px; top: calc(100% + 14px); }
+  .deck .felt-label { left: calc(50% + 12px); }
+
+  .battle { left: 50%; top: 426px; transform: translate(-58%, -50%); gap: 52px; }
+  .slot { padding: 0 6px 8px 0; font-size: 9px; border-width: 2.5px; }
+  .slot > div { width: 40px; }
+  .slot svg { width: 18px; height: 18px; margin-bottom: 2px; }
+
+  .status { left: 50%; top: 547px; height: 46px; padding: 0 12px 0 6px; gap: 9px;
+    box-shadow: 0 0 0 2.5px var(--sun), 0 5px 0 2.5px #d98c00, 0 10px 18px rgba(4,60,60,.35); }
+  .status .shield { width: 34px; height: 34px; }
+  .status .shield svg { width: 19px; height: 19px; }
+  .status .msg { font-size: 19px; }
+  .status .msg .c8 { height: 26px; font-size: 18px; padding: 0 6px 0 5px; border-radius: 7px; }
+  .status .msg .c8 svg { width: 15px; height: 15px; }
+  .status .timer { width: 30px; height: 30px; }
+  .status .timer::before { inset: 4px; }
+  .status .timer b { font-size: 11px; }
+
+  .hand { left: 50%; top: auto; bottom: 106px; }
+  .me-tray { position: absolute; z-index: 28; left: 0; right: 0; bottom: 0; height: 96px;
+    background: linear-gradient(180deg, #ffffff, #e8eeff); border-radius: 26px 26px 0 0;
+    box-shadow: inset 0 3px 0 #fff, 0 -4px 0 rgba(24,34,94,.10), 0 -12px 30px rgba(4,60,60,.3); }
+  .me-info { left: 46px; top: auto; bottom: 46px; }
+  .me-info .ava { --s: 54px; left: -27px; top: -27px; }
+  .me-info .timer-ring { left: -37px; top: -37px; width: 74px; height: 74px; -webkit-mask: radial-gradient(circle, transparent 33px, #000 34px); mask: radial-gradient(circle, transparent 33px, #000 34px);
+    background: conic-gradient(var(--orange) 0 223deg, #d9e0f7 223deg 360deg); }
+  .me-info .plate { left: 42px; top: -22px; transform: none; background: none; box-shadow: none; padding: 0; text-align: left; }
+  .me-info .plate b { font-size: 17px; }
+  .me-info .plate small { font-size: 10px; }
+
+  .actions { left: auto; right: 12px; top: auto; bottom: 16px; gap: 10px; align-items: center; }
+  .act-col .key { display: none; }
+  .hint-btn { --h: 62px; --r: 20px; width: 62px; font-size: 10px; gap: 0; }
+  .hint-btn svg { width: 26px; height: 26px; }
+  .take { --h: 62px; --r: 20px; min-width: 0; padding: 0 20px 0 16px; font-size: 25px; gap: 8px; }
+  .take .lbl small { font-size: 10px; }
+  .take svg { width: 26px; height: 26px; }
+
+  .coach { left: 50%; top: 528px; width: calc(100% - 24px); padding: 10px 14px 10px 10px; }
+  .coach .ava { --s: 44px; }
+  .coach p { font-size: 15px; }
+  .drawer { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; height: 72%; transform: translateY(115%); }
+  .hand .play-tip { display: none !important; }
+}
+@media (min-width: 641px) and (orientation: landscape), (min-width: 901px) { .me-tray { display: none; } }
+</style>
+</head>
+<body>
+<div class="stage" id="app">
+
+  <!-- ============ HUD ============ -->
+  <header class="hud">
+    <button class="icon-btn" aria-label="Menu"><svg><use href="#i-home"/></svg></button>
+    <div class="chip table-chip"><span class="tag"><svg><use href="#i-bolt"/></svg>Expert</span>Podkidnoy <span class="muted">· 5 players · Round 7</span></div>
+    <div class="chip trump-chip" title="Trump: hearts"><span class="suit-ball"><svg viewBox="0 0 100 100"><use href="#s-H"/></svg></span><span><small>Trump</small><b>Hearts</b></span></div>
+    <div class="spacer"></div>
+    <div class="chip meter" title="Win chance">
+      <span class="cup"><svg><use href="#i-trophy"/></svg></span>
+      <span class="txt"><span class="row"><small>Win chance</small><b>58%<em>▲4</em></b></span><span class="bar"><i></i></span></span>
+    </div>
+    <button class="icon-btn" id="logBtn" aria-label="Move log"><svg><use href="#i-log"/></svg><span class="dot">4</span></button>
+    <button class="icon-btn sound-btn" aria-label="Sound on"><svg><use href="#i-sound"/></svg></button>
+    <button class="icon-btn" aria-label="Settings"><svg><use href="#i-gear"/></svg></button>
+  </header>
+
+  <!-- ============ TABLE ============ -->
+  <main class="table">
+    <div class="felt">
+      <div class="watermark">
+        <div class="wm-top"><svg viewBox="0 0 100 100"><use href="#s-S"/></svg><svg viewBox="0 0 100 100"><use href="#s-H"/></svg><span>ДУРАК</span><svg viewBox="0 0 100 100"><use href="#s-C"/></svg><svg viewBox="0 0 100 100"><use href="#s-D"/></svg></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- opponents, clockwise from you -->
+  <div class="seat kostya fan-right">
+    <div class="mini" data-n="4"><span class="count">4</span></div>
+    <div class="ava attacker">
+      <div class="pic"><img src="img/kostya.webp" alt="Kostya"></div>
+      <span class="role" title="Attacker"><svg><use href="#i-swords"/></svg></span>
+      <span class="lvl">14</span>
+    </div>
+    <div class="plate"><b>Kostya</b><small class="st-atk"><i></i>Attacking</small></div>
+    <div class="thinking">thinking<i></i><i></i><i></i></div>
+    <div class="bubble">Твой ход!</div>
+  </div>
+  <div class="seat zina fan-right">
+    <div class="mini" data-n="6"><span class="count">6</span></div>
+    <div class="ava thrower">
+      <div class="pic"><img src="img/zina.webp" alt="Babushka Zina"></div>
+      <span class="role" title="Can throw in"><svg><use href="#i-plus"/></svg></span>
+      <span class="lvl">31</span>
+    </div>
+    <div class="plate"><b><span class="ttl">Babushka </span>Zina</b><small class="st-thr"><i></i>Throwing in</small></div>
+  </div>
+  <div class="seat misha fan-left">
+    <div class="mini" data-n="4"><span class="count">5</span></div>
+    <div class="known-card"><div data-card="QC"></div><span class="tag"><svg><use href="#i-eye"/></svg>Known</span></div>
+    <div class="ava idle">
+      <div class="pic"><img src="img/misha.webp" alt="Uncle Misha"></div>
+      <span class="lvl">22</span>
+    </div>
+    <div class="plate"><b><span class="ttl">Uncle </span>Misha</b><small><i></i>Waiting</small></div>
+  </div>
+  <div class="seat sveta out">
+    <span class="medal"><svg><use href="#i-crown"/></svg>1st place</span>
+    <svg class="crown"><use href="#i-crown"/></svg>
+    <div class="ava winner">
+      <div class="pic"><img src="img/sveta.webp" alt="Sveta"></div>
+      <span class="role" title="Finished first"><svg><use href="#i-trophy"/></svg></span>
+      <span class="lvl">27</span>
+    </div>
+    <div class="plate"><b>Sveta</b><small class="st-win"><i></i>Out · 1st</small></div>
+  </div>
+
+  <!-- talon + trump -->
+  <section class="deck" aria-label="Talon: 11 cards, trump nine of hearts">
+    <div data-card="9H" class="trump landscape"></div>
+    <div data-back class="stack-1"></div>
+    <div data-back class="stack-2"></div>
+    <div data-back></div>
+    <span class="count">11</span>
+    <span class="felt-label"><span class="l-desk">Deck</span><span class="l-phone"><svg viewBox="0 0 100 100"><use href="#s-H"/></svg>Trump</span></span>
+  </section>
+
+  <section class="bito" aria-label="Discard pile: 12 cards" id="bito">
+    <span class="count">12</span>
+    <span class="felt-label">Бито</span>
+  </section>
+
+  <section class="battle" aria-label="Table">
+    <div class="pair"><div data-card="8S" class="atk"></div><div data-card="JS" class="def"></div></div>
+    <div class="pair open" id="target"><div data-card="8D" class="atk"></div>
+      <div class="slot"><div><svg viewBox="0 0 100 100"><use href="#s-D"/></svg>Beat here</div></div>
+    </div>
+  </section>
+
+  <div class="status" id="status">
+    <span class="shield"><svg><use href="#i-shield"/></svg></span>
+    <span class="msg">Beat <span class="c8">8<svg viewBox="0 0 100 100"><use href="#s-D"/></svg></span> or <em>Take</em></span>
+    <span class="timer"><b>9</b></span>
+  </div>
+
+  <!-- me -->
+  <div class="me-tray"></div>
+  <div class="me-info">
+    <span class="timer-ring"></span>
+    <div class="ava defender">
+      <div class="pic"><img src="img/you.webp" alt="You"></div>
+      <span class="role" title="Defending"><svg><use href="#i-shield"/></svg></span>
+      <span class="lvl">12</span>
+    </div>
+    <div class="plate"><b>You</b><small class="st-me"><i></i>Defending</small></div>
+  </div>
+  <div class="hand" id="hand">
+    <div data-card="6C"></div><div data-card="9C"></div><div data-card="QD"></div><div data-card="KD"></div><div data-card="7H"></div><div data-card="AS"></div><div data-card="10H"></div>
+  </div>
+  <div class="actions">
+    <div class="act-col">
+      <button class="btn white hint-btn" id="hintBtn" aria-label="Hint"><svg><use href="#i-bulb"/></svg><span class="lbl">Hint</span></button>
+      <span class="key"><kbd>H</kbd></span>
+    </div>
+    <div class="act-col">
+      <button class="btn take" id="takeBtn"><svg><use href="#i-take"/></svg><span class="lbl">Take<small>Беру</small></span></button>
+      <span class="key"><kbd>T</kbd> / <kbd>Space</kbd></span>
+    </div>
+  </div>
+
+  <div class="coach" id="coach">
+    <div class="ava"><div class="pic"><img src="img/lev.webp" alt="Coach Lev"></div></div>
+    <p><b>Coach Lev:</b> beat it with <span class="red">Q<svg class="sg r" viewBox="0 0 100 100"><use href="#s-D"/></svg></span>. Same suit, higher rank, and you keep your trumps for later.</p>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" aria-label="Move log">
+  <header><svg class="h"><use href="#i-log"/></svg><h2>Move log</h2><button class="icon-btn" id="logClose" aria-label="Close"><svg><use href="#i-close"/></svg></button></header>
+  <div class="scroll">
+    <div class="round">Round 7 · Kostya attacks you</div>
+    <ol>
+      <li><img src="img/kostya.webp" alt="" style="--rc:var(--cherry)"><span class="what">Kostya attacks<small>opens the round</small></span><div data-card="8S" class="mc"></div></li>
+      <li><img src="img/you.webp" alt="" style="--rc:var(--royal)"><span class="what">You beat it<small>same suit, higher rank</small></span><div data-card="JS" class="mc"></div></li>
+      <li><img src="img/zina.webp" alt="" style="--rc:var(--orange)"><span class="what">Zina throws in<small>matching rank: eight</small></span><div data-card="8D" class="mc"></div></li>
+      <li class="now"><img src="img/you.webp" alt="" style="--rc:var(--royal)"><span class="what">Your move<small>beat 8<svg class="sg r" viewBox="0 0 100 100"><use href="#s-D"/></svg> or take everything</small></span></li>
+    </ol>
+    <div class="round">Round 6 · Misha defended</div>
+    <ol>
+      <li class="gold"><img src="img/sveta.webp" alt="" style="--rc:var(--gold)"><span class="what">Sveta is out: 1st place!<small>last card thrown in</small></span><div data-card="AH" class="mc"></div></li>
+      <li><img src="img/misha.webp" alt="" style="--rc:#9aa6d6"><span class="what">Misha took 3 cards<small>now everyone knows his Q<svg class="sg b" viewBox="0 0 100 100"><use href="#s-C"/></svg></small></span><div data-card="QC" class="mc"></div></li>
+    </ol>
+  </div>
+</aside>
+
+<script src="js/arcade.js"></script>
+<script>
+(function () {
+  const LEGAL = new Set(['QD', 'KD', '7H', '10H']);
+  const TRUMP = 'H';
+  const root = document.documentElement;
+  const app = document.getElementById('app');
+  const hand = document.getElementById('hand');
+  const q = new URLSearchParams(location.search);
+  const isPhone = () => matchMedia('(max-width: 640px), (orientation: portrait) and (max-width: 900px)').matches;
+
+  /* desktop stage scale */
+
+  /* opponent mini-hands */
+  document.querySelectorAll('.mini').forEach((m) => {
+    const n = +m.dataset.n;
+    const right = m.closest('.seat').classList.contains('fan-right');
+    let html = '';
+    for (let i = 0; i < n; i++) {
+      const k = i - (n - 1) / 2;
+      const x = 14 + i * 14;
+      html += `<div data-back class="sm" style="${right ? 'left' : 'right'}:${x}px;transform:rotate(${(right ? 1 : -1) * k * 8}deg) translateY(${Math.abs(k) * 2}px)"></div>`;
+    }
+    m.insertAdjacentHTML('afterbegin', html);
+    m.style.setProperty('--cx', (14 + ((n - 1) * 14 + 38) / 2) + 'px');
+  });
+
+  /* discard pile: 12 cards, tossed */
+  const toss = [[-14,-3,-4],[22,4,2],[-35,-2,5],[8,-5,-1],[40,6,3],[-22,3,-3],[15,-4,4],[-8,2,0],[30,-1,-2],[-40,5,1],[4,-2,3],[18,1,-1]];
+  document.getElementById('bito').insertAdjacentHTML('afterbegin', toss.map(([r, x, y]) => `<div data-back style="transform:translate(${x}px,${y}px) rotate(${r}deg)"></div>`).join(''));
+
+  Arcade.hydrateCards();
+
+  hand.querySelectorAll('.card').forEach((c) => {
+    const code = c.dataset.card;
+    c.classList.add(LEGAL.has(code) ? 'legal' : 'dim');
+    if (code.endsWith(TRUMP)) c.insertAdjacentHTML('beforeend', `<span class="trump-tag" title="Trump"><svg viewBox="0 0 100 100"><use href="#s-H"/></svg></span>`);
+    if (false) c.insertAdjacentHTML('beforeend', `<span class="play-tip">${code.endsWith(TRUMP) ? 'Trump it' : 'Beat 8'}${code.endsWith(TRUMP) ? '' : '<svg class="sg" style="fill:#ff8b98" viewBox="0 0 100 100"><use href="#s-D"/></svg>'}</span>`);
+  });
+
+  /* hand fan */
+  function layout() {
+    const cards = [...hand.querySelectorAll('.card')];
+    const phone = isPhone();
+    const cw = parseFloat(getComputedStyle(cards[0]).width);
+    const n = cards.length;
+    const avail = phone ? app.offsetWidth - 54 : 520;
+    const step = Math.min(phone ? cw * .56 : cw * .6, (avail - cw) / (n - 1));
+    const spread = phone ? 2 : 3.4;
+    cards.forEach((c, i) => {
+      const k = i - (n - 1) / 2;
+      const legal = c.classList.contains('legal');
+      c.style.setProperty('--x', (k * step - cw / 2) + 'px');
+      c.style.setProperty('--y', (k * k * (phone ? 1.6 : 2.2) - (legal ? (phone ? 14 : 24) : 0)) + 'px');
+      c.style.setProperty('--r', (k * spread) + 'deg');
+      c.style.zIndex = i + 1;
+      c.style.transform = 'translate(var(--x), var(--y)) rotate(var(--r))';
+    });
+  }
+  Arcade.fitStage(app, { after: layout });
+
+  const slotEl = document.querySelector('#target .slot');
+  function preview(code) {
+    slotEl.querySelector('.ghost')?.remove();
+    slotEl.classList.toggle('previewing', !!code);
+    if (code) { slotEl.insertAdjacentHTML('beforeend', `<div class="ghost" data-card="${code}"></div>`); Arcade.hydrateCards(slotEl); }
+  }
+  function pop(c, on) {
+    if (!c.classList.contains('legal')) return;
+    preview(on ? c.dataset.card : null);
+    c.style.transform = on
+      ? `translate(var(--x), calc(var(--y) - ${isPhone() ? 22 : 28}px)) rotate(calc(var(--r) * .3)) scale(1.06)`
+      : 'translate(var(--x), var(--y)) rotate(var(--r))';
+  }
+  hand.addEventListener('pointerover', (e) => { const c = e.target.closest('.card'); if (c) pop(c, true); });
+  hand.addEventListener('pointerout', (e) => { const c = e.target.closest('.card'); if (c && !c.classList.contains('force-hover')) pop(c, false); });
+
+  /* play a legal card onto 8♦ */
+  hand.addEventListener('click', (e) => {
+    const c = e.target.closest('.card');
+    if (!c) return;
+    if (!c.classList.contains('legal')) {
+      c.animate([{ translate: '0 0' }, { translate: '-6px 0' }, { translate: '6px 0' }, { translate: '0 0' }], { duration: 240 });
+      return;
+    }
+    const slot = document.querySelector('#target .slot');
+    const a = c.getBoundingClientRect(), b = slot.getBoundingClientRect();
+    const k = parseFloat(getComputedStyle(app).getPropertyValue('--k')) || 1;
+    const fly = c.cloneNode(true);
+    fly.classList.remove('legal', 'force-hover');
+    fly.querySelector('.play-tip')?.remove();
+    Object.assign(fly.style, { position: 'fixed', left: '0', top: '0', bottom: 'auto', zIndex: 100, transition: 'none', transformOrigin: '50% 50%' });
+    document.body.appendChild(fly);
+    fly.style.setProperty('--w', (parseFloat(getComputedStyle(c).width) * k) + 'px');
+    c.style.visibility = 'hidden';
+    const tw = parseFloat(getComputedStyle(document.querySelector('#target .atk')).width) * k;
+    const s = tw / (parseFloat(getComputedStyle(c).width) * k);
+    const fw = parseFloat(getComputedStyle(c).width) * k, fh = fw * 1.4;
+    const from = `translate(${a.left + a.width / 2 - fw / 2}px, ${a.top + a.height / 2 - fh / 2}px) rotate(0deg) scale(1.06)`;
+    const to = `translate(${b.left + b.width / 2 - fw / 2}px, ${b.top + b.height / 2 - fh / 2}px) rotate(8deg) scale(${s})`;
+    fly.animate([{ transform: from }, { transform: to }], { duration: 480, easing: 'cubic-bezier(.34,1.3,.64,1)', fill: 'forwards' });
+    preview(null); slot.style.visibility = 'hidden';
+    document.querySelector('#target .atk').style.animation = 'none';
+    document.querySelector('#status .msg').innerHTML = 'Nice block! <em>Kostya</em> may throw in…';
+    hand.querySelectorAll('.card.legal').forEach((x) => { x.classList.remove('legal'); x.classList.add('dim'); });
+  });
+
+  document.getElementById('hintBtn').addEventListener('click', () => app.classList.toggle('show-hint'));
+  const toggleLog = (on) => root.classList.toggle('show-log', on);
+  document.getElementById('logBtn').addEventListener('click', () => toggleLog(true));
+  document.getElementById('logClose').addEventListener('click', () => toggleLog(false));
+  document.getElementById('scrim').addEventListener('click', () => toggleLog(false));
+  addEventListener('keydown', (e) => {
+    if (e.key === 'h' || e.key === 'H') app.classList.toggle('show-hint');
+    if (e.key === 'Escape') toggleLog(false);
+  });
+
+  /* demo states for review: ?hover=QD &hint=1 &log=1 &press=take */
+  if (q.get('hover')) { const c = hand.querySelector(`[data-card="${q.get('hover')}"]`); if (c) { c.classList.add('force-hover'); pop(c, true); c.style.zIndex = 20; } }
+  if (q.get('hint')) app.classList.add('show-hint');
+  if (q.get('log')) root.classList.add('show-log');
+  if (q.get('press') === 'take') document.getElementById('takeBtn').classList.add('is-pressed');
+})();
+</script>
+</body>
+</html>

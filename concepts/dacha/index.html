@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Durak · Dacha</title>
+<link rel="stylesheet" href="css/dacha.css">
+<link rel="stylesheet" href="css/title.css">
+</head>
+<body class="page-title">
+
+<div class="scene" aria-hidden="true"></div>
+
+<!-- decor: cloth, light, props -->
+<div class="stage stage--decor" data-stage data-w="1440" data-h="900" aria-hidden="true">
+  <div class="decor">
+    <div class="stitch-h cloth__top"></div>
+    <div class="stitch-h cloth__bottom"></div>
+    <div class="stitch-v cloth__left"></div>
+    <div class="stitch-v cloth__right"></div>
+    <div class="pools"></div>
+    <div class="leaves"></div>
+    <div class="prop prop--seeds"><img src="art/seeds.svg" alt=""></div>
+    <div class="prop prop--tea"><img src="art/tea.svg" alt=""></div>
+    <div class="spill">
+      <img class="card back" src="art/back.svg" alt="" style="--x:0px;--y:30px;--r:-28deg">
+      <img class="card" src="../assets/cards/6S.webp" alt="" style="--x:60px;--y:4px;--r:-14deg">
+      <img class="card" src="../assets/cards/QD.webp" alt="" style="--x:126px;--y:-6px;--r:2deg">
+      <img class="card" src="../assets/cards/KS.webp" alt="" style="--x:196px;--y:4px;--r:16deg">
+      <img class="card" src="../assets/cards/AH.webp" alt="" style="--x:262px;--y:30px;--r:30deg">
+    </div>
+    <div class="prop prop--samovar"><img src="art/samovar.svg" alt=""></div>
+  </div>
+</div>
+
+<div class="stage stage--ui" data-stage data-w="1440" data-h="900">
+
+  <header class="topbar">
+    <div class="lang" role="group" aria-label="Language">
+      <svg><use href="#i-globe"/></svg>
+      <button data-lang-btn="en" class="is-on">EN</button><button data-lang-btn="ru">RU</button>
+    </div>
+    <button class="ibtn" aria-label="Sound"><svg><use href="#i-sound"/></svg></button>
+    <button class="ibtn" aria-label="Settings"><svg><use href="#i-gear"/></svg></button>
+  </header>
+
+  <main class="hero">
+    <div class="kicker hero__kicker"><span data-i18n="kicker">Podkidnoy Durak · the card game of every Russian summer</span></div>
+    <h1 class="wordmark" aria-label="Durak">
+      <img class="wordmark__cap" src="art/cap.svg" alt="">
+      <svg class="wordmark__svg" viewBox="0 0 660 210" role="img" aria-label="ДУРАК">
+        <defs>
+          <linearGradient id="wmFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2563a"/><stop offset=".55" stop-color="#c8361f"/><stop offset="1" stop-color="#a5281a"/></linearGradient>
+          <pattern id="wmHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)"><rect width="8" height="8" fill="#2350b4"/><rect width="3" height="8" fill="#1b4299"/></pattern>
+        </defs>
+        <text class="wm wm--shadow" x="12" y="188" textLength="640" lengthAdjust="spacingAndGlyphs">ДУРАК</text>
+        <text class="wm wm--outline" x="2" y="178" textLength="640" lengthAdjust="spacingAndGlyphs">ДУРАК</text>
+        <text class="wm wm--fill" x="2" y="178" textLength="640" lengthAdjust="spacingAndGlyphs">ДУРАК</text>
+      </svg>
+    </h1>
+    <div class="wordmark__en">
+      <svg class="flourish flourish--l"><use href="#flourish"/></svg>
+      <span>D U R A K</span>
+      <svg class="flourish flourish--r"><use href="#flourish"/></svg>
+    </div>
+    <p class="tagline" data-i18n="tagline">A card game at the dacha, with four sly neighbours.</p>
+
+    <div class="cta">
+      <a class="btn-primary play" href="table.html">
+        <svg width="24" height="24"><use href="#i-play"/></svg>
+        <span class="play__txt"><span data-i18n="play">Play</span><span class="play__sub" data-i18n="playSub">quick game · 5 players</span></span>
+        <span class="sub">играть</span>
+      </a>
+      <a class="continue" href="table.html"><svg><use href="#i-flame"/></svg><span data-i18n="continueGame">Continue round 7</span></a>
+    </div>
+
+    <nav class="secondary" aria-label="More">
+      <a class="btn" href="lobby.html"><svg><use href="#i-users"/></svg><span data-i18n="opponents">Opponents</span></a>
+      <a class="btn" href="#"><svg><use href="#i-watch"/></svg><span data-i18n="watch">Watch bots</span></a>
+      <a class="btn" href="#"><svg><use href="#i-stats"/></svg><span data-i18n="stats">Stats</span></a>
+      <a class="btn" href="#"><svg><use href="#i-rules"/></svg><span data-i18n="rules">Rules</span></a>
+    </nav>
+  </main>
+
+  <!-- the cast, gathered around the samovar -->
+  <section class="cast" aria-label="Today at the table">
+    <div class="cast__title"><span class="ru" data-i18n="todayDeco">Сегодня за столом</span><span class="kicker" data-i18n="todayTable">Today at the table</span></div>
+    <figure class="guest guest--zina"><div class="medal"><img src="art/p-zina.svg" alt=""></div><figcaption><b data-i18n="zina">Babushka Zina</b><span data-i18n="lvExpert">Expert</span></figcaption></figure>
+    <figure class="guest guest--kostya"><div class="medal"><img src="art/p-kostya.svg" alt=""></div><figcaption><b data-i18n="kostya">Kostya</b><span data-i18n="lvNovice">Novice</span></figcaption></figure>
+    <figure class="guest guest--misha"><div class="medal"><img src="art/p-misha.svg" alt=""></div><figcaption><b data-i18n="misha">Uncle Misha</b><span data-i18n="lvInter">Intermediate</span></figcaption></figure>
+    <figure class="guest guest--sveta"><div class="medal"><img src="art/p-sveta.svg" alt=""></div><figcaption><b data-i18n="sveta">Sveta</b><span data-i18n="lvGM">Grandmaster</span></figcaption></figure>
+  </section>
+
+  <!-- your record, embroidered -->
+  <footer class="record" aria-label="Your record">
+    <div class="record__who"><span class="record__me">Я</span><span><b data-i18n="you">You</b><small data-i18n="rankExpert">Expert · 1 530</small></span></div>
+    <ul class="record__stats">
+      <li><b>142</b><span data-i18n="recGames">games</span></li>
+      <li><b>87</b><span data-i18n="recWins">wins</span></li>
+      <li><b>61%</b><span data-i18n="recRate">win rate</span></li>
+      <li class="is-fool"><b>31×</b><span data-i18n="recFool">the durak</span></li>
+      <li><b>7</b><span data-i18n="recStreak">best streak</span></li>
+    </ul>
+  </footer>
+</div>
+
+<script src="js/i18n.js"></script>
+<script src="js/common.js"></script>
+</body>
+</html>

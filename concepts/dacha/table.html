@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Durak · Dacha table</title>
+
+<link rel="stylesheet" href="css/dacha.css">
+<link rel="stylesheet" href="css/table.css">
+</head>
+<body class="page-table">
+
+<!-- ======================= SCENE (sunlit tablecloth + props) ======================= -->
+<div class="scene" aria-hidden="true"></div>
+
+<!-- ======================= STAGE ======================= -->
+<div class="stage stage--decor" data-stage data-w="1440" data-h="900" aria-hidden="true">
+  <div class="decor">
+    <div class="stitch-h cloth__top"></div>
+    <div class="stitch-v cloth__left"></div>
+    <div class="stitch-v cloth__right"></div>
+    <div class="medallion"></div>
+    <div class="pools"></div>
+    <div class="leaves"></div>
+    <div class="prop prop--rowan"><img src="art/rowan.svg" alt=""></div>
+    <svg class="prop husks" viewBox="0 0 120 80" aria-hidden="true">
+      <g fill="#3d352e"><path d="M10 20 c2-4 9-5 15-2 c-5 1-10 2-15 2z" transform="rotate(-20 15 20)"/><path d="M40 52 c2-4 9-5 15-2 c-5 1-10 2-15 2z" transform="rotate(40 45 52)"/><path d="M80 30 c2-4 9-5 15-2 c-5 1-10 2-15 2z" transform="rotate(110 85 30)"/><path d="M60 70 c2-4 9-5 15-2 c-5 1-10 2-15 2z" transform="rotate(-70 65 70)"/></g>
+      <g stroke="#e2dccd" stroke-width=".8" fill="none"><path d="M12 19 c4-1 8-1 11 0" transform="rotate(-20 15 20)"/><path d="M42 51 c4-1 8-1 11 0" transform="rotate(40 45 52)"/></g>
+    </svg>
+    <div class="prop prop--samovar"><img src="art/samovar.svg" alt=""></div>
+    <div class="prop prop--tea"><img src="art/tea.svg" alt=""></div>
+    <div class="prop prop--seeds"><img src="art/seeds.svg" alt=""></div>
+  </div>
+</div>
+
+<!-- afternoon sun through the window: lights the cloth, never the UI -->
+
+<div class="stage stage--ui" data-stage data-w="1440" data-h="900">
+
+  <!-- top bar -->
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Back to title">
+      <span class="brand__back"><svg><use href="#i-back"/></svg></span>
+      <span class="brand__word">ДУРАК</span>
+      <span class="brand__meta"><span data-i18n="podkidnoy">Podkidnoy</span> · <span data-i18n="round">Round 7</span></span>
+    </a>
+    <div class="tools">
+      <button class="ibtn" data-act="log" aria-label="Move log" title="Move log"><svg><use href="#i-log"/></svg><span class="dot"></span></button>
+      <button class="ibtn" aria-label="Sound" title="Sound"><svg><use href="#i-sound"/></svg></button>
+      <button class="ibtn" aria-label="Settings" title="Settings"><svg><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <!-- opponents, clockwise from your left -->
+  <div class="opponents">
+    <section class="seat seat--kostya is-attacker is-thinking" aria-label="Kostya, attacker, 4 cards, thinking">
+      <div class="seat__id">
+        <div class="medal"><img src="art/p-kostya.svg" alt=""></div>
+        <span class="think" title="thinking…"><span class="think__txt" data-i18n="thinking">thinking</span><span class="thinking"><i></i><i></i><i></i></span></span>
+      </div>
+      <div class="seat__body">
+        <div class="seat__name" data-i18n="kostya">Kostya</div>
+        <div class="seat__meta"><span class="tag tag--attack"><svg width="11" height="11"><use href="#i-sword"/></svg><span data-i18n="attacking">Attacking</span></span></div>
+        <div class="seat__hand"><div class="fan" data-n="4"></div><span class="count">4</span></div>
+      </div>
+      <div class="bubble"><span class="bubble__ru">Твой ход!</span><span class="bubble__en" data-i18n="yourMoveGloss">“Your move!”</span></div>
+    </section>
+
+    <section class="seat seat--zina is-thrower" aria-label="Babushka Zina, can throw in, 6 cards">
+      <div class="seat__id"><div class="medal"><img src="art/p-zina.svg" alt=""></div></div>
+      <div class="seat__body">
+        <div class="seat__name" data-i18n="zina">Babushka Zina</div>
+        <div class="seat__meta"><span class="tag tag--throw"><svg width="11" height="11"><use href="#i-plus"/></svg><span data-i18n="throwing">Can throw in</span></span></div>
+        <div class="seat__hand"><div class="fan" data-n="6"></div><span class="count">6</span></div>
+      </div>
+    </section>
+
+    <section class="seat seat--misha" aria-label="Uncle Misha, 5 cards, queen of clubs known">
+      <div class="seat__id"><div class="medal"><img src="art/p-misha.svg" alt=""></div></div>
+      <div class="seat__body">
+        <div class="seat__name" data-i18n="misha">Uncle Misha</div>
+        <div class="seat__meta"><span class="known"><svg><use href="#i-eye"/></svg><span data-i18n="known">Known:</span> <b>Q<i class="suit c"></i></b></span></div>
+        <div class="seat__hand"><div class="fan" data-n="5" data-known="QC"></div><span class="count">5</span></div>
+      </div>
+    </section>
+
+    <section class="seat seat--sveta is-out" aria-label="Sveta, finished first">
+      <div class="seat__id"><div class="medal"><img src="art/p-sveta.svg" alt=""></div>
+        <span class="laurel"><svg><use href="#i-laurel"/></svg></span></div>
+      <div class="seat__body">
+        <div class="seat__name" data-i18n="sveta">Sveta</div>
+        <div class="seat__meta"><span class="tag tag--out" data-i18n="first">Out · 1st place</span></div>
+        <div class="seat__note" data-i18n="safe">safe — not the durak</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- talon with trump under it -->
+  <section class="talon" aria-label="Deck: 11 cards, trump nine of hearts">
+    <div class="talon__cards">
+      <img class="card trumpcard" src="../assets/cards/9H.webp" alt="9 of hearts (trump)">
+      <img class="card back" src="art/back.svg" alt="">
+      <img class="card back" src="art/back.svg" alt="">
+      <img class="card back" src="art/back.svg" alt="">
+      <span class="talon__count"><b>11</b></span>
+    </div>
+    <div class="trumpchip"><i class="suit h"></i><span><b data-i18n="trump">Trump</b> <span class="trumpchip__card">9<i class="suit h"></i></span> <span class="trumpchip__suit" data-i18n="hearts">hearts</span></span></div>
+  </section>
+
+  <!-- the battle -->
+  <section class="battle" aria-label="Table">
+    <div class="pair is-beaten">
+      <img class="card" src="../assets/cards/8S.webp" alt="8 of spades">
+      <img class="card cover" src="../assets/cards/JS.webp" alt="covered by jack of spades">
+    </div>
+    <div class="pair is-open">
+      <img class="card target" src="../assets/cards/8D.webp" alt="8 of diamonds — beat this">
+      <div class="dropslot"><span data-i18n="dropHere">beat it<br>here</span></div>
+      <span class="beatme" data-i18n="beatThis">beat this</span>
+    </div>
+  </section>
+
+  <!-- discard -->
+  <section class="bito" aria-label="Discard pile: 12 cards">
+    <div class="bito__pile">
+      <img class="card back" src="art/back.svg" alt="" style="--r:-14deg;--x:-6px;--y:4px">
+      <img class="card back" src="art/back.svg" alt="" style="--r:9deg;--x:8px;--y:-2px">
+      <img class="card back" src="art/back.svg" alt="" style="--r:-4deg;--x:2px;--y:0px">
+      <img class="card back" src="art/back.svg" alt="" style="--r:22deg;--x:-2px;--y:6px">
+    </div>
+    <div class="bito__label"><span class="ru">Бито</span><span data-i18n="discard">discard · 12</span></div>
+  </section>
+
+  <!-- YOU -->
+  <section class="me">
+    <div class="status">
+      <div class="ribbon"><span data-i18n="statusBeat">Beat <b class="cardref">8<i class="suit d"></i></b> or take</span></div>
+      <div class="status__sub" data-i18n="statusSub">You're defending against Kostya · 4 highlighted cards can beat it</div>
+    </div>
+    <div class="hand" aria-label="Your hand">
+      <button class="hcard is-dim" data-c="6C"><img src="../assets/cards/6C.webp" alt="6 of clubs"></button>
+      <button class="hcard is-dim" data-c="9C"><img src="../assets/cards/9C.webp" alt="9 of clubs"></button>
+      <button class="hcard is-legal" data-c="QD"><img src="../assets/cards/QD.webp" alt="queen of diamonds"></button>
+      <button class="hcard is-legal" data-c="KD"><img src="../assets/cards/KD.webp" alt="king of diamonds"></button>
+      <button class="hcard is-dim" data-c="AS"><img src="../assets/cards/AS.webp" alt="ace of spades"></button>
+      <button class="hcard is-legal is-trump" data-c="7H"><img src="../assets/cards/7H.webp" alt="7 of hearts (trump)"></button>
+      <button class="hcard is-legal is-trump" data-c="10H"><img src="../assets/cards/10H.webp" alt="10 of hearts (trump)"></button>
+    </div>
+    <div class="me__tag"><span class="tag tag--you" data-i18n="defending">You · defending</span><span class="me__count">7 <span data-i18n="cards">cards</span></span></div>
+  </section>
+
+  <!-- actions -->
+  <section class="actions">
+    <div class="meter" aria-label="Win chance 58 percent">
+      <svg class="meter__glass" viewBox="0 0 64 92" aria-hidden="true">
+        <defs>
+          <linearGradient id="teaG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8913a"/><stop offset="1" stop-color="#a8440f"/></linearGradient>
+          <linearGradient id="silv" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9a8e74"/><stop offset=".35" stop-color="#fffdf4"/><stop offset=".7" stop-color="#d7cfbb"/><stop offset="1" stop-color="#8a7d63"/></linearGradient>
+          <clipPath id="glassClip"><path d="M12 6 L46 6 L43 84 L15 84 Z"/></clipPath>
+        </defs>
+        <path d="M12 6 L46 6 L43 84 L15 84 Z" fill="#fff8ec" opacity=".55"/>
+        <g clip-path="url(#glassClip)">
+          <rect x="0" y="40.6" width="64" height="50" fill="url(#teaG)"/>
+          <ellipse cx="29" cy="40.6" rx="17" ry="2.2" fill="#f5b265"/>
+        </g>
+        <path d="M12 6 L46 6 L43 84 L15 84 Z" fill="none" stroke="#7a6a4c" stroke-width="1.6"/>
+        <path d="M17 10 L19 78" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>
+        <!-- podstakannik (holder) -->
+        <path d="M11 50 L47 50 L45 86 L13 86 Z" fill="url(#silv)" stroke="#6f634c" stroke-width="1.4"/>
+        <path d="M14 58 h30 M14 66 h30" stroke="#8a7d63" stroke-width="1" stroke-dasharray="2 2.5"/>
+        <path d="M18 72 q11 -10 22 0 q-11 10 -22 0z" fill="none" stroke="#c9952e" stroke-width="1.6"/>
+        <path d="M9 86 h40 v4 h-40z" fill="url(#silv)" stroke="#6f634c" stroke-width="1.2"/>
+        <path d="M47 54 C 60 54 60 80 46 80" fill="none" stroke="#8a7d63" stroke-width="5" stroke-linecap="round"/>
+        <path d="M47 54 C 60 54 60 80 46 80" fill="none" stroke="#efe9db" stroke-width="2.4" stroke-linecap="round"/>
+        <!-- spoon -->
+        <path d="M36 0 L 32 48" stroke="#b9ae94" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
+      <div class="meter__txt">
+        <div class="meter__num">58<small>%</small></div>
+        <div class="meter__lbl" data-i18n="winChance">win chance</div>
+      </div>
+    </div>
+    <button class="btn-primary take" data-act="take"><svg width="22" height="22"><use href="#i-hand"/></svg><span data-i18n="take">Take</span><span class="sub">беру</span></button>
+    <button class="btn btn--cobalt hint" data-act="hint"><svg><use href="#i-hint"/></svg><span data-i18n="hint">Hint</span></button>
+  </section>
+
+  <div class="hinttip" role="status"><b data-i18n="hintTitle">Coach:</b> <span data-i18n="hintBody">beat with <b>Q<i class="suit d"></i></b>: keep your trumps for later.</span></div>
+</div>
+
+<!-- move log: a squared school notebook -->
+<aside class="log" aria-label="Move log">
+  <div class="log__paper">
+    <header class="log__head"><h2 class="display" data-i18n="logTitle">Move log</h2><button class="ibtn ibtn--sm" data-act="log" aria-label="Close"><svg><use href="#i-close"/></svg></button></header>
+    <ol class="log__list">
+      <li class="log__round" data-i18n="logR6">Round 6</li>
+      <li><b data-i18n="sveta">Sveta</b> <span data-i18n="l1">is out: 1st place!</span> <svg class="li-ic"><use href="#i-laurel"/></svg></li>
+      <li><b data-i18n="mishaShort">Misha</b> <span data-i18n="l2">took 3 cards</span> (Q<i class="suit c"></i> …)</li>
+      <li class="log__round" data-i18n="logR7">Round 7</li>
+      <li><b data-i18n="kostya">Kostya</b> <span data-i18n="l3">attacks with</span> 8<i class="suit s"></i></li>
+      <li><b data-i18n="you">You</b> <span data-i18n="l4">beat it with</span> J<i class="suit s"></i></li>
+      <li><b data-i18n="zinaShort">Zina</b> <span data-i18n="l5">throws in</span> 8<i class="suit d"></i></li>
+      <li class="is-now"><b data-i18n="you">You</b> <span data-i18n="l6">to defend…</span></li>
+    </ol>
+  </div>
+</aside>
+
+<script src="js/i18n.js"></script>
+<script src="js/common.js"></script>
+<script src="js/table.js"></script>
+</body>
+</html>

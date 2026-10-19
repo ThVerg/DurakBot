@@ -1,0 +1,223 @@
+/* ==========================================================================
+   ATELIER — DurakBot design concept B
+   Light-first, flat, editorial. One accent: Gzhel cobalt.
+   ========================================================================== */
+
+/* ---------- Fonts (OFL, self-hosted) ---------- */
+@font-face { font-family: "Inter"; font-weight: 400; font-display: swap; src: url(../fonts/inter-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Inter"; font-weight: 500; font-display: swap; src: url(../fonts/inter-latin-500-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Inter"; font-weight: 600; font-display: swap; src: url(../fonts/inter-latin-600-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Inter"; font-weight: 700; font-display: swap; src: url(../fonts/inter-latin-700-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Inter"; font-weight: 400; font-display: swap; src: url(../fonts/inter-cyrillic-400-normal.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Inter"; font-weight: 500; font-display: swap; src: url(../fonts/inter-cyrillic-500-normal.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Inter"; font-weight: 600; font-display: swap; src: url(../fonts/inter-cyrillic-600-normal.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Inter"; font-weight: 700; font-display: swap; src: url(../fonts/inter-cyrillic-700-normal.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+
+@font-face { font-family: "Playfair Display"; font-weight: 400; font-display: swap; src: url(../fonts/playfair-display-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Playfair Display"; font-weight: 500; font-display: swap; src: url(../fonts/playfair-display-latin-500-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Playfair Display"; font-weight: 600; font-display: swap; src: url(../fonts/playfair-display-latin-600-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Playfair Display"; font-weight: 700; font-display: swap; src: url(../fonts/playfair-display-latin-700-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Playfair Display"; font-weight: 400; font-display: swap; src: url(../fonts/playfair-display-cyrillic-400-normal.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Playfair Display"; font-weight: 500; font-display: swap; src: url(../fonts/playfair-display-cyrillic-500-normal.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Playfair Display"; font-weight: 600; font-display: swap; src: url(../fonts/playfair-display-cyrillic-600-normal.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Playfair Display"; font-weight: 700; font-display: swap; src: url(../fonts/playfair-display-cyrillic-700-normal.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Playfair Display"; font-style: italic; font-weight: 400; font-display: swap; src: url(../fonts/playfair-display-latin-400-italic.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Playfair Display"; font-style: italic; font-weight: 500; font-display: swap; src: url(../fonts/playfair-display-latin-500-italic.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Playfair Display"; font-style: italic; font-weight: 600; font-display: swap; src: url(../fonts/playfair-display-latin-600-italic.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Playfair Display"; font-style: italic; font-weight: 400; font-display: swap; src: url(../fonts/playfair-display-cyrillic-400-italic.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Playfair Display"; font-style: italic; font-weight: 500; font-display: swap; src: url(../fonts/playfair-display-cyrillic-500-italic.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Playfair Display"; font-style: italic; font-weight: 600; font-display: swap; src: url(../fonts/playfair-display-cyrillic-600-italic.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+
+/* ---------- Tokens ---------- */
+:root {
+  color-scheme: light;
+  /* canvas: warm paper */
+  --canvas: #F5F2EC;
+  --canvas-hi: #FBFAF6;
+  --canvas-lo: #EDE8DF;
+  --surface: #FFFFFF;
+  --surface-2: #FAF8F4;
+  --sunken: rgba(32, 28, 20, 0.035);
+  --ink: #16171B;
+  --ink-2: #55565E;
+  --ink-3: #8C8C93;
+  --ink-4: #B9B8BC;
+  --hair: rgba(28, 24, 18, 0.09);
+  --hair-2: rgba(28, 24, 18, 0.14);
+
+  /* the one accent: Gzhel cobalt */
+  --accent: #2742C4;
+  --accent-hi: #2F4CD2;
+  --accent-lo: #1E35A6;
+  --accent-ink: #FFFFFF;
+  --accent-soft: rgba(39, 66, 196, 0.08);
+  --accent-line: rgba(39, 66, 196, 0.34);
+
+  /* suits */
+  --suit-red: #D2233A;
+  --suit-black: #16171B;
+  --card-stock: #FFFFFF;
+  --card-edge: rgba(20, 18, 14, 0.07);
+  --back-field: #2742C4;
+
+  /* depth: layered, soft, never fake 3D */
+  --sh-1: 0 0.5px 0 rgba(20, 16, 10, 0.05), 0 1px 2px rgba(20, 16, 10, 0.06), 0 2px 6px rgba(20, 16, 10, 0.04);
+  --sh-2: 0 0.5px 0 rgba(20, 16, 10, 0.06), 0 1px 2px rgba(20, 16, 10, 0.07), 0 4px 10px rgba(20, 16, 10, 0.05), 0 12px 28px -8px rgba(20, 16, 10, 0.10);
+  --sh-3: 0 1px 2px rgba(20, 16, 10, 0.08), 0 8px 18px -4px rgba(20, 16, 10, 0.10), 0 28px 48px -16px rgba(20, 16, 10, 0.22);
+  --sh-panel: 0 0 0 0.5px rgba(20, 16, 10, 0.06), 0 1px 2px rgba(20, 16, 10, 0.04), 0 12px 32px -12px rgba(20, 16, 10, 0.12);
+
+  --font-ui: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Playfair Display", "Iowan Old Style", Georgia, serif;
+
+  /* 4pt grid */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px; --s10: 40px; --s12: 48px; --s16: 64px;
+  --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-xl: 28px;
+
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+}
+
+/* Dark variant — "Dusk": slate-blue, never black; cards stay paper-white */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #2B2F3B;
+  --canvas-hi: #363B4A;
+  --canvas-lo: #242733;
+  --surface: #373C4A;
+  --surface-2: #323644;
+  --sunken: rgba(0, 0, 0, 0.12);
+  --ink: #F4F3EF;
+  --ink-2: #BCBEC8;
+  --ink-3: #8D91A0;
+  --ink-4: #636878;
+  --hair: rgba(255, 255, 255, 0.08);
+  --hair-2: rgba(255, 255, 255, 0.14);
+
+  --accent: #7D95FF;
+  --accent-hi: #93A8FF;
+  --accent-lo: #6A83F2;
+  --accent-ink: #12172B;
+  --accent-soft: rgba(125, 149, 255, 0.14);
+  --accent-line: rgba(125, 149, 255, 0.45);
+
+  --suit-red: #D2233A;
+  --suit-black: #16171B;
+  --card-stock: #F7F5F0;
+  --card-edge: rgba(0, 0, 0, 0.2);
+  --back-field: #4060DE;
+
+  --sh-1: 0 0.5px 0 rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.22);
+  --sh-2: 0 0.5px 0 rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.18), 0 12px 28px -8px rgba(0, 0, 0, 0.35);
+  --sh-3: 0 2px 4px rgba(0, 0, 0, 0.2), 0 10px 22px -4px rgba(0, 0, 0, 0.3), 0 30px 50px -16px rgba(0, 0, 0, 0.5);
+  --sh-panel: 0 0 0 0.5px rgba(255, 255, 255, 0.07), 0 12px 32px -12px rgba(0, 0, 0, 0.4);
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.2  0 0 0 .055 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink);
+  background: var(--canvas);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01", "ss03";
+  text-rendering: optimizeLegibility;
+}
+button { font: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+.serif { font-family: var(--font-display); }
+.tnum { font-variant-numeric: tabular-nums; }
+/* paper grain: tactile, almost subliminal */
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: var(--grain); opacity: 1; mix-blend-mode: multiply; }
+:root[data-theme="dark"] body::before { opacity: .5; mix-blend-mode: soft-light; }
+body > * { position: relative; z-index: 1; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.eyebrow {
+  font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+}
+
+/* ---------- Cards ---------- */
+.card {
+  --w: 120px;
+  position: relative;
+  width: var(--w);
+  aspect-ratio: 5 / 7;
+  border-radius: calc(var(--w) * 0.075);
+  background: var(--card-stock);
+  box-shadow: 0 0 0 0.5px var(--card-edge), var(--sh-2);
+  flex: none;
+  transition: transform .35s var(--ease-out), box-shadow .35s var(--ease-out), opacity .25s, filter .25s;
+  user-select: none;
+}
+.card > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.card.is-red { color: var(--suit-red); }
+.card.is-black { color: var(--suit-black); }
+.cf use { fill: currentColor; }
+.cf .cf-rank { font-family: var(--font-ui); font-weight: 600; fill: currentColor; font-feature-settings: "tnum" 0; }
+.cf .cf-court { font-family: var(--font-display); font-weight: 500; fill: currentColor; }
+.cf .cf-courtname { font-family: var(--font-ui); font-size: 10.5px; font-weight: 600; letter-spacing: 3.4px; fill: currentColor; opacity: .6; }
+.cf .cf-panel { fill: currentColor; fill-opacity: .05; stroke: currentColor; stroke-opacity: .14; stroke-width: 1; }
+.cf .cf-panel2 { fill: none; stroke: currentColor; stroke-opacity: .22; stroke-width: 1; }
+
+.card--back { background: var(--card-stock); }
+.cb .cb-field { fill: var(--back-field); }
+.cb .cb-mono { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 42px; fill: #fff; }
+.cb .cb-rosette ellipse { fill: none; stroke: #fff; stroke-opacity: .3; stroke-width: .9; }
+
+/* inline suit glyph */
+.glyph { width: .62em; height: .92em; display: inline-block; vertical-align: -0.08em; fill: currentColor; }
+.glyph.is-red { color: var(--suit-red); }
+.glyph.is-black { color: var(--ink); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  --h: 44px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  height: var(--h); padding: 0 20px; border-radius: 999px; border: 0;
+  font-size: 15px; font-weight: 600; letter-spacing: -0.005em;
+  cursor: pointer; white-space: nowrap;
+  transition: transform .2s var(--ease), box-shadow .2s var(--ease), background-color .2s, color .2s;
+}
+.btn:active, .btn.is-pressed { transform: scale(.97); }
+.btn--primary {
+  background: var(--accent); color: var(--accent-ink);
+  box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 1px 2px rgba(20, 30, 90, .18), 0 10px 22px -8px rgba(39, 66, 196, .6);
+}
+.btn--primary:hover { background: var(--accent-hi); box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 1px 2px rgba(20, 30, 90, .2), 0 14px 28px -8px rgba(39, 66, 196, .65); }
+.btn--primary.is-pressed, .btn--primary:active { background: var(--accent-lo); box-shadow: 0 1px 2px rgba(20, 30, 90, .25); }
+.btn--secondary { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--hair-2), var(--sh-1); }
+.btn--secondary:hover { box-shadow: 0 0 0 1px var(--hair-2), var(--sh-2); }
+.btn--ghost { background: transparent; color: var(--ink-2); }
+.btn--ghost:hover { background: var(--sunken); color: var(--ink); }
+.btn .kbd {
+  font-size: 11px; font-weight: 600; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 6px;
+  display: inline-grid; place-items: center; background: rgba(255,255,255,.18); color: inherit; opacity: .9;
+}
+.btn--secondary .kbd { background: var(--sunken); color: var(--ink-3); }
+
+.icon-btn {
+  width: 40px; height: 40px; border-radius: 12px; border: 0; background: transparent; color: var(--ink-2);
+  display: inline-grid; place-items: center; cursor: pointer; transition: background-color .2s, color .2s, transform .2s var(--ease);
+}
+.icon-btn:hover { background: var(--sunken); color: var(--ink); }
+.icon-btn:active { transform: scale(.94); }
+.icon-btn.is-on { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--hair), var(--sh-1); }
+.ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* segmented control */
+.seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--sunken); box-shadow: inset 0 0 0 1px var(--hair); }
+.seg button { height: 30px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; font-size: 13px; font-weight: 600; color: var(--ink-3); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 0.5px var(--hair-2), var(--sh-1); }
+
+/* avatars */
+.avatar { position: relative; width: var(--a, 56px); height: var(--a, 56px); border-radius: 50%; flex: none; }
+.avatar img { width: 100%; height: 100%; border-radius: 50%; display: block; box-shadow: 0 0 0 3px var(--surface), 0 0 0 3.5px var(--hair-2), var(--sh-2); background: var(--surface); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

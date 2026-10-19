@@ -1,0 +1,192 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+  <defs>
+    <radialGradient id="brass" cx="38%" cy="32%" r="75%">
+      <stop offset="0" stop-color="#fff1b8"/>
+      <stop offset=".18" stop-color="#f3cd6a"/>
+      <stop offset=".55" stop-color="#d79c33"/>
+      <stop offset=".85" stop-color="#a86a1c"/>
+      <stop offset="1" stop-color="#7f4c14"/>
+    </radialGradient>
+    <radialGradient id="brass2" cx="40%" cy="35%" r="70%">
+      <stop offset="0" stop-color="#ffe9a3"/>
+      <stop offset=".5" stop-color="#e2ad45"/>
+      <stop offset="1" stop-color="#9c6219"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff0b0"/>
+      <stop offset=".5" stop-color="#c98a2a"/>
+      <stop offset="1" stop-color="#7c4a12"/>
+    </linearGradient>
+    <radialGradient id="porc" cx="40%" cy="35%" r="70%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".7" stop-color="#f1f3fa"/>
+      <stop offset="1" stop-color="#cdd5ea"/>
+    </radialGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6b3a1c"/>
+      <stop offset=".45" stop-color="#3e1f0e"/>
+      <stop offset="1" stop-color="#2a140a"/>
+    </linearGradient>
+    <filter id="sh" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="1.2"/>
+    </filter>
+  </defs>
+
+  <!-- cast shadow (sun from upper-left) -->
+  <g opacity=".42" fill="#5a3415" filter="url(#sh)">
+    <circle cx="262" cy="270" r="172"/>
+    <rect x="40" y="240" width="60" height="30" rx="12"/>
+    <rect x="400" y="240" width="70" height="30" rx="12"/>
+  </g>
+
+  <!-- handles (left & right) -->
+  <g>
+    <g transform="translate(240 240)">
+      <g id="handle">
+        <rect x="-214" y="-12" width="44" height="24" rx="4" fill="url(#rim)"/>
+        <rect x="-226" y="-34" width="26" height="68" rx="12" fill="url(#wood)" stroke="#20100a" stroke-width="2"/>
+        <rect x="-221" y="-28" width="6" height="56" rx="3" fill="#a0663a" opacity=".55"/>
+        <circle cx="-180" cy="0" r="9" fill="url(#brass2)" stroke="#7a4512" stroke-width="1.5"/>
+      </g>
+      <use href="#handle" transform="scale(-1 1)"/>
+    </g>
+  </g>
+
+  <!-- tap / spigot pointing down-right -->
+  <g transform="translate(240 240) rotate(58)">
+    <rect x="150" y="-13" width="74" height="26" rx="10" fill="url(#rim)" stroke="#7a4512" stroke-width="1.5"/>
+    <rect x="200" y="-20" width="20" height="40" rx="6" fill="url(#brass2)" stroke="#7a4512" stroke-width="1.5"/>
+    <!-- valve key -->
+    <g transform="translate(186 0)">
+      <path d="M-8 -30 C 0 -42 16 -42 22 -30 C 16 -24 0 -24 -8 -30 Z" fill="url(#brass2)" stroke="#7a4512" stroke-width="1.5"/>
+      <rect x="-2" y="-28" width="10" height="20" fill="url(#rim)"/>
+    </g>
+    <circle cx="228" cy="0" r="7" fill="#7a4512"/>
+  </g>
+
+  <!-- body: fluted brass -->
+  <circle cx="240" cy="240" r="172" fill="url(#brass)" stroke="#6e420f" stroke-width="2.5"/>
+  <g transform="translate(240 240)" opacity=".9">
+    <!-- 24 flutes: alternating light/dark wedges -->
+    <g fill="#fff6cf" opacity=".22">
+      <path d="M0 0 L172 0 A172 172 0 0 1 166.1 44.5 Z"/>
+      <path d="M0 0 L148.9 86 A172 172 0 0 1 121.6 121.6 Z" />
+      <path d="M0 0 L86 148.9 A172 172 0 0 1 44.5 166.1 Z"/>
+      <path d="M0 0 L0 172 A172 172 0 0 1 -44.5 166.1 Z" transform="rotate(15)"/>
+      <path d="M0 0 L-86 148.9 A172 172 0 0 1 -121.6 121.6 Z"/>
+      <path d="M0 0 L-148.9 86 A172 172 0 0 1 -166.1 44.5 Z"/>
+      <path d="M0 0 L-172 0 A172 172 0 0 1 -166.1 -44.5 Z"/>
+      <path d="M0 0 L-148.9 -86 A172 172 0 0 1 -121.6 -121.6 Z"/>
+      <path d="M0 0 L-86 -148.9 A172 172 0 0 1 -44.5 -166.1 Z"/>
+      <path d="M0 0 L0 -172 A172 172 0 0 1 44.5 -166.1 Z"/>
+      <path d="M0 0 L86 -148.9 A172 172 0 0 1 121.6 -121.6 Z"/>
+      <path d="M0 0 L148.9 -86 A172 172 0 0 1 166.1 -44.5 Z"/>
+    </g>
+    <g stroke="#8a5615" stroke-width="1.2" opacity=".45">
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(0)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(15)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(30)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(45)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(60)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(75)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(90)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(105)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(120)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(135)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(150)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(165)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(180)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(195)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(210)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(225)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(240)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(255)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(270)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(285)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(300)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(315)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(330)"/>
+      <line x1="0" y1="0" x2="172" y2="0" transform="rotate(345)"/>
+    </g>
+  </g>
+  <!-- specular sweep -->
+  <path d="M120 150 C 150 100 210 78 262 84" stroke="#fffbe6" stroke-width="10" stroke-linecap="round" fill="none" opacity=".55" filter="url(#soft)"/>
+  <path d="M104 196 C 106 182 110 172 116 162" stroke="#fffbe6" stroke-width="6" stroke-linecap="round" fill="none" opacity=".45"/>
+
+  <!-- stamped medals ring -->
+  <g transform="translate(240 240)">
+    <g fill="url(#brass2)" stroke="#7a4512" stroke-width="1.2">
+      <circle cx="0" cy="-146" r="11"/>
+      <circle cx="-34" cy="-142" r="9"/>
+      <circle cx="34" cy="-142" r="9"/>
+    </g>
+    <g fill="none" stroke="#8a5615" stroke-width=".9" opacity=".8">
+      <circle cx="0" cy="-146" r="7"/>
+      <circle cx="-34" cy="-142" r="5.5"/>
+      <circle cx="34" cy="-142" r="5.5"/>
+    </g>
+  </g>
+
+  <!-- shoulder ring with beading -->
+  <circle cx="240" cy="240" r="122" fill="url(#brass2)" stroke="#6e420f" stroke-width="2"/>
+  <circle cx="240" cy="240" r="114" fill="none" stroke="#fff1b8" stroke-width="2" opacity=".6"/>
+  <g transform="translate(240 240)" fill="#fff0b8" stroke="#8a5615" stroke-width=".8">
+    <circle cx="118" cy="0" r="3.2"/><circle cx="114" cy="30.5" r="3.2"/><circle cx="102.2" cy="59" r="3.2"/><circle cx="83.4" cy="83.4" r="3.2"/>
+    <circle cx="59" cy="102.2" r="3.2"/><circle cx="30.5" cy="114" r="3.2"/><circle cx="0" cy="118" r="3.2"/><circle cx="-30.5" cy="114" r="3.2"/>
+    <circle cx="-59" cy="102.2" r="3.2"/><circle cx="-83.4" cy="83.4" r="3.2"/><circle cx="-102.2" cy="59" r="3.2"/><circle cx="-114" cy="30.5" r="3.2"/>
+    <circle cx="-118" cy="0" r="3.2"/><circle cx="-114" cy="-30.5" r="3.2"/><circle cx="-102.2" cy="-59" r="3.2"/><circle cx="-83.4" cy="-83.4" r="3.2"/>
+    <circle cx="-59" cy="-102.2" r="3.2"/><circle cx="-30.5" cy="-114" r="3.2"/><circle cx="0" cy="-118" r="3.2"/><circle cx="30.5" cy="-114" r="3.2"/>
+    <circle cx="59" cy="-102.2" r="3.2"/><circle cx="83.4" cy="-83.4" r="3.2"/><circle cx="102.2" cy="-59" r="3.2"/><circle cx="114" cy="-30.5" r="3.2"/>
+  </g>
+
+  <!-- crown (konforka) with heart-shaped vents -->
+  <circle cx="240" cy="240" r="92" fill="url(#rim)" stroke="#6e420f" stroke-width="2"/>
+  <g transform="translate(240 240)" fill="#3a1f0a">
+    <ellipse cx="0" cy="-80" rx="6" ry="9"/>
+    <ellipse cx="0" cy="-80" rx="6" ry="9" transform="rotate(45)"/>
+    <ellipse cx="0" cy="-80" rx="6" ry="9" transform="rotate(90)"/>
+    <ellipse cx="0" cy="-80" rx="6" ry="9" transform="rotate(135)"/>
+    <ellipse cx="0" cy="-80" rx="6" ry="9" transform="rotate(180)"/>
+    <ellipse cx="0" cy="-80" rx="6" ry="9" transform="rotate(225)"/>
+    <ellipse cx="0" cy="-80" rx="6" ry="9" transform="rotate(270)"/>
+    <ellipse cx="0" cy="-80" rx="6" ry="9" transform="rotate(315)"/>
+  </g>
+
+  <!-- teapot shadow on crown -->
+  <ellipse cx="250" cy="252" rx="70" ry="68" fill="#4a2a0c" opacity=".35" filter="url(#sh)"/>
+
+  <!-- Gzhel teapot on top: spout to upper-right, handle lower-left -->
+  <g transform="translate(240 240)">
+    <path d="M44 -36 C 70 -60 92 -84 112 -100 C 118 -104 124 -98 120 -92 C 102 -72 84 -46 60 -20 Z" fill="url(#porc)" stroke="#1d3f93" stroke-width="2"/>
+    <path d="M70 -50 C 84 -64 98 -80 110 -94" stroke="#2a54b0" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M-50 40 C -82 52 -98 84 -82 98 C -66 110 -40 92 -32 62" fill="none" stroke="#f4f6fc" stroke-width="13" stroke-linecap="round"/>
+    <path d="M-50 40 C -82 52 -98 84 -82 98 C -66 110 -40 92 -32 62" fill="none" stroke="#1d3f93" stroke-width="2" stroke-linecap="round" opacity=".9"/>
+    <circle r="66" fill="url(#porc)" stroke="#1d3f93" stroke-width="2.4"/>
+    <!-- gzhel brush strokes: petals -->
+    <g fill="#2a54b0">
+      <path d="M0 -60 C 12 -50 12 -38 0 -32 C -12 -38 -12 -50 0 -60 Z" transform="rotate(0)"/>
+      <path d="M0 -60 C 12 -50 12 -38 0 -32 C -12 -38 -12 -50 0 -60 Z" transform="rotate(60)"/>
+      <path d="M0 -60 C 12 -50 12 -38 0 -32 C -12 -38 -12 -50 0 -60 Z" transform="rotate(120)"/>
+      <path d="M0 -60 C 12 -50 12 -38 0 -32 C -12 -38 -12 -50 0 -60 Z" transform="rotate(180)"/>
+      <path d="M0 -60 C 12 -50 12 -38 0 -32 C -12 -38 -12 -50 0 -60 Z" transform="rotate(240)"/>
+      <path d="M0 -60 C 12 -50 12 -38 0 -32 C -12 -38 -12 -50 0 -60 Z" transform="rotate(300)"/>
+    </g>
+    <g fill="#6e8fdc" opacity=".9">
+      <ellipse cx="0" cy="-49" rx="3" ry="8" transform="rotate(30)"/>
+      <ellipse cx="0" cy="-49" rx="3" ry="8" transform="rotate(90)"/>
+      <ellipse cx="0" cy="-49" rx="3" ry="8" transform="rotate(150)"/>
+      <ellipse cx="0" cy="-49" rx="3" ry="8" transform="rotate(210)"/>
+      <ellipse cx="0" cy="-49" rx="3" ry="8" transform="rotate(270)"/>
+      <ellipse cx="0" cy="-49" rx="3" ry="8" transform="rotate(330)"/>
+    </g>
+    <!-- lid -->
+    <circle r="30" fill="#ffffff" stroke="#1d3f93" stroke-width="2"/>
+    <circle r="24" fill="none" stroke="#2a54b0" stroke-width="3" stroke-dasharray="2 5" stroke-linecap="round"/>
+    <circle r="11" fill="#2a54b0"/>
+    <circle cx="-3" cy="-4" r="3.5" fill="#9fb4ea"/>
+    <path d="M-36 -38 C -28 -50 -12 -58 6 -60" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".85"/>
+  </g>
+</svg>

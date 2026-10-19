@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Durak design concepts</title>
+<style>
+  :root { --bg:#f4f1ea; --ink:#17181c; --muted:#6b6b72; --card:#fff; --line:#e4dfd4; --accent:#2742c4; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui, -apple-system, "Segoe UI", Inter, sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { font: 700 34px/1.15 Georgia, "Times New Roman", serif; margin: 0 0 6px; }
+  .lede { color: var(--muted); margin: 0 0 32px; max-width: 70ch; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 560px), 1fr)); gap: 24px; }
+  .concept { background:var(--card); border:1px solid var(--line); border-radius: 18px; overflow:hidden; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05); }
+  .shots { display:grid; grid-template-columns: 1fr 26%; gap: 8px; padding: 8px; background:#ece8df; }
+  .shots img { width:100%; height:100%; object-fit: cover; object-position: top; border-radius: 10px; display:block; }
+  .body { padding: 18px 20px 20px; }
+  .tag { font-size: 12px; letter-spacing:.08em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+  h2 { margin: 2px 0 6px; font: 700 24px/1.2 Georgia, serif; }
+  p { margin: 0 0 14px; color: #3b3c42; }
+  .links { display:flex; flex-wrap:wrap; gap: 8px; }
+  .links a { text-decoration:none; color: var(--ink); border:1px solid var(--line); background:#faf8f3; padding: 7px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; }
+  .links a.primary { background: var(--ink); color:#fff; border-color: var(--ink); }
+  .links a:hover { border-color: var(--ink); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Durak: four design concepts</h1>
+  <p class="lede">The same moment in each: a 5-player game where you are defending against an 8♦. Open the pages on both desktop and phone. Hover and click your playable cards; most concepts animate them onto the table.</p>
+  <div class="grid">
+    <article class="concept">
+      <div class="shots"><img src="arcade/shots/desktop-table.png" alt="Arcade table, desktop"><img src="arcade/shots/mobile-table.png" alt="Arcade table, phone"></div>
+      <div class="body">
+        <div class="tag">Concept A</div>
+        <h2>Arcade</h2>
+        <p>Bright, juicy mobile-game style: teal felt, chunky glossy buttons, character avatars with level badges, big-index cards, playful motion.</p>
+        <div class="links"><a class="primary" href="arcade/table.html">Game table</a><a href="arcade/index.html">Title screen</a><a href="arcade/lobby.html">Lobby</a></div>
+      </div>
+    </article>
+    <article class="concept">
+      <div class="shots"><img src="atelier/shots/desktop-table.png" alt="Atelier table, desktop"><img src="atelier/shots/mobile-table.png" alt="Atelier table, phone"></div>
+      <div class="body">
+        <div class="tag">Concept B</div>
+        <h2>Atelier</h2>
+        <p>Elegant flat minimal, Apple-style: warm paper canvas, no felt, one cobalt accent, refined typography, a card tracker and win-chance panel. Has a dark mode too.</p>
+        <div class="links"><a class="primary" href="atelier/table.html">Game table</a><a href="atelier/index.html">Title screen</a><a href="atelier/lobby.html">Lobby</a><a href="atelier/table.html?theme=dark">Dark mode</a></div>
+      </div>
+    </article>
+    <article class="concept">
+      <div class="shots"><img src="dacha/shots/desktop-table.png" alt="Dacha table, desktop"><img src="dacha/shots/mobile-table.png" alt="Dacha table, phone"></div>
+      <div class="body">
+        <div class="tag">Concept C</div>
+        <h2>Dacha</h2>
+        <p>Warm illustrated Russian folk-art world: sunlit embroidered tablecloth, samovar and tea, Gzhel card backs, woodcut-style «ДУРАК» wordmark, illustrated characters.</p>
+        <div class="links"><a class="primary" href="dacha/table.html">Game table</a><a href="dacha/index.html">Title screen</a><a href="dacha/lobby.html">Lobby</a><a href="dacha/table.html?lang=ru">По-русски</a></div>
+      </div>
+    </article>
+    <article class="concept">
+      <div class="shots"><img src="tabletop/shots/desktop-table.png" alt="Tabletop table, desktop"><img src="tabletop/shots/mobile-table.png" alt="Tabletop table, phone"></div>
+      <div class="body">
+        <div class="tag">Concept D</div>
+        <h2>Tabletop</h2>
+        <p>Bright, realistic table seen straight down, like a flagship poker app: real-looking baize and leather rail, printed-card shadows, clean frosted HUD.</p>
+        <div class="links"><a class="primary" href="tabletop/table.html">Game table</a><a href="tabletop/index.html">Title screen</a><a href="tabletop/lobby.html">Lobby</a><a href="tabletop/table.html?felt=royal">Blue felt</a></div>
+      </div>
+    </article>
+  </div>
+</main>
+</body>
+</html>

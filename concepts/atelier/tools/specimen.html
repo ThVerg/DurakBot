@@ -1,0 +1,12 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier deck — specimen</title><link rel="stylesheet" href="../css/atelier.css">
+<style>body{padding:40px 48px;background:var(--canvas)} h1{font-family:var(--font-display);font-weight:500;font-size:40px;margin:0 0 6px} p{color:var(--ink-2);margin:0 0 28px}
+.row{display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap}.card{--w:112px}</style></head>
+<body><h1>The Atelier deck</h1><p>36 vector faces (Podkidnoy 6–A) and the Gzhel-cobalt back. Open with <code>?theme=dark</code> for Dusk.</p>
+<div id="deck"></div>
+<script src="../js/cards.js"></script>
+<script>
+if (new URLSearchParams(location.search).get('theme')==='dark') document.documentElement.dataset.theme='dark';
+const R=['6','7','8','9','10','J','Q','K','A'];
+document.getElementById('deck').innerHTML=['S','C','D','H'].map(s=>`<div class="row">${R.map(r=>Atelier.card(r+s)).join('')}</div>`).join('')+`<div class="row">${Atelier.cardBack()}</div>`;
+</script></body></html>

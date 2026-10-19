@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Durak · Arcade</title>
+<link rel="stylesheet" href="css/arcade.css">
+<style>
+body {
+  background:
+    radial-gradient(55% 45% at 50% 34%, #e9f8ff 0%, rgba(233,248,255,0) 70%),
+    radial-gradient(120% 90% at 50% 30%, #8fd6ff 0%, #5fa8ff 45%, #6a7ef4 80%, #7b6cf0 100%);
+}
+/* slow sunburst behind the logo */
+.rays {
+  position: fixed; left: 50%; top: 32%; width: 2400px; height: 2400px; margin: -1200px 0 0 -1200px; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, rgba(255,255,255,.16) 0deg 7deg, rgba(255,255,255,0) 7deg 18deg);
+  -webkit-mask: radial-gradient(circle, #000 0%, rgba(0,0,0,.6) 25%, transparent 55%); mask: radial-gradient(circle, #000 0%, rgba(0,0,0,.6) 25%, transparent 55%);
+  animation: spin 120s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+.confetti svg { position: absolute; fill: #fff; opacity: .5; animation: drift 9s ease-in-out infinite; }
+@keyframes drift { 0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); } 50% { transform: translateY(-16px) rotate(calc(var(--r, 0deg) + 14deg)); } }
+
+.stage { position: fixed; left: 50%; top: 50%; width: 1440px; height: 900px; transform: translate(-50%, -50%) scale(var(--k, 1)); }
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; }
+
+/* ---------- top bar ---------- */
+.top { position: relative; z-index: 5; width: 100%; display: flex; align-items: center; gap: 14px; padding: 18px 26px 0; }
+.top .spacer { flex: 1; }
+.profile {
+  display: flex; align-items: center; gap: 14px; height: 64px; padding: 0 22px 0 8px; border-radius: 22px;
+  background: linear-gradient(180deg, #fff, #eef2ff);
+  box-shadow: inset 0 2px 0 #fff, 0 0 0 2px #8e9bd8, 0 4px 0 2px #8e9bd8, 0 12px 20px rgba(16,30,110,.2);
+}
+.profile .ava { --s: 50px; }
+.profile .ava .lvl { font-size: 10px; height: 17px; min-width: 20px; box-shadow: 0 0 0 2px #fff, 0 2px 0 2px rgba(20,30,110,.3); }
+.profile .who b { display: block; font-size: 19px; font-weight: 900; line-height: 1.05; }
+.profile .xp { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 11px; letter-spacing: .08em; color: var(--navy-3); text-transform: uppercase; }
+.profile .xp .bar { width: 110px; height: 9px; border-radius: 5px; background: #dfe5f7; overflow: hidden; box-shadow: inset 0 2px 0 rgba(0,0,0,.08); }
+.profile .xp .bar i { display: block; width: 68%; height: 100%; border-radius: 5px; background: linear-gradient(90deg, #8f9dff, var(--royal)); box-shadow: inset 0 2px 0 rgba(255,255,255,.5); }
+.rank {
+  height: 44px; padding: 0 16px 0 8px; border-radius: 15px; display: inline-flex; align-items: center; gap: 8px; color: #7a4300; font-size: 16px; font-weight: 900;
+  background: linear-gradient(180deg, #fff3a3, var(--gold) 60%, var(--gold-lo)); box-shadow: inset 0 2px 0 rgba(255,255,255,.7), 0 0 0 2px #c07800, 0 4px 0 2px #c07800, 0 10px 16px rgba(120,60,0,.2);
+}
+.rank svg { width: 26px; height: 26px; color: #fff; filter: drop-shadow(0 2px 0 #c07800); }
+
+.lang {
+  position: relative; display: inline-flex; height: 48px; padding: 4px; border-radius: 16px; gap: 0;
+  background: linear-gradient(180deg, #2c46d6, #2238c4); box-shadow: inset 0 3px 6px rgba(0,0,0,.25), 0 0 0 2px #fff, 0 6px 14px rgba(16,30,110,.25);
+}
+.lang button { position: relative; z-index: 1; width: 58px; border: 0; background: none; color: rgba(255,255,255,.75); font-size: 16px; font-weight: 900; letter-spacing: .04em; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.lang button.on { color: var(--navy); }
+.lang .knob { position: absolute; top: 4px; left: 38px; width: 58px; height: 40px; border-radius: 12px; background: linear-gradient(180deg, #fff, #e3e9ff); box-shadow: inset 0 2px 0 #fff, 0 3px 0 #8e9bd8; transition: transform .35s var(--ease-pop); }
+.lang.ru .knob { transform: translateX(58px); }
+.lang .globe { width: 20px; height: 20px; color: #fff; margin: 0 6px 0 8px; align-self: center; }
+
+/* ---------- hero ---------- */
+.hero { position: relative; z-index: 3; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; padding-bottom: 8px; }
+.logo { position: relative; width: 640px; height: 300px; margin-top: -6px; animation: float 4.5s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.fan { position: absolute; z-index: 1; left: 50%; top: 0; width: 0; height: 0; }
+.fan .card { --w: 92px; position: absolute; left: -46px; top: 0; transform-origin: 50% 150%; }
+.wordmark { position: absolute; z-index: 2; left: 0; right: 0; top: 74px; width: 100%; height: 200px; overflow: visible; }
+.wordmark text { font-family: "Nunito"; font-weight: 900; font-size: 158px; letter-spacing: 3px; text-anchor: middle; }
+.ribbon { position: absolute; z-index: 3; left: 50%; top: 248px; transform: translateX(-50%); width: 430px; height: 64px; }
+.ribbon svg { width: 100%; height: 100%; overflow: visible; }
+.ribbon span { position: absolute; inset: 0 0 10px; display: grid; place-items: center; color: #fff; font-size: 21px; font-weight: 900; letter-spacing: .14em; text-shadow: 0 2px 0 rgba(120,0,30,.45); white-space: nowrap; }
+.sparkle { position: absolute; width: 26px; height: 26px; color: #fff; animation: twinkle 2.4s ease-in-out infinite; filter: drop-shadow(0 0 6px rgba(255,255,255,.9)); }
+@keyframes twinkle { 0%, 100% { transform: scale(.4) rotate(0); opacity: 0; } 50% { transform: scale(1) rotate(30deg); opacity: 1; } }
+
+.play {
+  --h: 112px; --r: 34px; --lift: 9px; margin-top: 30px; min-width: 420px; padding: 0 44px 0 22px; gap: 18px; font-size: 56px;
+  animation: breathe-btn 2.2s ease-in-out infinite;
+}
+.play .disc { width: 70px; height: 70px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.28); box-shadow: inset 0 2px 0 rgba(255,255,255,.5), 0 3px 0 rgba(150,60,0,.25); }
+.play .disc svg { width: 40px; height: 40px; margin-left: 5px; }
+.play .lbl { align-items: flex-start; }
+.play .lbl small { font-size: 16px; letter-spacing: .1em; margin-top: 6px; }
+.play::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.6) 48%, transparent 60%) no-repeat; background-size: 250% 100%; animation: shine 3.4s ease-in-out infinite 1s; }
+@keyframes shine { 0% { background-position: 130% 0; } 40%, 100% { background-position: -130% 0; } }
+@keyframes breathe-btn { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255,220,90,0)); } 50% { filter: drop-shadow(0 0 22px rgba(255,236,140,.95)); } }
+
+.tiles { display: flex; gap: 18px; margin-top: 36px; }
+.tile {
+  position: relative; width: 156px; height: 132px; border: 0; border-radius: 26px; padding: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px;
+  background: linear-gradient(180deg, #ffffff, #eaf0ff); color: var(--navy);
+  box-shadow: inset 0 2px 0 #fff, 0 0 0 2.5px #8e9bd8, 0 6px 0 2.5px #8e9bd8, 0 16px 22px rgba(16,30,110,.22);
+  transition: transform .14s var(--ease-pop), box-shadow .14s;
+}
+.tile:hover { transform: translateY(-3px) rotate(-1deg); }
+.tile.is-pressed { transform: translateY(5px) scale(1.04, .94); box-shadow: inset 0 2px 0 #fff, 0 0 0 2.5px #8e9bd8, 0 1px 0 2.5px #8e9bd8, 0 5px 10px rgba(16,30,110,.2); }
+.tile .ic { width: 58px; height: 58px; border-radius: 19px; display: grid; place-items: center; color: #fff; background: linear-gradient(180deg, var(--a), var(--b)); box-shadow: inset 0 2px 0 rgba(255,255,255,.5), 0 4px 0 var(--c); }
+.tile .ic svg { width: 32px; height: 32px; filter: drop-shadow(0 2px 0 rgba(0,0,0,.18)); --hole: var(--b); }
+.tile b { font-size: 18px; font-weight: 900; line-height: 1; }
+.tile.t-opp { --a: #7fb0ff; --b: var(--royal); --c: var(--royal-lip); }
+.tile.t-watch { --a: #c4a6ff; --b: #7b4dff; --c: #5a2fd6; }
+.tile.t-stats { --a: #8ff0b2; --b: var(--mint-lo); --c: var(--mint-lip); }
+.tile.t-rules { --a: #ffd36b; --b: var(--orange); --c: var(--orange-lip); }
+.tile .badge { position: absolute; top: -10px; right: -10px; height: 26px; padding: 0 9px; border-radius: 13px; display: grid; place-items: center; font-size: 12px; font-weight: 900; color: #fff; letter-spacing: .04em; background: linear-gradient(180deg, #ff8a8f, var(--cherry-lo)); box-shadow: 0 0 0 2.5px #fff, 0 3px 6px rgba(0,0,0,.2); }
+.tile .stack { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); display: flex; }
+.tile .stack img { width: 30px; height: 30px; border-radius: 50%; margin-left: -8px; box-shadow: 0 0 0 2.5px #fff, 0 2px 4px rgba(0,0,0,.2); }
+.tile .stack img:first-child { margin-left: 0; }
+.t-opp { padding-top: 10px; }
+
+/* ---------- record strip ---------- */
+.record {
+  position: relative; z-index: 4; margin: 0 0 26px; display: flex; align-items: center; gap: 0; height: 92px; padding: 0 10px 0 12px; border-radius: 28px;
+  background: linear-gradient(180deg, #ffffff, #eef2ff);
+  box-shadow: inset 0 2px 0 #fff, 0 0 0 2.5px #8e9bd8, 0 6px 0 2.5px #8e9bd8, 0 18px 30px rgba(16,30,110,.25);
+}
+.record .head { display: flex; align-items: center; gap: 12px; padding: 0 22px 0 6px; }
+.record .head .cup { width: 60px; height: 60px; border-radius: 20px; display: grid; place-items: center; color: #fff; background: linear-gradient(180deg, #ffe36b, var(--gold-lo)); box-shadow: inset 0 2px 0 rgba(255,255,255,.6), 0 4px 0 #c07800; }
+.record .head .cup svg { width: 34px; height: 34px; filter: drop-shadow(0 2px 0 rgba(150,80,0,.35)); }
+.record .head small { display: block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--navy-3); }
+.record .head b { font-size: 20px; font-weight: 900; }
+.stat { padding: 0 22px; border-left: 2px solid #e2e7f8; text-align: center; line-height: 1; }
+.stat b { display: block; font-size: 30px; font-weight: 900; letter-spacing: -.01em; }
+.stat small { display: block; margin-top: 5px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--navy-3); }
+.stat.win b { color: var(--mint-lip); }
+.stat.fool b { color: var(--cherry-lo); }
+.stat.streak b { color: var(--orange-lip); display: inline-flex; align-items: center; gap: 2px; }
+.stat.streak b svg { width: 26px; height: 26px; color: var(--orange); }
+.last { padding: 0 14px 0 22px; border-left: 2px solid #e2e7f8; }
+.last small { display: block; white-space: nowrap; margin-bottom: 8px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--navy-3); }
+.last .dots { display: flex; gap: 5px; }
+.last .dots i { width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 900; color: #fff; }
+.last .dots .w { background: linear-gradient(180deg, #8ff0b2, var(--mint-lo)); box-shadow: 0 2px 0 var(--mint-lip); }
+.last .dots .l { background: linear-gradient(180deg, #ff8a8f, var(--cherry-lo)); box-shadow: 0 2px 0 var(--cherry-lip); }
+.last .dots .m { background: linear-gradient(180deg, #c9d2f2, #9aa6d6); box-shadow: 0 2px 0 #7d88b8; }
+
+/* ---------- characters ---------- */
+.cast { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.char { position: absolute; display: flex; flex-direction: column; align-items: center; animation: bob 4s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
+.char .ava { --s: 150px; }
+.char.sm .ava { --s: 116px; }
+.char .tagname { margin-top: 18px; padding: 5px 14px 6px; border-radius: 13px; font-size: 16px; font-weight: 900; background: #fff; box-shadow: 0 4px 0 rgba(24,34,94,.15), 0 10px 16px rgba(16,30,110,.2); white-space: nowrap; }
+.char .tagname small { display: block; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); text-align: center; }
+.char .say { position: absolute; top: -18px; white-space: nowrap; padding: 9px 16px 10px; border-radius: 18px; background: #fff; font-size: 18px; font-weight: 900; box-shadow: 0 0 0 3px var(--orange), 0 5px 0 3px var(--orange-lip), 0 12px 20px rgba(16,30,110,.25); animation: sway 4s ease-in-out infinite; }
+@keyframes sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(2deg) translateY(-2px); } }
+.c1 { left: 5%; top: 30%; } .c2 { left: 12.5%; top: 59%; animation-delay: -1.3s; }
+.c3 { right: 5%; top: 30%; animation-delay: -2.1s; } .c4 { right: 12.5%; top: 59%; animation-delay: -.7s; }
+.c1 .say { left: 70px; top: -58px; border-radius: 18px 18px 18px 5px; }
+.c3 .say { right: 70px; top: -58px; border-radius: 18px 18px 5px 18px; box-shadow: 0 0 0 3px var(--royal), 0 5px 0 3px var(--royal-lip), 0 12px 20px rgba(16,30,110,.25); }
+.floater { position: absolute; z-index: 1; pointer-events: none; animation: float2 6s ease-in-out infinite; }
+.floater .card { --w: 120px; }
+@keyframes float2 { 0%, 100% { transform: translateY(0) rotate(var(--r)); } 50% { transform: translateY(-14px) rotate(calc(var(--r) + 4deg)); } }
+
+/* ===================== PHONE ===================== */
+@media (max-width: 640px), (orientation: portrait) and (max-width: 900px) {
+  .stage { left: 0; top: 0; transform: scale(var(--k, 1)); transform-origin: 0 0; }
+  .rays { top: 26%; }
+  .top { padding: 12px 14px 0; gap: 8px; }
+  .profile { height: 52px; padding: 0 12px 0 6px; gap: 9px; border-radius: 18px; }
+  .profile .ava { --s: 40px; }
+  .profile .who b { font-size: 16px; }
+  .profile .xp { font-size: 9.5px; gap: 6px; margin-top: 3px; }
+  .profile .xp .bar { width: 76px; height: 7px; }
+  .profile .xp [data-i18n] { display: none; }
+  .rank, .top .sound-btn { display: none; }
+  .lang { height: 42px; border-radius: 14px; }
+  .lang .globe { display: none; }
+  .lang button { width: 46px; font-size: 14px; }
+  .lang .knob { left: 4px; width: 46px; height: 34px; border-radius: 11px; }
+  .lang.ru .knob { transform: translateX(46px); }
+  .icon-btn { --s: 42px; border-radius: 14px; }
+
+  .hero { justify-content: flex-start; padding-top: 8px; }
+  .logo { width: 360px; height: 228px; margin-top: 0; }
+  .fan { top: 4px; }
+  .fan .card { --w: 66px; left: -33px; }
+  .wordmark { top: 56px; height: 126px; }
+  .ribbon { top: 168px; width: 300px; height: 48px; }
+  .ribbon span { font-size: 15px; inset: 0 0 8px; }
+  .play { --h: 92px; --r: 28px; --lift: 8px; margin-top: 26px; min-width: 0; width: calc(100% - 40px); font-size: 44px; padding: 0 20px 0 16px; justify-content: flex-start; }
+  .play .disc { width: 58px; height: 58px; }
+  .play .disc svg { width: 32px; height: 32px; }
+  .play .lbl small { font-size: 13px; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: calc(100% - 40px); margin-top: 30px; }
+  .tile { width: auto; height: 72px; flex-direction: row; justify-content: flex-start; gap: 12px; padding: 0 12px; border-radius: 22px; }
+  .tile .ic { width: 46px; height: 46px; border-radius: 15px; flex: none; }
+  .tile .ic svg { width: 26px; height: 26px; }
+  .tile b { font-size: 16px; text-align: left; }
+  .tile .stack { top: -12px; left: auto; right: 10px; transform: none; }
+  .tile .stack img { width: 24px; height: 24px; margin-left: -7px; }
+  .t-opp { padding-top: 0; }
+  .tile .badge { top: -9px; right: -6px; height: 22px; font-size: 10.5px; }
+  .record { margin: 0 20px 22px; width: calc(100% - 40px); height: auto; padding: 14px 14px 14px; border-radius: 24px; flex-wrap: wrap; row-gap: 12px; }
+  .record .head { width: 100%; padding: 0; }
+  .record .head .cup { width: 40px; height: 40px; border-radius: 13px; }
+  .record .head .cup svg { width: 24px; height: 24px; }
+  .record .head b { font-size: 17px; }
+  .record .head .rate { margin-left: auto; text-align: right; }
+  .stat { flex: 1; padding: 0 4px; }
+  .head + .stat { border-left: 0; }
+  .stat.dk { display: none; }
+  .stat b { font-size: 22px; }
+  .stat small { font-size: 9px; letter-spacing: .08em; }
+  .stat.streak b svg { width: 18px; height: 18px; }
+  .last { width: 100%; padding: 12px 0 0; border-left: 0; border-top: 2px solid #e2e7f8; display: flex; align-items: center; justify-content: space-between; }
+  .last small { margin: 0; font-size: 9.5px; }
+  .last .dots { gap: 4px; }
+  .last .dots i { width: 20px; height: 20px; border-radius: 6px; font-size: 10px; }
+  .cast, .floater { display: none; }
+  .confetti svg:nth-child(n+7) { display: none; }
+}
+@media (min-width: 641px) and (orientation: landscape), (min-width: 901px) { .record .head .rate { display: none; } }
+</style>
+</head>
+<body>
+<div class="rays"></div>
+<div class="confetti" id="confetti"></div>
+
+<div class="stage" id="stage">
+<div class="floater" style="left:2.5%;top:72%;--r:-18deg"><div data-card="AH"></div></div>
+<div class="floater" style="right:2.5%;top:70%;--r:16deg;animation-delay:-2s"><div data-back></div></div>
+
+<div class="cast">
+  <div class="char c1">
+    <div class="say">Сыграем, внучок?</div>
+    <div class="ava thrower"><div class="pic"><img src="img/zina.webp" alt=""></div><span class="lvl">31</span></div>
+    <div class="tagname">Babushka Zina<small>Expert</small></div>
+  </div>
+  <div class="char sm c2">
+    <div class="ava attacker"><div class="pic"><img src="img/kostya.webp" alt=""></div><span class="lvl">14</span></div>
+    <div class="tagname">Kostya<small>Intermediate</small></div>
+  </div>
+  <div class="char c3">
+    <div class="say">I remember every card.</div>
+    <div class="ava idle" style="--ring2:#7b4dff"><div class="pic"><img src="img/misha.webp" alt=""></div><span class="lvl">22</span></div>
+    <div class="tagname">Uncle Misha<small>Grandmaster</small></div>
+  </div>
+  <div class="char sm c4">
+    <div class="ava winner"><div class="pic"><img src="img/sveta.webp" alt=""></div><span class="lvl">27</span></div>
+    <div class="tagname">Sveta<small>Expert</small></div>
+  </div>
+</div>
+
+<div class="screen">
+  <header class="top">
+    <div class="profile">
+      <div class="ava defender"><div class="pic"><img src="img/you.webp" alt=""></div><span class="lvl">12</span></div>
+      <div class="who"><b>Player</b><span class="xp"><span class="bar"><i></i></span><span data-i18n="xp">340 / 500 XP</span></span></div>
+    </div>
+    <span class="rank"><svg><use href="#i-crown"/></svg><span data-i18n="rank">Gold III</span></span>
+    <div class="spacer"></div>
+    <div class="lang" id="lang" role="group" aria-label="Language">
+      <svg class="globe"><use href="#i-globe"/></svg>
+      <span class="knob"></span>
+      <button class="on" data-l="en">EN</button><button data-l="ru">RU</button>
+    </div>
+    <button class="icon-btn sound-btn" aria-label="Sound"><svg><use href="#i-sound"/></svg></button>
+    <button class="icon-btn" aria-label="Settings"><svg><use href="#i-gear"/></svg></button>
+  </header>
+
+  <main class="hero">
+    <div class="logo">
+      <div class="fan" id="fan">
+        <div data-card="JC"></div><div data-card="QD"></div><div data-card="AH"></div><div data-card="KS"></div><div data-card="10H"></div>
+      </div>
+      <svg class="wordmark" viewBox="0 0 640 200" aria-label="Durak">
+        <defs>
+          <linearGradient id="wm-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fffbe0"/><stop offset=".42" stop-color="#ffe45c"/><stop offset=".5" stop-color="#ffc414"/><stop offset="1" stop-color="#ff8a00"/>
+          </linearGradient>
+          <linearGradient id="wm-gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+        </defs>
+        <g class="wm">
+          <text x="320" y="164" fill="#16248a" stroke="#16248a" stroke-width="44" stroke-linejoin="round" transform="translate(0 12)">DURAK</text>
+          <text x="320" y="164" fill="#fff" stroke="#fff" stroke-width="44" stroke-linejoin="round">DURAK</text>
+          <text x="320" y="164" fill="#1b2a99" stroke="#1b2a99" stroke-width="22" stroke-linejoin="round">DURAK</text>
+          <text x="320" y="164" fill="url(#wm-fill)">DURAK</text>
+          <text x="320" y="164" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="3" stroke-linejoin="round" transform="translate(0 -3)" style="mix-blend-mode:soft-light">DURAK</text>
+        </g>
+      </svg>
+      <div class="ribbon">
+        <svg viewBox="0 0 430 64" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 18h46v40H0l14-20Z" fill="#b8173c"/><path d="M430 18h-46v40h46l-14-20Z" fill="#b8173c"/>
+          <path d="M34 50l12 8V44Z" fill="#7d0a26"/><path d="M396 50l-12 8V44Z" fill="#7d0a26"/>
+          <path d="M34 4h362v46H34Z" fill="#e3264a"/><path d="M34 4h362v20H34Z" fill="#ff5a6e"/>
+          <path d="M34 4h362" stroke="#ff9aa6" stroke-width="3"/>
+        </svg>
+        <span data-i18n="ribbon">«ДУРАК» · PODKIDNOY</span>
+      </div>
+      <svg class="sparkle" style="left:58px;top:70px"><use href="#i-star"/></svg>
+      <svg class="sparkle" style="right:66px;top:52px;animation-delay:-1.1s;width:20px;height:20px"><use href="#i-star"/></svg>
+      <svg class="sparkle" style="right:20px;top:214px;animation-delay:-.5s;width:18px;height:18px"><use href="#i-star"/></svg>
+    </div>
+
+    <button class="btn play" onclick="location.href='table.html'">
+      <span class="disc"><svg><use href="#i-play"/></svg></span>
+      <span class="lbl"><span data-i18n="play">Play</span><small data-i18n="playsub">Quick match · 5 players</small></span>
+    </button>
+
+    <nav class="tiles">
+      <button class="tile t-opp" onclick="location.href='lobby.html'"><span class="stack"><img src="img/kostya.webp" alt=""><img src="img/zina.webp" alt=""><img src="img/misha.webp" alt=""><img src="img/sveta.webp" alt=""></span><span class="ic"><svg><use href="#i-users"/></svg></span><b data-i18n="opp">Opponents</b></button>
+      <button class="tile t-watch"><span class="badge">LIVE</span><span class="ic"><svg><use href="#i-eye"/></svg></span><b data-i18n="watch">Watch bots</b></button>
+      <button class="tile t-stats"><span class="ic"><svg><use href="#i-chart"/></svg></span><b data-i18n="stats">Stats</b></button>
+      <button class="tile t-rules"><span class="ic"><svg><use href="#i-book"/></svg></span><b data-i18n="rules">Rules</b></button>
+    </nav>
+  </main>
+
+  <footer class="record" aria-label="Your record">
+    <div class="head"><span class="cup"><svg><use href="#i-trophy"/></svg></span><span><small data-i18n="rec">Your record</small><b data-i18n="games">222 games</b></span><span class="rate stat win"><b>58%</b><small data-i18n="rate">win rate</small></span></div>
+    <div class="stat win"><b>128</b><small data-i18n="wins">Wins</small></div>
+    <div class="stat fool"><b>31</b><small data-i18n="fool">Durak</small></div>
+    <div class="stat win dk"><b>58%</b><small data-i18n="rate">Win rate</small></div>
+    <div class="stat streak"><b><svg><use href="#i-flame"/></svg>4</b><small data-i18n="streak">Streak</small></div>
+    <div class="last"><small data-i18n="last">Last 10</small><div class="dots"><i class="w">W</i><i class="w">W</i><i class="l">D</i><i class="w">W</i><i class="m">–</i><i class="w">W</i><i class="w">W</i><i class="l">D</i><i class="w">W</i><i class="w">W</i></div></div>
+  </footer>
+</div>
+</div>
+
+<script src="js/arcade.js"></script>
+<script>
+(function () {
+  /* hand fan above the wordmark */
+  const fan = [...document.querySelectorAll('#fan > div')];
+  fan.forEach((c, i) => {
+    const k = i - 2;
+    c.style.transform = `rotate(${k * 13}deg) translateY(${Math.abs(k) * 6}px)`;
+    c.style.zIndex = 10 - Math.abs(k);
+  });
+
+  /* drifting suit confetti */
+  const cf = document.getElementById('confetti');
+  const spots = [[8,14,30,-12],[22,9,22,20],[78,12,26,8],[90,22,34,-20],[30,86,24,15],[70,88,28,-8],[4,46,20,10],[95,50,22,-14],[50,6,18,0],[60,94,20,12],[16,92,26,-6],[86,84,24,18]];
+  cf.innerHTML = spots.map(([x, y, s, r], i) => `<svg viewBox="0 0 100 100" style="left:${x}%;top:${y}%;width:${s}px;height:${s}px;--r:${r}deg;animation-delay:${-i * .8}s"><use href="#s-${'SHCD'[i % 4]}"/></svg>`).join('');
+
+  /* language toggle (EN/RU) */
+  const T = {
+    en: { word: 'DURAK', ribbon: '«ДУРАК» · PODKIDNOY', play: 'Play', playsub: 'Quick match · 5 players', opp: 'Opponents', watch: 'Watch bots', stats: 'Stats', rules: 'Rules', rec: 'Your record', games: '222 games', wins: 'Wins', fool: 'Durak', rate: 'Win rate', streak: 'Streak', last: 'Last 10', xp: '340 / 500 XP', rank: 'Gold III' },
+    ru: { word: 'ДУРАК', ribbon: 'DURAK · ПОДКИДНОЙ', play: 'Играть', playsub: 'Быстрая игра · 5 игроков', opp: 'Соперники', watch: 'Боты играют', stats: 'Статистика', rules: 'Правила', rec: 'Ваш рекорд', games: '222 игры', wins: 'Победы', fool: 'Дурак', rate: 'Побед', streak: 'Серия', last: 'Посл. 10', xp: '340 / 500 XP', rank: 'Золото III' }
+  };
+  const lang = document.getElementById('lang');
+  function setLang(l) {
+    lang.classList.toggle('ru', l === 'ru');
+    lang.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.l === l));
+    document.querySelectorAll('.wm text').forEach((t) => (t.textContent = T[l].word));
+    document.querySelectorAll('[data-i18n]').forEach((el) => (el.textContent = T[l][el.dataset.i18n]));
+    document.querySelectorAll('.dots .w').forEach((d) => (d.textContent = l === 'ru' ? 'П' : 'W'));
+    document.querySelectorAll('.dots .l').forEach((d) => (d.textContent = l === 'ru' ? 'Д' : 'D'));
+    document.documentElement.lang = l;
+    document.querySelector('.wordmark').setAttribute('aria-label', T[l].word);
+  }
+  lang.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setLang(b.dataset.l); });
+  const q = new URLSearchParams(location.search);
+  if (q.get('lang') === 'ru') setLang('ru');
+  Arcade.fitStage(document.getElementById('stage'));
+})();
+</script>
+</body>
+</html>

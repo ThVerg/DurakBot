@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Durak · Table — Concept D “Tabletop”</title>
+<link rel="icon" href="../assets/ui/favicon.svg">
+<link rel="stylesheet" href="css/tabletop.css">
+<link rel="stylesheet" href="css/table.css">
+</head>
+<body>
+<div class="room"></div>
+
+<div class="stage" id="stage">
+
+  <!-- ============ top HUD ============ -->
+  <header class="hud-top">
+    <div class="pill glass brand">
+      <a class="icon-btn btn" href="index.html" title="Menu"><i data-icon="menu"></i></a>
+      <span class="wordmark">Durak</span>
+      <span class="sep"></span>
+      <span class="meta"><b>Podkidnoy</b> · Expert</span>
+    </div>
+
+    <div class="pill glass winpill" title="Estimated chance to win from here">
+      <span class="wp-label">Win chance</span>
+      <span class="wp-bar"><span class="wp-fill" style="--p:58%"></span><span class="wp-tick"></span></span>
+      <span class="wp-val">58<small>%</small></span>
+      <span class="wp-delta">▲ 4</span>
+    </div>
+
+    <div class="pill glass tools">
+      <button class="btn tool" id="logBtn" title="Move log (L)"><i data-icon="log"></i><span class="tool-label">Moves</span><span class="badge">3</span></button>
+      <button class="btn icon-btn" id="soundBtn" title="Sound"><i data-icon="sound"></i></button>
+      <button class="btn icon-btn" id="setBtn" title="Settings"><i data-icon="gear"></i></button>
+    </div>
+  </header>
+
+  <!-- ============ the table ============ -->
+  <section class="table" id="table" aria-label="Card table">
+
+    <!-- talon + trump -->
+    <div class="talon at" id="talon">
+      <div class="trumpcard card" id="trumpCard" style="background-image:url(../assets/cards/9H.webp)"></div>
+      <div class="deck" id="deck"></div>
+      <div class="chip-label talon-label"><span class="tl-suit">♥</span><span><b>Trump</b> · 11 left</span></div>
+    </div>
+
+    <!-- discard / бито -->
+    <div class="discard at" id="discard">
+      <div class="pile" id="pile"></div>
+      <div class="chip-label"><b>Бито</b> · 12</div>
+    </div>
+
+    <!-- battle -->
+    <div class="battle" id="battle">
+      <div class="pair at" id="pair1">
+        <div class="card atk" style="background-image:url(../assets/cards/8S.webp)"></div>
+        <div class="card def" style="background-image:url(../assets/cards/JS.webp)"></div>
+      </div>
+      <div class="pair at target" id="pair2">
+        <div class="card atk" id="targetCard" style="background-image:url(../assets/cards/8D.webp)"></div>
+        <div class="slot" id="slot"><span>Beat<br>here</span></div>
+      </div>
+    </div>
+
+    <!-- seats -->
+    <div class="seat at side-l is-active" id="seat-kostya" data-seat="kostya">
+      <div class="fan" data-n="4"></div>
+      <div class="av-wrap">
+        <svg class="timer" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" pathLength="100"/></svg>
+        <div class="avatar" style="background-image:url(../assets/avatars/kostya.webp)"></div>
+      </div>
+      <div class="plate">
+        <div class="pl-name">Kostya <span class="count"><i data-icon="card"></i>4</span></div>
+        <div class="pl-row"><span class="tag attacker"><i data-icon="sword"></i>Attacker</span><span class="thinking">thinking<i></i><i></i><i></i></span></div>
+      </div>
+      <div class="say">Твой ход!</div>
+    </div>
+
+    <div class="seat at top" id="seat-zina" data-seat="zina">
+      <div class="fan" data-n="6"></div>
+      <div class="av-wrap"><div class="avatar" style="background-image:url(../assets/avatars/zina.webp)"></div></div>
+      <div class="plate">
+        <div class="pl-name"><span class="nm-full">Babushka Zina</span><span class="nm-short">Zina</span> <span class="count"><i data-icon="card"></i>6</span></div>
+        <div class="pl-row"><span class="tag thrower"><i data-icon="plus"></i>Thrower</span></div>
+      </div>
+    </div>
+
+    <div class="seat at top" id="seat-misha" data-seat="misha">
+      <div class="fan" data-n="5" data-known="QC"></div>
+      <div class="av-wrap"><div class="avatar" style="background-image:url(../assets/avatars/misha.webp)"></div></div>
+      <div class="plate">
+        <div class="pl-name"><span class="nm-full">Uncle Misha</span><span class="nm-short">Misha</span> <span class="count"><i data-icon="card"></i>5</span></div>
+        <div class="pl-row"><span class="known"><i data-icon="eye"></i>holds <b class="suit-c">Q♣</b></span></div>
+      </div>
+    </div>
+
+    <div class="seat at side-r is-out" id="seat-sveta" data-seat="sveta">
+      <div class="av-wrap">
+        <div class="avatar" style="background-image:url(../assets/avatars/sveta.webp)"></div>
+        <span class="medal">1<sup>st</sup></span>
+      </div>
+      <div class="plate">
+        <div class="pl-name">Sveta <span class="count zero"><i data-icon="card"></i>0</span></div>
+        <div class="pl-row"><span class="tag out"><i data-icon="check"></i>Out · 1st</span></div>
+      </div>
+    </div>
+
+    <!-- what to do now -->
+    <div class="status at" id="status">
+      <span class="st-icon"><i data-icon="shield"></i></span>
+      <span class="st-icon st-icon-hint"><i data-icon="bulb"></i></span>
+      <span class="st-text st-default">
+        <span class="st-kicker">Your turn · defend</span>
+        <span class="st-main">Beat <span class="cchip suit-d">8♦</span> or Take</span>
+      </span>
+      <span class="st-text st-hint">
+        <span class="st-kicker">Hint</span>
+        <span class="st-main">Play <span class="cchip suit-d">Q♦</span> <span class="st-why">cheapest beater · keep trumps</span></span>
+      </span>
+      <span class="st-timer" title="Time left"><svg viewBox="0 0 36 36"><circle class="bg" cx="18" cy="18" r="15.5"/><circle class="fg" cx="18" cy="18" r="15.5" pathLength="100"/></svg><b>14</b></span>
+    </div>
+  </section>
+
+  <!-- ============ you ============ -->
+  <div class="me" id="me">
+    <div class="av-wrap me-av"><div class="avatar" style="background-image:url(../assets/avatars/you.webp)"></div></div>
+    <div class="me-info">
+      <div class="me-name">You <span class="me-elo">1 642</span></div>
+      <span class="tag defender"><i data-icon="shield"></i>Defender</span>
+    </div>
+  </div>
+
+  <div class="hand" id="hand" aria-label="Your hand"></div>
+
+  <div class="actions" id="actions">
+    <button class="btn btn-glass hint" id="hintBtn" title="Hint (H)"><i data-icon="bulb"></i><span>Hint</span><span class="kbd">H</span></button>
+    <button class="btn btn-primary take" id="takeBtn" title="Take the cards (T)">
+      <i data-icon="hand"></i><span class="take-txt"><b>Take</b><small>Беру</small></span><span class="kbd">T</span>
+    </button>
+  </div>
+
+  <!-- ============ move log drawer ============ -->
+  <aside class="drawer glass glass-solid" id="drawer" aria-label="Move log">
+    <header><h3>Moves</h3><span class="dr-sub">Round 7 · you are defending</span><button class="btn icon-btn" id="drawerClose"><i data-icon="close"></i></button></header>
+    <ol class="log">
+      <li class="now"><span class="lg-av" style="background-image:url(../assets/avatars/you.webp)"></span><span><b>You</b> to move — beat <span class="cchip suit-d">8♦</span> or take</span><span class="lg-t">now</span></li>
+      <li><span class="lg-av" style="background-image:url(../assets/avatars/kostya.webp)"></span><span><b>Kostya</b> adds <span class="cchip suit-d">8♦</span></span><span class="lg-t">0:04</span></li>
+      <li><span class="lg-av" style="background-image:url(../assets/avatars/you.webp)"></span><span><b>You</b> beat <span class="cchip suit-s">8♠</span> with <span class="cchip suit-s">J♠</span></span><span class="lg-t">0:11</span></li>
+      <li><span class="lg-av" style="background-image:url(../assets/avatars/kostya.webp)"></span><span><b>Kostya</b> attacks with <span class="cchip suit-s">8♠</span></span><span class="lg-t">0:19</span></li>
+      <li class="round"><span>Round 6</span></li>
+      <li><span class="lg-av" style="background-image:url(../assets/avatars/sveta.webp)"></span><span><b>Sveta</b> plays her last card — <b>finishes 1st</b></span><span class="lg-t">0:41</span></li>
+      <li><span class="lg-av" style="background-image:url(../assets/avatars/zina.webp)"></span><span><b>Zina</b> beats <span class="cchip suit-c">10♣</span> with <span class="cchip suit-h">6♥</span></span><span class="lg-t">0:48</span></li>
+      <li><span class="lg-av" style="background-image:url(../assets/avatars/misha.webp)"></span><span><b>Misha</b> takes 3 cards</span><span class="lg-t">1:02</span></li>
+    </ol>
+  </aside>
+
+  <!-- ============ settings popover ============ -->
+  <div class="popover glass glass-solid" id="settings">
+    <h4>Table settings</h4>
+    <label class="row"><span>Sound effects</span><input type="checkbox" checked><i class="sw"></i></label>
+    <label class="row"><span>Show legal moves</span><input type="checkbox" checked><i class="sw"></i></label>
+    <label class="row"><span>Four-colour deck</span><input type="checkbox" id="fourColour"><i class="sw"></i></label>
+    <div class="row col"><span>Table felt</span>
+      <div class="felts" id="feltPick">
+        <button data-felt="emerald" class="on"><i style="--f:#22894f"></i>Emerald</button>
+        <button data-felt="royal"><i style="--f:#2563b4"></i>Ocean</button>
+      </div>
+    </div>
+    <div class="row col"><span>Card back</span>
+      <div class="backs" id="backPick">
+        <button data-back="red" style="background-image:url(../assets/backs_sm/red.webp)"></button>
+        <button data-back="navy" class="on" style="background-image:url(../assets/backs_sm/navy.webp)"></button>
+        <button data-back="khokhloma" style="background-image:url(../assets/backs_sm/khokhloma.webp)"></button>
+        <button data-back="gzhel" style="background-image:url(../assets/backs_sm/gzhel.webp)"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/icons.js"></script>
+<script src="js/stage.js"></script>
+<script src="js/table.js"></script>
+</body>
+</html>

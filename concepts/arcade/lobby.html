@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Durak · New game</title>
+<link rel="stylesheet" href="css/arcade.css">
+<style>
+body {
+  overflow: hidden;
+  background:
+    radial-gradient(60% 40% at 50% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%),
+    linear-gradient(180deg, #a3dfff 0%, #74b6ff 45%, #7186f6 100%);
+  min-height: 100%;
+}
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .14;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%23ffffff'%3E%3Cpath transform='translate(14 14) scale(.22)' d='M50 3C59 20 75 38 90 50 75 62 59 80 50 97 41 80 25 62 10 50 25 38 41 20 50 3Z'/%3E%3Cpath transform='translate(74 74) scale(.22)' d='M50 6a21 21 0 0 1 17 33c3-1 6-2 9-2a21 21 0 1 1-20 27c1 13 5 21 12 27H32c7-6 11-14 12-27a21 21 0 1 1-20-27c3 0 6 1 9 2A21 21 0 0 1 50 6Z'/%3E%3C/g%3E%3C/svg%3E"); }
+.stage { position: fixed; left: 50%; top: 50%; width: 1440px; height: 900px; transform: translate(-50%, -50%) scale(var(--k, 1)); }
+.wrap { position: relative; max-width: 1180px; margin: 0 auto; padding: 18px 26px 30px; display: flex; flex-direction: column; }
+.top { display: flex; align-items: center; gap: 16px; }
+.top h1 { margin: 0; font-size: 40px; font-weight: 900; color: #fff; letter-spacing: .01em; --sw: 8px; --sc: var(--royal-lip); text-shadow: 0 5px 0 var(--royal-lip); }
+.top .spacer { flex: 1; }
+.crumbs { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 14px; background: rgba(255,255,255,.35); color: var(--navy); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+.crumbs b { color: var(--royal); }
+
+.sec { display: flex; align-items: baseline; gap: 12px; margin: 20px 4px 12px; }
+.sec h2 { margin: 0; font-size: 24px; font-weight: 900; color: #fff; --sw: 6px; --sc: var(--royal-lip); text-shadow: 0 3px 0 var(--royal-lip); }
+.sec p { margin: 0; font-size: 15px; color: rgba(255,255,255,.92); font-weight: 800; }
+
+/* ---------- difficulty tiers ---------- */
+.tiers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+.tier {
+  --a: #8ff0b2; --b: #22b866; --c: #138a4a;
+  position: relative; border: 0; padding: 0; text-align: center; border-radius: 30px; background: #fff; color: var(--navy);
+  box-shadow: 0 0 0 3px #fff, 0 0 0 6px rgba(24,34,94,.12), 0 8px 0 6px rgba(24,34,94,.16), 0 22px 30px rgba(16,30,110,.25);
+  transition: transform .2s var(--ease-pop), box-shadow .2s;
+  display: flex; flex-direction: column; overflow: visible;
+}
+.tier:hover { transform: translateY(-4px); }
+.tier .head {
+  position: relative; height: 150px; border-radius: 27px 27px 0 0; overflow: hidden; display: grid; place-items: center;
+  background: radial-gradient(70% 80% at 50% 30%, var(--a), var(--b));
+}
+.tier .head::before { content: ""; position: absolute; inset: -40%; background: repeating-conic-gradient(rgba(255,255,255,.16) 0 10deg, transparent 10deg 24deg); animation: spin 60s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.tier .head .ava { --s: 100px; --ring2: var(--c); position: relative; top: 6px; }
+.tier .head .ava .pic { box-shadow: 0 0 0 6px #fff, 0 0 0 11px var(--c), 0 18px 24px rgba(0,0,0,.25); }
+.tier .lvlname { position: absolute; left: 50%; top: 133px; transform: translateX(-50%); z-index: 3; height: 34px; padding: 0 16px; border-radius: 17px; display: inline-flex; align-items: center; gap: 4px; background: #fff; box-shadow: 0 0 0 3px var(--b), 0 4px 0 3px var(--c); }
+.tier .lvlname svg { width: 18px; height: 18px; color: #d7dcef; }
+.tier .lvlname svg.on { color: var(--gold); filter: drop-shadow(0 1px 0 #c07800); }
+.tier .body { padding: 28px 18px 18px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.tier h3 { margin: 0; font-size: 25px; font-weight: 900; line-height: 1; }
+.tier .elo { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 9px; font-size: 13px; letter-spacing: .06em; color: var(--c); background: color-mix(in srgb, var(--a) 30%, #fff); }
+.tier .elo svg { width: 14px; height: 14px; }
+.tier p { margin: 0; font-size: 14px; line-height: 1.28; color: var(--navy-2); font-weight: 700; min-height: 36px; }
+.tier .bar { width: 100%; margin-top: 6px; display: flex; flex-direction: column; gap: 5px; }
+.tier .bar span { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); }
+.tier .bar span b { color: var(--navy); letter-spacing: 0; font-size: 13px; }
+.tier .bar i { display: block; height: 9px; border-radius: 5px; background: #e4e8f6; overflow: hidden; }
+.tier .bar i::after { content: ""; display: block; height: 100%; width: var(--p); border-radius: 5px; background: linear-gradient(90deg, var(--a), var(--b)); }
+.tier .check { position: absolute; z-index: 4; top: -14px; right: -14px; width: 46px; height: 46px; border-radius: 50%; display: none; place-items: center; color: #fff; background: linear-gradient(180deg, var(--a), var(--b)); box-shadow: 0 0 0 4px #fff, 0 5px 0 4px var(--c), 0 10px 16px rgba(0,0,0,.25); }
+.tier .check svg { width: 26px; height: 26px; }
+.tier .hot { position: absolute; z-index: 4; top: 14px; left: 14px; height: 26px; padding: 0 10px 0 6px; border-radius: 13px; display: inline-flex; align-items: center; gap: 3px; color: #fff; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; background: rgba(120, 10, 20, .35); }
+.tier .hot svg { width: 16px; height: 16px; color: #ffd36b; }
+.tier.sel { transform: translateY(-10px); box-shadow: 0 0 0 4px #fff, 0 0 0 9px var(--b), 0 9px 0 9px var(--c), 0 0 46px 12px color-mix(in srgb, var(--a) 70%, transparent), 0 30px 40px rgba(16,30,110,.3); }
+.tier.sel .check { display: grid; animation: pop .45s var(--ease-pop); }
+@keyframes pop { from { transform: scale(0); } }
+.t-nov { --a: #9af5b8; --b: #2fcf7e; --c: #138a4a; }
+.t-int { --a: #8cc0ff; --b: #3f6cf0; --c: #1f34b8; }
+.t-exp { --a: #c9a8ff; --b: #8253ff; --c: #5a2fd6; }
+.t-gm  { --a: #ffd36b; --b: #ff5a4f; --c: #b8173c; }
+
+/* ---------- players ---------- */
+.players { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: stretch; }
+.panel { border-radius: 30px; background: linear-gradient(180deg, #fff, #f0f3ff); box-shadow: 0 0 0 3px #fff, 0 0 0 6px rgba(24,34,94,.12), 0 8px 0 6px rgba(24,34,94,.16), 0 22px 30px rgba(16,30,110,.25); }
+.count { padding: 18px 24px; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+.count small { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--navy-3); }
+.chips { display: flex; gap: 12px; }
+.chip-n {
+  width: 74px; height: 80px; border: 0; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  background: linear-gradient(180deg, #fff, #e6ebfb); color: var(--navy); box-shadow: inset 0 2px 0 #fff, 0 0 0 2.5px #b7c0e6, 0 5px 0 2.5px #b7c0e6;
+  transition: transform .14s var(--ease-pop);
+}
+.chip-n b { font-size: 34px; font-weight: 900; line-height: 1; }
+.chip-n span { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--navy-3); }
+.chip-n:hover { transform: translateY(-2px); }
+.chip-n.on { color: #fff; background: linear-gradient(180deg, #7fb0ff, #4f80ff 50%, var(--royal)); box-shadow: inset 0 2px 0 rgba(255,255,255,.6), 0 0 0 2.5px var(--royal-lip), 0 5px 0 2.5px var(--royal-lip), 0 10px 18px rgba(30,50,180,.35); text-shadow: 0 2px 0 rgba(0,0,0,.2); }
+.chip-n.on span { color: rgba(255,255,255,.85); }
+.rulesline { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill { height: 30px; padding: 0 12px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--navy-2); background: #e9edfb; }
+.pill svg { width: 15px; height: 15px; fill: var(--cherry-lo); }
+.pill.on { background: #e5fff0; color: var(--mint-lip); }
+
+.preview { position: relative; padding: 10px 18px; display: flex; align-items: center; justify-content: center; min-height: 176px; }
+.mini-table { position: relative; width: 100%; max-width: 520px; height: 156px; flex: none; }
+.mini-table .oval { position: absolute; inset: 26px 70px 30px; border-radius: 70px; background: linear-gradient(180deg, #6f8fff, var(--royal)); box-shadow: 0 5px 0 #1b2a99, 0 12px 18px rgba(16,30,110,.25); }
+.mini-table .oval::before { content: ""; position: absolute; inset: 7px; border-radius: 63px; background: radial-gradient(70% 70% at 50% 40%, var(--felt-hi), var(--felt) 60%, var(--felt-lo)); box-shadow: 0 0 0 2.5px var(--gold), inset 0 6px 10px rgba(4,70,60,.35); }
+.mini-table .oval::after { content: "ДУРАК"; position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.35); font-size: 14px; letter-spacing: .4em; font-weight: 900; }
+.mini-table .s { position: absolute; z-index: 2; width: 46px; height: 46px; margin: -23px 0 0 -23px; transition: left .45s var(--ease-pop), top .45s var(--ease-pop), transform .3s var(--ease-pop); }
+.mini-table .s b { position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); white-space: nowrap; padding: 2px 8px 3px; border-radius: 8px; background: #fff; font-size: 12px; font-weight: 900; color: var(--navy); box-shadow: 0 2px 0 rgba(24,34,94,.15), 0 3px 8px rgba(16,30,110,.18); }
+.mini-table .s .face { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 3px #fff, 0 0 0 5.5px var(--rc, var(--royal)), 0 5px 8px rgba(0,0,0,.25); }
+.mini-table .s img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12) translateY(4%); }
+.mini-table .s.you { --rc: var(--sun); width: 54px; height: 54px; margin: -27px 0 0 -27px; }
+.mini-table .s.hide { transform: scale(0); }
+.preview .shuffle { position: absolute; top: 14px; right: 14px; }
+.roster { display: none; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.roster small { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--navy-3); display: flex; justify-content: space-between; align-items: center; }
+.shuffle { height: 32px; padding: 0 12px 0 8px; border: 0; border-radius: 11px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 900; color: var(--royal); background: #e9eefe; box-shadow: 0 2px 0 #c5cff3; letter-spacing: .02em; text-transform: none; }
+.shuffle svg { width: 16px; height: 16px; }
+.roster ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+.roster li { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 12px 0 6px; border-radius: 16px; background: #fff; box-shadow: 0 0 0 2px #e6eaf8, 0 3px 0 2px #e6eaf8; font-size: 16px; font-weight: 900; }
+.roster li img { width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--rc, #9aa6d6); }
+.roster li em { margin-left: auto; font-style: normal; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 4px 8px; border-radius: 8px; color: #fff; background: var(--tc, var(--navy-3)); }
+.roster li.off { opacity: .35; filter: grayscale(.8); }
+
+.cta { display: flex; justify-content: center; align-items: center; gap: 22px; margin-top: 24px; }
+.cta .back { --h: 72px; --r: 24px; font-size: 22px; padding: 0 26px 0 18px; }
+.cta .go { --h: 88px; --r: 28px; --lift: 8px; min-width: 380px; font-size: 38px; gap: 16px; }
+.cta .go .lbl { align-items: flex-start; }
+.cta .go .lbl small { font-size: 14px; letter-spacing: .12em; }
+.cta .go svg { width: 40px; height: 40px; }
+.cta .go::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.55) 48%, transparent 60%) no-repeat; background-size: 250% 100%; animation: shine 3.2s ease-in-out infinite 1s; }
+@keyframes shine { 0% { background-position: 130% 0; } 40%, 100% { background-position: -130% 0; } }
+
+/* ===================== PHONE ===================== */
+@media (max-width: 640px), (orientation: portrait) and (max-width: 900px) {
+  body { overflow: auto; }
+  .stage { position: static; transform: none; width: auto !important; height: auto !important; }
+  .wrap { padding: 12px 14px 130px; }
+  .top { gap: 10px; }
+  .top h1 { font-size: 28px; --sw: 6px; text-shadow: 0 4px 0 var(--royal-lip); }
+  .top .crumbs, .top .sound-btn { display: none; }
+  .icon-btn { --s: 42px; border-radius: 14px; }
+  .sec { margin: 18px 2px 12px; flex-wrap: wrap; row-gap: 2px; }
+  .sec h2 { font-size: 20px; }
+  .sec p { font-size: 13px; width: 100%; }
+  .tiers { grid-template-columns: 1fr 1fr; gap: 14px; }
+  .tier { border-radius: 24px; }
+  .tier .head { height: 104px; border-radius: 22px 22px 0 0; }
+  .tier .head .ava { --s: 66px; top: 4px; }
+  .tier .head .ava .pic { box-shadow: 0 0 0 4px #fff, 0 0 0 7.5px var(--c), 0 10px 14px rgba(0,0,0,.25); }
+  .tier .lvlname { height: 26px; padding: 0 10px; top: 91px; gap: 2px; }
+  .tier .lvlname svg { width: 14px; height: 14px; }
+  .tier .body { padding: 26px 10px 14px; gap: 6px; }
+  .tier h3 { font-size: 17px; }
+  .tier .elo { height: 22px; font-size: 11px; padding: 0 8px; }
+  .tier p, .tier .bar { display: none; }
+  .tier .hot { top: 8px; left: 8px; height: 22px; font-size: 10px; padding: 0 7px 0 4px; }
+  .tier .hot svg { width: 13px; height: 13px; }
+  .tier .check { width: 36px; height: 36px; top: -10px; right: -8px; }
+  .tier .check svg { width: 20px; height: 20px; }
+  .tier.sel { transform: translateY(-4px); }
+  .players { grid-template-columns: 1fr; gap: 14px; }
+  .count { padding: 16px; gap: 12px; }
+  .chips { gap: 8px; }
+  .chip-n { flex: 1; width: auto; height: 64px; border-radius: 18px; }
+  .chip-n b { font-size: 26px; }
+  .chip-n span { font-size: 8.5px; }
+  .preview { flex-direction: column; padding: 14px 14px 16px; gap: 10px; min-height: 0; }
+  .mini-table { width: 100%; height: 150px; }
+  .mini-table .oval { inset: 26px 44px 30px; }
+  .preview .shuffle { top: 10px; right: 10px; }
+  .roster { width: 100%; }
+  .roster ul { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .roster li { height: 46px; font-size: 14px; padding: 0 8px 0 5px; gap: 8px; }
+  .roster li img { width: 34px; height: 34px; }
+  .roster li em { font-size: 9px; padding: 3px 6px; }
+  .cta { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; margin: 0; padding: 14px 14px 20px; gap: 10px;
+    background: linear-gradient(180deg, rgba(255,255,255,.96), #e8eeff); border-radius: 26px 26px 0 0; box-shadow: 0 -4px 0 rgba(24,34,94,.08), 0 -12px 30px rgba(16,30,110,.25); }
+  .cta .back { --h: 70px; width: 70px; padding: 0; }
+  .cta .back .lbl { display: none; }
+  .cta .go { --h: 76px; --r: 24px; min-width: 0; flex: 1; font-size: 25px; white-space: nowrap; }
+  .cta .go .lbl small { font-size: 11px; }
+  .cta .go svg { width: 30px; height: 30px; }
+}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+<div class="wrap">
+  <header class="top">
+    <button class="icon-btn" aria-label="Back" onclick="location.href='index.html'"><svg><use href="#i-back"/></svg></button>
+    <h1 class="stroke">New game</h1>
+    <span class="crumbs">Podkidnoy · <b>36 cards</b></span>
+    <div class="spacer"></div>
+    <button class="icon-btn sound-btn" aria-label="Sound"><svg><use href="#i-sound"/></svg></button>
+    <button class="icon-btn" aria-label="Settings"><svg><use href="#i-gear"/></svg></button>
+  </header>
+
+  <div class="sec"><h2 class="stroke">Choose difficulty</h2><p>Every bot at the table plays at this level.</p></div>
+  <section class="tiers" id="tiers">
+    <button class="tier t-nov" data-t="Novice">
+      <span class="check"><svg><use href="#i-check"/></svg></span>
+      <div class="head"><div class="ava"><div class="pic"><img src="img/dasha.webp" alt=""></div></div></div>
+        <span class="lvlname"><svg class="on"><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg></span>
+      <div class="body"><h3>Novice</h3><span class="elo"><svg><use href="#i-bolt"/></svg>ELO ~ 900</span>
+        <p>Plays fair and honest. Great for learning the ropes.</p>
+        <div class="bar" style="--p:84%"><span>Your wins <b>84%</b></span><i></i></div></div>
+    </button>
+    <button class="tier t-int" data-t="Intermediate">
+      <span class="check"><svg><use href="#i-check"/></svg></span>
+      <div class="head"><div class="ava"><div class="pic"><img src="img/kostya.webp" alt=""></div></div></div>
+        <span class="lvlname"><svg class="on"><use href="#i-star"/></svg><svg class="on"><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg></span>
+      <div class="body"><h3>Intermediate</h3><span class="elo"><svg><use href="#i-bolt"/></svg>ELO ~ 1250</span>
+        <p>Saves trumps and throws in sharply. Watch out.</p>
+        <div class="bar" style="--p:63%"><span>Your wins <b>63%</b></span><i></i></div></div>
+    </button>
+    <button class="tier t-exp sel" data-t="Expert">
+      <span class="check"><svg><use href="#i-check"/></svg></span>
+      <div class="head"><div class="ava"><div class="pic"><img src="img/zina.webp" alt=""></div></div></div>
+        <span class="lvlname"><svg class="on"><use href="#i-star"/></svg><svg class="on"><use href="#i-star"/></svg><svg class="on"><use href="#i-star"/></svg><svg><use href="#i-star"/></svg></span>
+      <div class="body"><h3>Expert</h3><span class="elo"><svg><use href="#i-bolt"/></svg>ELO ~ 1600</span>
+        <p>Counts every card. Punishes a weak defence.</p>
+        <div class="bar" style="--p:41%"><span>Your wins <b>41%</b></span><i></i></div></div>
+    </button>
+    <button class="tier t-gm" data-t="Grandmaster">
+      <span class="hot"><svg><use href="#i-flame"/></svg>Hard</span>
+      <span class="check"><svg><use href="#i-check"/></svg></span>
+      <div class="head"><div class="ava"><div class="pic"><img src="img/misha.webp" alt=""></div></div></div>
+        <span class="lvlname"><svg class="on"><use href="#i-star"/></svg><svg class="on"><use href="#i-star"/></svg><svg class="on"><use href="#i-star"/></svg><svg class="on"><use href="#i-star"/></svg></span>
+      <div class="body"><h3>Grandmaster</h3><span class="elo"><svg><use href="#i-bolt"/></svg>ELO ~ 2000</span>
+        <p>Searches the endgame perfectly. Rarely wrong.</p>
+        <div class="bar" style="--p:18%"><span>Your wins <b>18%</b></span><i></i></div></div>
+    </button>
+  </section>
+
+  <div class="sec"><h2 class="stroke">Players at the table</h2><p>You plus up to five bots.</p></div>
+  <section class="players">
+    <div class="panel count">
+      <small>How many players?</small>
+      <div class="chips" id="chips">
+        <button class="chip-n" data-n="2"><b>2</b><span>Duel</span></button>
+        <button class="chip-n" data-n="3"><b>3</b><span>Trio</span></button>
+        <button class="chip-n" data-n="4"><b>4</b><span>Classic</span></button>
+        <button class="chip-n on" data-n="5"><b>5</b><span>Party</span></button>
+        <button class="chip-n" data-n="6"><b>6</b><span>Full</span></button>
+      </div>
+      <div class="rulesline"><span class="pill on">Podkidnoy</span><span class="pill">36 cards</span><span class="pill"><svg viewBox="0 0 100 100"><use href="#s-H"/></svg>Random trump</span></div>
+    </div>
+    <div class="panel preview">
+      <div class="mini-table" id="mt"><div class="oval"></div></div>
+      <button class="shuffle"><svg><use href="#i-robot"/></svg>Shuffle</button>
+    </div>
+  </section>
+
+  <div class="cta">
+    <button class="btn white back" onclick="location.href='index.html'"><svg style="color:var(--royal)"><use href="#i-back"/></svg><span class="lbl">Back</span></button>
+    <button class="btn go" onclick="location.href='table.html'"><svg><use href="#i-play"/></svg><span class="lbl">Start game<small id="ctaSub">5 players · Expert</small></span></button>
+  </div>
+</div>
+</div>
+
+<script src="js/arcade.js"></script>
+<script>
+(function () {
+  const BOTS = [
+    { id: 'kostya', short: 'Kostya', rc: 'var(--cherry)' },
+    { id: 'zina', short: 'Zina', rc: 'var(--orange)' },
+    { id: 'misha', short: 'Misha', rc: '#7b4dff' },
+    { id: 'sveta', short: 'Sveta', rc: 'var(--gold)' },
+    { id: 'dasha', short: 'Dasha', rc: 'var(--mint-lo)' },
+  ];
+  const TC = { Novice: '#2fcf7e', Intermediate: '#3f6cf0', Expert: '#8253ff', Grandmaster: '#ff5a4f' };
+  let n = 5, tier = 'Expert';
+  const mt = document.getElementById('mt');
+
+  mt.insertAdjacentHTML('beforeend', `<div class="s you"><span class="face"><img src="img/you.webp" alt=""></span><b>You</b></div>` + BOTS.map((b) => `<div class="s" data-id="${b.id}" style="--rc:${b.rc}"><span class="face"><img src="img/${b.id}.webp" alt=""></span><b>${b.short}</b></div>`).join(''));
+
+  function render() {
+    // seats on an ellipse, you at the bottom, bots clockwise
+    const W = mt.clientWidth, H = mt.clientHeight, cx = W / 2, cy = H / 2 - 6, rx = W / 2 - 40, ry = H / 2 - 30;
+    const pos = (i, total) => { const a = Math.PI / 2 + (i / total) * Math.PI * 2; return [cx + rx * Math.cos(a), cy + ry * Math.sin(a)]; };
+    const you = mt.querySelector('.you'); const [yx, yy] = pos(0, n); you.style.left = yx + 'px'; you.style.top = yy + 'px';
+    mt.querySelectorAll('.s[data-id]').forEach((el, i) => {
+      if (i < n - 1) { const [x, y] = pos(i + 1, n); el.style.left = x + 'px'; el.style.top = y + 'px'; el.classList.remove('hide'); }
+      else { el.style.left = cx + 'px'; el.style.top = cy + 'px'; el.classList.add('hide'); }
+    });
+    document.getElementById('ctaSub').textContent = `${n} players · ${tier}`;
+  }
+  document.getElementById('chips').addEventListener('click', (e) => {
+    const b = e.target.closest('.chip-n'); if (!b) return;
+    document.querySelectorAll('.chip-n').forEach((c) => c.classList.toggle('on', c === b)); n = +b.dataset.n; render();
+  });
+  document.getElementById('tiers').addEventListener('click', (e) => {
+    const t = e.target.closest('.tier'); if (!t) return;
+    document.querySelectorAll('.tier').forEach((c) => c.classList.toggle('sel', c === t)); tier = t.dataset.t; render();
+  });
+  Arcade.fitStage(document.getElementById('stage'), { phone: false });
+  render(); addEventListener('resize', render);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Durak · New game — Concept D “Tabletop”</title>
+<link rel="icon" href="../assets/ui/favicon.svg">
+<link rel="stylesheet" href="css/tabletop.css">
+<link rel="stylesheet" href="css/lobby.css">
+</head>
+<body>
+<div class="room"></div>
+
+<div class="stage" id="stage">
+  <header class="l-top">
+    <a class="btn btn-glass back" href="index.html"><i data-icon="back"></i><span>Menu</span></a>
+    <div class="l-title"><h1>New game</h1><span>Podkidnoy · 36 cards</span></div>
+    <div class="l-rating glass"><span>Your rating</span><b><span class="star">★</span> 1 642</b></div>
+  </header>
+
+  <main class="l-main">
+    <!-- settings column -->
+    <section class="panel glass glass-solid setup">
+      <div class="block">
+        <div class="b-head"><h2>Players at the table</h2><span class="b-note" id="countNote">You + 4 bots</span></div>
+        <div class="seg" id="count" role="radiogroup" aria-label="Number of players">
+          <button data-n="2"><b>2</b><small>Duel</small></button>
+          <button data-n="3"><b>3</b></button>
+          <button data-n="4"><b>4</b></button>
+          <button data-n="5" class="on"><b>5</b><small>Classic</small></button>
+          <button data-n="6"><b>6</b><small>Full</small></button>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="b-head"><h2>Bot strength</h2><span class="b-note">Recommended for you: <b>Expert</b></span></div>
+        <div class="tiers" id="tiers" role="radiogroup" aria-label="Difficulty">
+          <button class="tier" data-tier="novice">
+            <span class="t-av" style="background-image:url(../assets/avatars/dasha.webp)"></span>
+            <span class="t-body"><b>Novice</b><small>Plays the obvious card. Ideal for learning the rules.</small></span>
+            <span class="t-meta"><span class="pips"><i class="on"></i><i></i><i></i><i></i></span><em>~900</em></span>
+          </button>
+          <button class="tier" data-tier="intermediate">
+            <span class="t-av" style="background-image:url(../assets/avatars/grisha.webp)"></span>
+            <span class="t-body"><b>Intermediate</b><small>Saves trumps and high cards, rarely wastes a move.</small></span>
+            <span class="t-meta"><span class="pips"><i class="on"></i><i class="on"></i><i></i><i></i></span><em>~1 300</em></span>
+          </button>
+          <button class="tier on" data-tier="expert">
+            <span class="t-av" style="background-image:url(../assets/avatars/kostya.webp)"></span>
+            <span class="t-body"><b>Expert <span class="rec">For you</span></b><small>Tracks every card and throws in at the worst moment.</small></span>
+            <span class="t-meta"><span class="pips"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><em>~1 700</em></span>
+          </button>
+          <button class="tier" data-tier="grandmaster">
+            <span class="t-av" style="background-image:url(../assets/avatars/lev.webp)"></span>
+            <span class="t-body"><b>Grandmaster</b><small>Full search engine. Expect to be the durak.</small></span>
+            <span class="t-meta"><span class="pips"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><em>~2 100</em></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="block row2">
+        <label class="opt"><span><b>Transfer variant</b><small>Perevodnoy — pass the attack on</small></span><input type="checkbox"><i class="sw"></i></label>
+        <label class="opt"><span><b>Coach tips</b><small>Hints and win chance during play</small></span><input type="checkbox" checked><i class="sw"></i></label>
+      </div>
+    </section>
+
+    <!-- live table preview -->
+    <section class="preview">
+      <div class="p-table" id="ptable">
+        <div class="p-center">
+          <span class="p-kicker">Your table</span>
+          <span class="p-sum" id="sum">5 players · Expert</span>
+        </div>
+      </div>
+      <a class="btn btn-primary deal" href="table.html"><i data-icon="play"></i><span><b>Deal the cards</b><small id="dealSub">You vs 4 Expert bots</small></span></a>
+    </section>
+  </main>
+</div>
+
+<script src="js/icons.js"></script>
+<script src="js/stage.js"></script>
+<script src="js/lobby.js"></script>
+</body>
+</html>

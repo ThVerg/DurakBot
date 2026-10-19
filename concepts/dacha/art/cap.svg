@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 170" width="220" height="170">
+  <defs>
+    <radialGradient id="bell" cx="35%" cy="30%" r="70%"><stop offset="0" stop-color="#fff6c8"/><stop offset=".5" stop-color="#e8b23c"/><stop offset="1" stop-color="#9c6312"/></radialGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6d06a"/><stop offset="1" stop-color="#c88a22"/></linearGradient>
+  </defs>
+  <g stroke="#33200f" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+    <!-- left horn (cobalt) -->
+    <path d="M60 128 C 46 96 30 70 10 58 C 26 56 48 62 64 76 C 74 88 84 104 92 122 Z" fill="#2350b4"/>
+    <!-- right horn (cobalt) -->
+    <path d="M150 124 C 166 96 186 74 210 66 C 196 60 170 62 152 74 C 140 86 132 102 126 120 Z" fill="#2350b4"/>
+    <!-- centre horn (vermilion) -->
+    <path d="M78 126 C 80 90 92 50 120 18 C 126 40 132 60 134 82 C 136 98 140 112 142 126 Z" fill="#c8361f"/>
+    <!-- inner shading -->
+    <path d="M118 30 C 104 56 96 86 94 120" fill="none" stroke="#e86a4c" stroke-width="3" opacity=".8"/>
+    <path d="M24 62 C 44 70 62 86 74 110" fill="none" stroke="#4f78d2" stroke-width="3" opacity=".8"/>
+    <path d="M198 70 C 178 78 160 92 146 112" fill="none" stroke="#4f78d2" stroke-width="3" opacity=".8"/>
+    <!-- band -->
+    <path d="M52 122 C 86 112 128 110 160 118 L 162 146 C 128 138 88 140 54 150 Z" fill="url(#band)"/>
+    <!-- band zigzag -->
+    <path d="M60 136 l8 -6 l8 6 l8 -6 l8 6 l8 -6 l8 6 l8 -6 l8 6 l8 -6 l8 6 l8 -6" fill="none" stroke="#c8361f" stroke-width="2.4"/>
+    <!-- bells -->
+    <circle cx="10" cy="58" r="10" fill="url(#bell)"/>
+    <circle cx="120" cy="14" r="10" fill="url(#bell)"/>
+    <circle cx="210" cy="66" r="10" fill="url(#bell)"/>
+  </g>
+  <g fill="#33200f"><circle cx="10" cy="61" r="2"/><circle cx="120" cy="17" r="2"/><circle cx="210" cy="69" r="2"/></g>
+  <g fill="#fff" opacity=".8"><circle cx="7" cy="54" r="2.4"/><circle cx="117" cy="10" r="2.4"/><circle cx="207" cy="62" r="2.4"/></g>
+</svg>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Durak · Set the table</title>
+<link rel="stylesheet" href="css/dacha.css">
+<link rel="stylesheet" href="css/lobby.css">
+</head>
+<body class="page-lobby">
+
+<div class="scene" aria-hidden="true"></div>
+<div class="stage stage--decor" data-stage data-w="1440" data-h="900" aria-hidden="true">
+  <div class="decor">
+    <div class="stitch-h cloth__top"></div>
+    <div class="stitch-v cloth__left"></div>
+    <div class="stitch-v cloth__right"></div>
+    <div class="pools"></div>
+    <div class="leaves"></div>
+    <div class="prop prop--samovar"><img src="art/samovar.svg" alt=""></div>
+    <div class="prop prop--tea"><img src="art/tea.svg" alt=""></div>
+  </div>
+</div>
+
+<div class="stage stage--ui" data-stage data-w="1440" data-h="900">
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Back to title">
+      <span class="brand__back"><svg><use href="#i-back"/></svg></span>
+      <span class="brand__word">ДУРАК</span>
+    </a>
+    <div class="lang" role="group" aria-label="Language">
+      <svg><use href="#i-globe"/></svg>
+      <button data-lang-btn="en" class="is-on">EN</button><button data-lang-btn="ru">RU</button>
+    </div>
+  </header>
+
+  <div class="head">
+    <span class="ru" data-i18n="headDeco">Накрываем на стол</span>
+    <h1 class="display" data-i18n="lobbyTitle">Set the table</h1>
+  </div>
+
+  <section class="count" aria-label="Number of players">
+    <div class="count__label"><b data-i18n="howMany">How many at the table?</b><span data-i18n="incl">including you</span></div>
+    <div class="count__chips" role="radiogroup">
+      <button role="radio" aria-checked="false">2</button>
+      <button role="radio" aria-checked="false">3</button>
+      <button role="radio" aria-checked="false">4</button>
+      <button role="radio" aria-checked="true" class="is-on">5</button>
+      <button role="radio" aria-checked="false">6</button>
+    </div>
+    <div class="count__seats" aria-hidden="true">
+      <span class="seatdot is-me">Я</span>
+      <img src="art/p-kostya.svg" alt=""><img src="art/p-zina.svg" alt=""><img src="art/p-misha.svg" alt=""><img src="art/p-sveta.svg" alt="">
+      <span class="seatdot is-empty"></span>
+    </div>
+  </section>
+
+  <section class="tiers" role="radiogroup" aria-label="Difficulty">
+    <button class="tier tier--novice" role="radio" aria-checked="false">
+      <span class="tier__suit"><i class="suit c"></i></span>
+      <span class="tier__portrait"><img src="art/p-kostya.svg" alt=""></span>
+      <span class="tier__ru">Новичок</span>
+      <span class="tier__name" data-i18n="lvNovice">Novice</span>
+      <span class="tier__pips"><i></i><i class="off"></i><i class="off"></i><i class="off"></i></span>
+      <span class="tier__desc" data-i18n="dNovice">Plays on instinct. Forgets what's been beaten.</span>
+      <span class="tier__rec"><span data-i18n="vsYou">you vs them</span> · <b>24 W</b> · 3 L</span>
+    </button>
+    <button class="tier tier--inter" role="radio" aria-checked="false">
+      <span class="tier__suit"><i class="suit d"></i></span>
+      <span class="tier__portrait"><img src="art/p-misha.svg" alt=""></span>
+      <span class="tier__ru">Любитель</span>
+      <span class="tier__name" data-i18n="lvInter">Intermediate</span>
+      <span class="tier__pips"><i></i><i></i><i class="off"></i><i class="off"></i></span>
+      <span class="tier__desc" data-i18n="dInter">Saves trumps, counts aces. A fair Sunday game.</span>
+      <span class="tier__rec"><span data-i18n="vsYou">you vs them</span> · <b>31 W</b> · 12 L</span>
+    </button>
+    <button class="tier tier--expert is-on" role="radio" aria-checked="true">
+      <span class="tier__flag" data-i18n="chosen">Chosen</span>
+      <span class="tier__suit"><i class="suit s"></i></span>
+      <span class="tier__portrait"><img src="art/p-zina.svg" alt=""></span>
+      <span class="tier__ru">Знаток</span>
+      <span class="tier__name" data-i18n="lvExpert">Expert</span>
+      <span class="tier__pips"><i></i><i></i><i></i><i class="off"></i></span>
+      <span class="tier__desc" data-i18n="dExpert">Remembers every card. Throws in exactly when it hurts.</span>
+      <span class="tier__rec"><span data-i18n="vsYou">you vs them</span> · <b>27 W</b> · 14 L</span>
+    </button>
+    <button class="tier tier--gm" role="radio" aria-checked="false">
+      <span class="tier__suit"><i class="suit h"></i></span>
+      <span class="tier__portrait"><img src="art/p-sveta.svg" alt=""></span>
+      <span class="tier__ru">Гроссмейстер</span>
+      <span class="tier__name" data-i18n="lvGM">Grandmaster</span>
+      <span class="tier__pips"><i></i><i></i><i></i><i></i></span>
+      <span class="tier__desc" data-i18n="dGM">Solves the endgame perfectly. Bring tea.</span>
+      <span class="tier__rec"><span data-i18n="vsYou">you vs them</span> · <b>5 W</b> · 11 L</span>
+    </button>
+  </section>
+
+  <footer class="go">
+    <div class="go__sum"><span class="kicker" data-i18n="yourTable">Your table</span><b data-i18n="sumLine">5 players · Expert · Podkidnoy</b></div>
+    <a class="btn" href="#"><svg><use href="#i-watch"/></svg><span data-i18n="watchInstead">Watch bots instead</span></a>
+    <a class="btn-primary sit" href="table.html"><svg width="24" height="24"><use href="#i-play"/></svg><span data-i18n="sit">Sit down</span><span class="sub">за стол</span></a>
+  </footer>
+</div>
+
+<script src="js/i18n.js"></script>
+<script src="js/common.js"></script>
+<script>
+  /* simple radio behaviour for the mockup */
+  document.querySelectorAll('[role=radiogroup]').forEach(g => g.addEventListener('click', e => {
+    const b = e.target.closest('[role=radio]'); if (!b) return;
+    g.querySelectorAll('[role=radio]').forEach(x => { x.classList.toggle('is-on', x === b); x.setAttribute('aria-checked', x === b); });
+    const flag = document.querySelector('.tier__flag');
+    if (b.classList.contains('tier')) b.prepend(flag);
+  }));
+</script>
+</body>
+</html>

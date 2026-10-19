@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Durak — Atelier</title>
+<link rel="stylesheet" href="css/atelier.css">
+<link rel="stylesheet" href="css/title.css">
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search).get('theme');
+    if (q) document.documentElement.setAttribute('data-theme', q);
+  })();
+</script>
+</head>
+<body class="page-title">
+
+<header class="nav">
+  <a class="nav-brand" href="index.html" aria-label="Durak">
+    <span class="mark serif">Д</span>
+    <span class="nav-word serif">Durak</span>
+  </a>
+  <nav class="nav-links" aria-label="Primary">
+    <a href="lobby.html">Play</a>
+    <a href="#">Watch</a>
+    <a href="#">Stats</a>
+    <a href="#">Rules</a>
+  </nav>
+  <div class="nav-right">
+    <div class="seg lang" role="group" aria-label="Language">
+      <button aria-pressed="true" data-lang="en">EN</button>
+      <button aria-pressed="false" data-lang="ru">RU</button>
+    </div>
+    <div class="seg theme-seg" role="group" aria-label="Appearance">
+      <button aria-pressed="true" data-theme-set="light" aria-label="Light">
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></svg>
+      </button>
+      <button aria-pressed="false" data-theme-set="dark" aria-label="Dark">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>
+      </button>
+    </div>
+    <button class="me-chip" aria-label="Your profile">
+      <span class="me-ava">Т</span><span class="me-name">Theo</span>
+    </button>
+  </div>
+</header>
+
+<main class="hero">
+  <section class="hero-copy">
+    <div class="eyebrow hero-eyebrow" data-i18n="eyebrow">Podkidnoy · 36 cards · 2–6 players</div>
+    <h1 class="masthead serif">
+      <span class="mh-en">DURAK</span>
+      <span class="mh-ru">«Дурак»</span>
+    </h1>
+    <p class="tagline" data-i18n="tagline">The classic Russian card game. Shed every card — and don’t be the last one holding them.</p>
+
+    <div class="cta">
+      <a class="btn btn--primary btn-play" href="table.html">
+        <span class="play-ico"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></span>
+        <span class="play-text">
+          <span class="play-main" data-i18n="play">Play</span>
+          <span class="play-sub">4 opponents · Expert</span>
+        </span>
+      </a>
+      <a class="btn btn--secondary btn-lg" href="lobby.html">
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 13.6c.5-.1 1-.2 1.5-.2 2.2 0 3.8 1.4 4.3 4.1"/></svg>
+        <span data-i18n="choose">Choose opponents</span>
+      </a>
+    </div>
+
+    <div class="quiet-links">
+      <a href="lobby.html" class="phone-only"><svg class="ico" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 13.6c.5-.1 1-.2 1.5-.2 2.2 0 3.8 1.4 4.3 4.1"/></svg><span class="short" data-i18n="opps">Opponents</span></a>
+      <a href="#"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2.5"/><path d="M10 9l4.5 2.5L10 14z"/><path d="M8 20.5h8"/></svg><span data-i18n="watch">Watch bots play</span><span class="short" data-i18n="watchS">Watch</span></a>
+      <a href="#"><svg class="ico" viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-6"/></svg><span data-i18n="stats">Statistics</span><span class="short" data-i18n="statsS">Stats</span></a>
+      <a href="#"><svg class="ico" viewBox="0 0 24 24"><path d="M5 4.5h9.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h9.5"/></svg><span data-i18n="rules">How to play</span><span class="short" data-i18n="rulesS">Rules</span></a>
+    </div>
+  </section>
+
+  <section class="still" aria-hidden="true">
+    <div class="still-shadow"></div>
+    <div class="deck">
+      <div data-back class="d d3"></div>
+      <div data-back class="d d2"></div>
+      <div data-back class="d d1"></div>
+    </div>
+    <div class="fan">
+      <div data-card="6S" class="f f1"></div>
+      <div data-card="QD" class="f f2"></div>
+      <div data-card="10C" class="f f3"></div>
+      <div data-card="KH" class="f f4"></div>
+      <div data-card="AS" class="f f5"></div>
+    </div>
+    <div class="still-note">Fig. 1 — a hand worth keeping</div>
+  </section>
+</main>
+
+<section class="record" aria-label="Your record">
+  <div class="rec-who">
+    <span class="eyebrow">Your record</span>
+    <span class="rec-rank serif">Expert <span>· Rating 1642</span></span>
+  </div>
+  <div class="rec-stats">
+    <div class="stat"><span class="stat-v serif tnum">128</span><span class="stat-k">Games</span></div>
+    <div class="stat"><span class="stat-v serif tnum">71</span><span class="stat-k">Wins</span></div>
+    <div class="stat"><span class="stat-v serif tnum">55<small>%</small></span><span class="stat-k">Win rate</span></div>
+    <div class="stat"><span class="stat-v serif tnum">19</span><span class="stat-k">Times the fool</span></div>
+    <div class="stat stat-form">
+      <span class="form" aria-label="Last ten games">
+        <i class="w"></i><i class="w"></i><i class="l"></i><i class="w"></i><i class="w"></i><i class="w"></i><i class="l"></i><i class="w"></i><i class="w"></i><i class="w"></i>
+      </span>
+      <span class="stat-k">Last 10 · <b>4 win streak</b></span>
+    </div>
+  </div>
+</section>
+
+<script src="js/cards.js"></script>
+<script>
+  (function () {
+    const root = document.documentElement;
+    const sync = () => document.querySelectorAll('[data-theme-set]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeSet === root.getAttribute('data-theme'))));
+    document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => { root.setAttribute('data-theme', b.dataset.themeSet); sync(); }));
+    sync();
+    const T = {
+      en: { eyebrow: 'Podkidnoy · 36 cards · 2–6 players', tagline: 'The classic Russian card game. Shed every card — and don’t be the last one holding them.', play: 'Play', choose: 'Choose opponents', watch: 'Watch bots play', stats: 'Statistics', rules: 'How to play', opps: 'Opponents', watchS: 'Watch', statsS: 'Stats', rulesS: 'Rules' },
+      ru: { eyebrow: 'Подкидной · 36 карт · 2–6 игроков', tagline: 'Классическая русская карточная игра. Избавься от всех карт — и только не останься последним.', play: 'Играть', choose: 'Выбрать соперников', watch: 'Смотреть ботов', stats: 'Статистика', rules: 'Правила', opps: 'Соперники', watchS: 'Смотреть', statsS: 'Статистика', rulesS: 'Правила' }
+    };
+    document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => {
+      const L = b.dataset.lang;
+      document.querySelectorAll('[data-lang]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = T[L][el.dataset.i18n]; });
+      root.lang = L;
+      document.body.classList.toggle('is-ru', L === 'ru');
+    }));
+  })();
+</script>
+</body>
+</html>

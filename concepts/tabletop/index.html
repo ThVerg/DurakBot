@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Durak — Concept D “Tabletop”</title>
+<link rel="icon" href="../assets/ui/favicon.svg">
+<link rel="stylesheet" href="css/tabletop.css">
+<link rel="stylesheet" href="css/title.css">
+</head>
+<body>
+<div class="room"></div>
+
+<div class="stage" id="stage">
+
+  <!-- top bar -->
+  <header class="t-top">
+    <a class="profile glass" href="#" title="Your profile">
+      <span class="avatar" style="background-image:url(../assets/avatars/you.webp)"></span>
+      <span class="pf-txt"><b>Theo</b><small><span class="star">★</span> 1 642 · Expert</small></span>
+    </a>
+    <div class="t-right">
+      <div class="lang glass" role="group" aria-label="Language">
+        <button class="on" data-lang="en">EN</button><button data-lang="ru">RU</button>
+      </div>
+      <button class="btn icon-btn glass round" title="Sound"><i data-icon="sound"></i></button>
+      <button class="btn icon-btn glass round" title="Settings"><i data-icon="gear"></i></button>
+    </div>
+  </header>
+
+  <!-- the table is the menu -->
+  <section class="t-table" id="ttable">
+
+    <!-- props lying on the felt -->
+    <div class="prop deck-prop">
+      <div class="card trump" style="background-image:url(../assets/cards/9H.webp)"></div>
+      <div class="stack" id="stack"></div>
+    </div>
+    <div class="prop aces" id="aces"></div>
+
+    <!-- printed felt logo -->
+    <div class="felt-logo">
+      <div class="ornament"><span></span><i>♠</i><i class="r">♥</i><i>♣</i><i class="r">♦</i><span></span></div>
+      <h1 class="word" data-en="DURAK" data-ru="ДУРАК">DURAK</h1>
+      <div class="sub"><span data-en="«ДУРАК» · PODKIDNOY · 36 CARDS" data-ru="«DURAK» · ПОДКИДНОЙ · 36 КАРТ">«ДУРАК» · PODKIDNOY · 36 CARDS</span></div>
+    </div>
+
+    <div class="cta">
+      <a class="btn btn-primary play" href="table.html">
+        <span class="play-ic"><i data-icon="play"></i></span>
+        <span class="play-txt"><b data-en="Play" data-ru="Играть">Play</b><small data-en="4 bots · Expert" data-ru="4 бота · Эксперт">4 bots · Expert</small></span>
+      </a>
+      <nav class="more">
+        <a class="btn chip" href="lobby.html">
+          <span class="mini-avs"><i style="background-image:url(../assets/avatars/kostya.webp)"></i><i style="background-image:url(../assets/avatars/zina.webp)"></i><i style="background-image:url(../assets/avatars/misha.webp)"></i><i style="background-image:url(../assets/avatars/sveta.webp)"></i></span>
+          <span data-en="Choose opponents" data-ru="Соперники">Choose opponents</span>
+        </a>
+        <a class="btn chip" href="#"><i data-icon="eye"></i><span data-en="Watch bots" data-ru="Боты играют">Watch bots</span></a>
+        <a class="btn chip" href="#"><i data-icon="chart"></i><span data-en="Stats" data-ru="Статистика">Stats</span></a>
+        <a class="btn chip" href="#"><i data-icon="book"></i><span data-en="Rules" data-ru="Правила">Rules</span></a>
+      </nav>
+    </div>
+  </section>
+
+  <!-- player's record -->
+  <footer class="record glass glass-solid">
+    <div class="rc-title"><span data-en="Your record" data-ru="Результаты">Your record</span><small data-en="last 30 days" data-ru="за 30 дней">last 30 days</small></div>
+    <div class="rc-stat"><b>128</b><span data-en="Games" data-ru="Игры">Games</span></div>
+    <div class="rc-stat good"><b>74</b><span data-en="Wins" data-ru="Победы">Wins</span></div>
+    <div class="rc-stat"><b>58<small>%</small></b><span data-en="Win rate" data-ru="Процент побед">Win rate</span></div>
+    <div class="rc-stat bad"><b>21</b><span data-en="Times durak" data-ru="Был дураком">Times durak</span></div>
+    <div class="rc-stat"><b><i data-icon="fire"></i>5</b><span data-en="Streak" data-ru="Серия">Streak</span></div>
+    <div class="rc-form" title="Last 10 games">
+      <span data-en="Form" data-ru="Форма">Form</span>
+      <div class="dots"><i class="w"></i><i class="w"></i><i class="l"></i><i class="w"></i><i class="w"></i><i class="w"></i><i class="l"></i><i class="w"></i><i class="w"></i><i class="w"></i></div>
+    </div>
+    <div class="rc-elo"><span data-en="Rating" data-ru="Рейтинг">Rating</span><b>1 642</b><em>▲ 18</em></div>
+  </footer>
+</div>
+
+<script src="js/icons.js"></script>
+<script src="js/stage.js"></script>
+<script src="js/title.js"></script>
+</body>
+</html>

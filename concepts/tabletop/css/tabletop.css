@@ -1,0 +1,236 @@
+/* =====================================================================
+   DURAK — Concept D "Tabletop"
+   Shared design system: tokens, type, glass panels, buttons, cards.
+   ===================================================================== */
+
+/* ---------- fonts (OFL, copied from @fontsource) ---------- */
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 400;
+  src: url(../fonts/inter-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+2660-2667; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 400;
+  src: url(../fonts/inter-cyrillic-400-normal.woff2) format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 500;
+  src: url(../fonts/inter-latin-500-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+2660-2667; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 500;
+  src: url(../fonts/inter-cyrillic-500-normal.woff2) format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 600;
+  src: url(../fonts/inter-latin-600-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+2660-2667; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 600;
+  src: url(../fonts/inter-cyrillic-600-normal.woff2) format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 700;
+  src: url(../fonts/inter-latin-700-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+2660-2667; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 700;
+  src: url(../fonts/inter-cyrillic-700-normal.woff2) format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 800;
+  src: url(../fonts/inter-latin-800-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+2660-2667; }
+@font-face { font-family: "Inter"; font-style: normal; font-display: swap; font-weight: 800;
+  src: url(../fonts/inter-cyrillic-800-normal.woff2) format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Playfair"; font-style: normal; font-display: swap; font-weight: 600;
+  src: url(../fonts/playfair-display-latin-600-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+2000-206F; }
+@font-face { font-family: "Playfair"; font-style: normal; font-display: swap; font-weight: 600;
+  src: url(../fonts/playfair-display-cyrillic-600-normal.woff2) format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Playfair"; font-style: normal; font-display: swap; font-weight: 700;
+  src: url(../fonts/playfair-display-latin-700-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+2000-206F; }
+@font-face { font-family: "Playfair"; font-style: normal; font-display: swap; font-weight: 700;
+  src: url(../fonts/playfair-display-cyrillic-700-normal.woff2) format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family: "Playfair"; font-style: normal; font-display: swap; font-weight: 900;
+  src: url(../fonts/playfair-display-latin-900-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+2000-206F; }
+@font-face { font-family: "Playfair"; font-style: normal; font-display: swap; font-weight: 900;
+  src: url(../fonts/playfair-display-cyrillic-900-normal.woff2) format("woff2"); unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+
+/* ---------- tokens ---------- */
+:root {
+  --ink: #15201b;
+  --ink-2: #46544d;
+  --ink-3: #7b8781;
+  --line: rgba(21, 32, 27, .10);
+  --paper: #fbf8f2;
+
+  --room-1: #f3eee6;
+  --room-2: #e3dacb;
+
+  --glass: rgba(255, 255, 255, .74);
+  --glass-hi: rgba(255, 255, 255, .90);
+  --glass-edge: rgba(255, 255, 255, .95);
+  --panel-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 0 0 1px rgba(30, 40, 35, .06),
+                  0 2px 4px rgba(25, 35, 30, .10), 0 12px 28px -10px rgba(25, 35, 30, .35);
+
+  --amber-1: #ffd27a;
+  --amber-2: #ffb43c;
+  --amber-3: #f09012;
+  --amber-ink: #3b2200;
+  --glow: 255, 190, 70;
+
+  --attacker: #e5484d;
+  --defender: #2f6feb;
+  --thrower: #8b5cf6;
+  --out: #7d8a84;
+  --heart: #d0263b;
+  --felt: #1f8a55;
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+
+  --card-ratio: 716 / 512;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--room-1);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  font-feature-settings: "cv11", "ss01", "tnum";
+}
+button { font: inherit; color: inherit; }
+img { display: block; }
+
+/* ---------- the room (what is under the table) ---------- */
+.room {
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 42%, rgba(255,253,248,.95) 0%, rgba(255,251,244,.0) 62%),
+    radial-gradient(140% 120% at 50% 50%, var(--room-1) 30%, var(--room-2) 100%);
+}
+.room::after {   /* linen / plaster grain so the light colour never looks flat */
+  content: ""; position: absolute; inset: 0;
+  background: url(../img/backdrop.png) 0 0 / 512px 512px;
+  mix-blend-mode: multiply; opacity: .16;
+}
+
+/* ---------- stage: fixed design space, scaled to the viewport ---------- */
+.stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+
+/* ---------- glass panels ---------- */
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  backdrop-filter: blur(18px) saturate(1.5);
+  box-shadow: var(--panel-shadow);
+  border-radius: var(--r-md);
+}
+.glass-solid { background: var(--glass-hi); }
+
+/* ---------- buttons ---------- */
+.btn {
+  appearance: none; border: 0; cursor: pointer; user-select: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  transition: transform .12s ease, box-shadow .18s ease, filter .18s ease, background .18s ease;
+}
+.btn:focus-visible { outline: 3px solid rgba(47,111,235,.55); outline-offset: 3px; }
+
+.btn-primary {
+  height: 64px; padding: 0 30px; border-radius: 18px;
+  color: var(--amber-ink); font-weight: 800; font-size: 20px; letter-spacing: .01em;
+  background: linear-gradient(180deg, #ffdf94 0%, var(--amber-2) 48%, var(--amber-3) 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.75) inset,
+    0 -2px 0 rgba(160, 80, 0, .35) inset,
+    0 0 0 1px rgba(150, 80, 0, .35),
+    0 3px 0 #c9700a,
+    0 10px 24px -6px rgba(200, 110, 0, .55),
+    0 18px 36px -12px rgba(30, 20, 0, .35);
+}
+.btn-primary:hover { filter: brightness(1.05) saturate(1.05); transform: translateY(-1px); }
+.btn-primary:active, .btn-primary.is-pressed {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.5) inset,
+    0 2px 6px rgba(160, 80, 0, .45) inset,
+    0 0 0 1px rgba(150, 80, 0, .4),
+    0 0 0 #c9700a,
+    0 4px 10px -4px rgba(200, 110, 0, .5);
+}
+
+.btn-glass {
+  height: 52px; padding: 0 20px; border-radius: 16px;
+  font-weight: 700; font-size: 16px; color: var(--ink);
+  background: var(--glass-hi);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow: 0 1px 0 #fff inset, 0 0 0 1px rgba(25,35,30,.08), 0 2px 0 rgba(25,35,30,.10),
+              0 8px 20px -8px rgba(25,35,30,.35);
+}
+.btn-glass:hover { background: #fff; transform: translateY(-1px); }
+.btn-glass:active, .btn-glass.is-pressed { transform: translateY(2px); box-shadow: 0 0 0 1px rgba(25,35,30,.10), 0 1px 3px rgba(25,35,30,.25) inset; }
+
+.icon-btn {
+  width: 44px; height: 44px; border-radius: 14px; padding: 0;
+  background: transparent; color: var(--ink-2);
+}
+.icon-btn:hover { background: rgba(21,32,27,.06); color: var(--ink); }
+.icon-btn:active { background: rgba(21,32,27,.10); }
+.icon-btn svg, .btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.kbd {
+  display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 5px;
+  border-radius: 6px; font-size: 12px; font-weight: 700; line-height: 1;
+  background: rgba(21,32,27,.07); color: var(--ink-2); box-shadow: 0 1px 0 rgba(21,32,27,.12);
+}
+.btn-primary .kbd { background: rgba(80, 40, 0, .14); color: #5a3400; box-shadow: 0 1px 0 rgba(80,40,0,.18); }
+
+/* ---------- playing cards (printed stock on cloth) ---------- */
+.card {
+  position: absolute; width: var(--cw, 112px); aspect-ratio: 512 / 716;
+  border-radius: 5.1% / 3.65%;
+  background: #f7f3e8 var(--face, none) center / 100% 100% no-repeat;
+  /* 1px paper edge + tight contact shadow + soft key shadow (light from top-left) */
+  box-shadow:
+    0 0 0 .5px rgba(60, 50, 30, .22),
+    .5px 1px 0 #d6cdb8,
+    1px 1.5px 1.5px rgba(10, 30, 15, .40),
+    3px 6px 8px -2px rgba(10, 30, 15, .26),
+    8px 16px 24px -8px rgba(10, 30, 15, .30);
+  transform-origin: 50% 50%;
+}
+.card::after {     /* soft overhead light falling across the stock */
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(145deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 38%, rgba(0,0,0,0) 70%, rgba(40,30,10,.06) 100%);
+}
+.card.back { background-color: #7b1626; }
+.card.lifted {
+  box-shadow:
+    0 0 0 .5px rgba(60, 50, 30, .22),
+    .5px 1px 0 #d6cdb8,
+    2px 4px 4px rgba(10, 30, 15, .22),
+    8px 18px 22px -6px rgba(10, 30, 15, .32),
+    16px 30px 40px -12px rgba(10, 30, 15, .30);
+}
+
+/* ---------- avatar ---------- */
+.avatar {
+  --ring: #fff;
+  width: var(--av, 72px); height: var(--av, 72px); border-radius: 50%;
+  background: #ddd var(--img, none) center / cover no-repeat;
+  box-shadow: 0 0 0 3px var(--ring), 0 0 0 4px rgba(20,30,25,.10), 0 6px 16px -4px rgba(20,30,25,.45);
+  position: relative;
+}
+
+/* ---------- role tags ---------- */
+.tag {
+  --c: var(--ink-3);
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 22px; padding: 0 8px 0 6px; border-radius: 999px;
+  font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+  color: #fff; background: var(--c);
+  box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 1px 2px rgba(0,0,0,.18);
+  white-space: nowrap;
+}
+.tag svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.tag.attacker { --c: var(--attacker); }
+.tag.defender { --c: var(--defender); }
+.tag.thrower { --c: var(--thrower); }
+.tag.out { --c: #9aa39f; }
+
+.suit-h, .suit-d { color: var(--heart); }
+.suit-s, .suit-c { color: #17171b; }
+
+/* card chip used inline in text: [8♦] */
+.cchip {
+  display: inline-flex; align-items: center; justify-content: center; gap: 1px;
+  height: 1.45em; min-width: 1.9em; padding: 0 .3em; margin: 0 .08em;
+  border-radius: .3em; background: #fff; font-weight: 800; line-height: 1;
+  box-shadow: 0 0 0 1px rgba(21,32,27,.14), 0 1px 2px rgba(21,32,27,.18);
+  vertical-align: .05em; font-size: .92em;
+}
