@@ -1,0 +1,36 @@
+{
+ "format": 1,
+ "version": 197800,
+ "steps": 6656556524,
+ "obs_dim": 918,
+ "hidden": 384,
+ "blocks": 3,
+ "belief": true,
+ "inputs": [
+  "obs",
+  "mask"
+ ],
+ "outputs": [
+  "logits",
+  "value",
+  "durak",
+  "belief"
+ ],
+ "opset": 17,
+ "bytes": 5707222,
+ "sha256": "71b8259665da0bc075fb4284d42be9780cb05330a09d8d190dc49e23d6919836",
+ "checkpoint_sha256": "cb46089a1c9abb69ce308488580d898cb45606f490d56062e813a6d27996d3ca",
+ "exported": "2026-10-19T15:37:28+02:00",
+ "iteration": 197800,
+ "parity": {
+  "positions": 4000,
+  "max_abs_diff": {
+   "logits": 4.76837158203125e-05,
+   "value": 1.3262033462524414e-06,
+   "durak": 9.5367431640625e-06,
+   "belief": 3.0100345611572266e-06
+  },
+  "argmax_agreement": 1.0,
+  "ok": true
+ }
+}

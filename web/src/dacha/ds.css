@@ -344,17 +344,40 @@ html[lang=ru] .sheet__head .ru { display: none; }
 .card-img { display: block; width: 100%; height: 100%; border-radius: inherit; }
 
 /* speech bubble (lubok print: ink outline + offset red misprint) */
-.bubble { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 16px 9px; border-radius: 20px; pointer-events: none;
+.bubble { --rot: -4deg; --tail: 26px; position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0 16px; border-radius: 20px; pointer-events: none;
   background: #fff; box-shadow: inset 0 0 0 2px var(--ink), 4px 5px 0 rgba(200, 54, 31, .85), 8px 14px 22px rgba(var(--shadow-col), .22);
-  transform: rotate(-4deg); animation: pop .45s cubic-bezier(.3,1.6,.5,1) both; z-index: 40; }
-.bubble::before { content: ""; position: absolute; left: 22px; bottom: -17px; width: 26px; height: 20px; background: var(--ink); clip-path: polygon(0 0, 100% 0, 8% 100%); }
-.bubble::after { content: ""; position: absolute; left: 25px; bottom: -12px; width: 19px; height: 15px; background: #fff; clip-path: polygon(0 0, 100% 0, 8% 100%); }
+  transform: rotate(var(--rot)); animation: pop .45s cubic-bezier(.3,1.6,.5,1) both; z-index: 40; }
+/* tail: ink triangle + white inner triangle, its tip at --tail along the edge */
+.bubble::before, .bubble::after { content: ""; position: absolute; }
+.bubble::before { background: var(--ink); }
+.bubble::after { background: #fff; }
+.bubble--tail-down::before, .bubble--tail-up::before { width: 26px; height: 20px; left: calc(var(--tail) - 2px); }
+.bubble--tail-down::after, .bubble--tail-up::after { width: 19px; height: 15px; left: calc(var(--tail) + 1px); }
+.bubble--tail-down::before { bottom: -17px; clip-path: polygon(0 0, 100% 0, 8% 100%); }
+.bubble--tail-down::after { bottom: -12px; clip-path: polygon(0 0, 100% 0, 8% 100%); }
+.bubble--tail-up::before { top: -17px; clip-path: polygon(0 100%, 100% 100%, 8% 0); }
+.bubble--tail-up::after { top: -12px; clip-path: polygon(0 100%, 100% 100%, 8% 0); }
+.bubble--tail-left::before { left: -17px; top: calc(var(--tail) - 2px); width: 20px; height: 26px; clip-path: polygon(100% 0, 100% 100%, 0 8%); }
+.bubble--tail-left::after { left: -12px; top: calc(var(--tail) + 1px); width: 15px; height: 19px; clip-path: polygon(100% 0, 100% 100%, 0 8%); }
+/* tail tip in the right half: lean the triangle the other way */
+.bubble--tail-down.is-tail-r::before { left: calc(var(--tail) - 24px); clip-path: polygon(0 0, 100% 0, 92% 100%); }
+.bubble--tail-down.is-tail-r::after { left: calc(var(--tail) - 20px); clip-path: polygon(0 0, 100% 0, 92% 100%); }
+.bubble--tail-up.is-tail-r::before { left: calc(var(--tail) - 24px); clip-path: polygon(0 100%, 100% 100%, 92% 0); }
+.bubble--tail-up.is-tail-r::after { left: calc(var(--tail) - 20px); clip-path: polygon(0 100%, 100% 100%, 92% 0); }
 .bubble__ru { font: 900 22px/1 var(--display); color: var(--vermilion); white-space: nowrap; }
 .bubble__en { font: italic 400 12.5px/1 var(--display); color: var(--ink-2); white-space: nowrap; }
 html[lang=ru] .bubble__en { display: none; }
+/* phones: smaller print, gentler tilt */
+.bubble--m { --rot: -2deg; gap: 2px; padding: 0 11px; border-radius: 15px; box-shadow: inset 0 0 0 1.8px var(--ink), 3px 4px 0 rgba(200, 54, 31, .85), 6px 10px 16px rgba(var(--shadow-col), .22); }
+.bubble--m .bubble__ru { font-size: 15px; }
+.bubble--m .bubble__en { font-size: 10px; }
+.bubble--m.bubble--tail-up::before { top: -14px; width: 20px; height: 16px; }
+.bubble--m.bubble--tail-up::after { top: -10px; width: 15px; height: 12px; }
+.bubble--m.bubble--tail-up.is-tail-r::before { left: calc(var(--tail) - 18px); }
+.bubble--m.bubble--tail-up.is-tail-r::after { left: calc(var(--tail) - 16px); }
 .bubble.is-fading { animation: pop .45s cubic-bezier(.3,1.6,.5,1) both, bubbleout .4s ease 2.4s forwards; }
-@keyframes pop { from { transform: rotate(-4deg) scale(.4); opacity: 0; } to { transform: rotate(-4deg) scale(1); opacity: 1; } }
-@keyframes bubbleout { to { opacity: 0; transform: rotate(-4deg) scale(.9); } }
+@keyframes pop { from { transform: rotate(var(--rot)) scale(.4); opacity: 0; } to { transform: rotate(var(--rot)) scale(1); opacity: 1; } }
+@keyframes bubbleout { to { opacity: 0; transform: rotate(var(--rot)) scale(.9); } }
 
 /* loading spinner */
 .spin { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(93,66,41,.2); border-top-color: var(--vermilion); animation: spin .8s linear infinite; display: inline-block; }

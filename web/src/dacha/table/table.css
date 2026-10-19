@@ -9,7 +9,6 @@
 .table-under { z-index: 2; }
 .table-over { z-index: 4; pointer-events: none; }
 .table-over > .actions, .table-over > .sortbtn, .table-over > .skipbtn, .table-over > .log { pointer-events: auto; }
-.seatghost { pointer-events: none; }
 .table-stage > * { position: absolute; }
 
 /* ---------- top bar ---------- */
@@ -46,15 +45,13 @@
 .seat--m .pips { bottom: -5px; padding: 2px 4px; gap: 2px; }
 .seat--m .pips i { width: 4.5px; height: 4.5px; }
 /* bottom seat when watching bots (phone) */
-.seatpill { z-index: 45; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; height: 32px; padding: 3px 10px 3px 3px; border-radius: 16px; white-space: nowrap;
+.seatpill { z-index: 45; display: flex; align-items: center; gap: 6px; height: 32px; padding: 3px 10px 3px 3px; border-radius: 16px; white-space: nowrap;
   background: rgba(255, 252, 244, .96); box-shadow: inset 0 0 0 1.5px rgba(168,109,18,.4), var(--sh-1); }
 .seatpill .medal { padding: 1.5px; box-shadow: none; }
 .seatpill b { font: 700 13px/1 var(--display); }
 .seatpill .tag { font-size: 8.5px; padding: 3px 6px; letter-spacing: .07em; }
 .seatpill .tag svg { display: none; }
 .seatpill.to-move { box-shadow: inset 0 0 0 2px var(--cobalt), var(--sh-1); }
-.seatpill .bubble { left: 10px; bottom: calc(100% + 16px); top: auto; padding: 7px 12px 6px; }
-.seatpill .bubble__ru { font-size: 17px; }
 .seat__win { font: 900 13px/1 var(--display); color: var(--green); background: #eef6ef; padding: 3px 7px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(47,107,69,.35); }
 .seat .count { position: absolute; transform: translate(0, -50%); display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px;
   font: 900 14px/1 var(--text); color: var(--ink); background: #fff; box-shadow: inset 0 0 0 1.5px rgba(93,66,41,.35), 0 1px 2px rgba(var(--shadow-col), .2); z-index: 2; }
@@ -73,11 +70,6 @@
 .laurel { position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; z-index: 3;
   color: var(--gold-lo); background: radial-gradient(circle at 35% 30%, #fff8d8, var(--gold-hi)); box-shadow: 0 0 0 2px #fff, var(--sh-1); }
 .laurel svg { width: 22px; height: 22px; }
-.seatghost .bubble { left: 64px; top: -84px; }
-.seat--right .bubble { left: auto; right: 150px; }
-.seat--top .bubble { top: auto; bottom: -70px; left: -34px; }
-.seat--top .bubble::before { top: -17px; bottom: auto; left: 70px; clip-path: polygon(0 100%, 100% 100%, 8% 0); }
-.seat--top .bubble::after { top: -12px; bottom: auto; left: 73px; clip-path: polygon(0 100%, 100% 100%, 8% 0); }
 
 /* phone: arched column place-cards */
 .seat--m { border-radius: 44px 44px 16px 16px; }
@@ -98,15 +90,6 @@
 .seat--m .laurel { width: 24px; height: 24px; bottom: -8px; }
 .seat--m .laurel svg { width: 17px; height: 17px; }
 .seat--m .seat__win { position: absolute; top: -8px; left: -4px; font-size: 10px; padding: 2px 5px; }
-.seat--m .bubble { left: 4px; top: calc(100% + 16px); padding: 7px 12px 6px; transform: rotate(-3deg); }
-.seat--m:nth-last-child(n) .bubble { bottom: auto; }
-.seat--m .bubble::before { left: 18px; top: -17px; bottom: auto; clip-path: polygon(0 100%, 100% 100%, 8% 0); }
-.seat--m .bubble::after { left: 21px; top: -12px; bottom: auto; clip-path: polygon(0 100%, 100% 100%, 8% 0); }
-.seat--m .bubble__ru { font-size: 17px; }
-.seat--m .bubble__en { font-size: 10.5px; }
-.seat--m.seat--rhs .bubble { left: auto; right: 4px; }
-.seat--m.seat--rhs .bubble::before { left: auto; right: 18px; transform: scaleX(-1); }
-.seat--m.seat--rhs .bubble::after { left: auto; right: 21px; transform: scaleX(-1); }
 .seat--xs .tag { font-size: 7px; letter-spacing: .02em; padding: 3px 4px; max-width: calc(100% + 8px); overflow: hidden; }
 .seat--xs .known { padding: 2px 4px; }
 
@@ -126,7 +109,7 @@
 .trumpchip b { color: var(--vermilion); font-weight: 900; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; }
 .trumpchip__card { display: inline-flex; align-items: center; gap: 1px; margin: 0 2px; padding: 2px 6px; border-radius: 5px; font: 900 14px/1 var(--display); color: var(--ink); background: #fff4ef; box-shadow: inset 0 0 0 1px rgba(200,54,31,.35); }
 .trumpchip__card .suit { width: 11px; height: 11px; }
-.talon--m .talon__count { left: -10px; top: -10px; bottom: auto; width: 32px; height: 32px; }
+.talon--m .talon__count { left: 1px; top: -2px; bottom: auto; width: 30px; height: 30px; }
 .talon--m .talon__count b { font-size: 16px; }
 .trumpchip--m { left: -52px; top: 8px; flex-direction: column; gap: 3px; padding: 5px 5px 6px; border-radius: 12px; }
 .trumpchip--m .trumpchip__disc { width: 22px; height: 22px; }
@@ -138,8 +121,8 @@
 .bito__label { z-index: 36; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 14px 7px; border-radius: 12px; background: rgba(255, 252, 244, .93); box-shadow: var(--sh-1); white-space: nowrap; }
 .bito__label .ru { font: italic 700 23px/1 var(--display); color: var(--ink); }
 .bito__n { font: 700 10.5px/1 var(--text); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); }
-.bito__label--m { transform: none; flex-direction: row; align-items: baseline; gap: 5px; padding: 4px 8px 5px; border-radius: 9px; background: rgba(255, 252, 244, .95); }
-.bito__label--m .ru { font-size: 13px; }
+.bito__label--m { transform: none; flex-direction: column; align-items: center; gap: 3px; padding: 5px 6px 6px; border-radius: 9px; background: rgba(255, 252, 244, .95); }
+.bito__label--m .ru { font-size: 12.5px; }
 .bito__label--m .bito__n { font: 900 12px/1 var(--display); letter-spacing: 0; color: var(--ink); }
 
 /* ---------- battle helpers ---------- */
@@ -153,6 +136,8 @@
 .dropslot.is-drag { background: rgba(255, 250, 238, .5); box-shadow: 0 0 0 6px rgba(255, 240, 200, .25); }
 .dropslot.is-hot { border-style: solid; border-color: var(--gold-hi); background: rgba(255, 246, 220, .82); box-shadow: 0 0 0 4px var(--vermilion), 0 0 26px 10px rgba(255, 210, 120, .55); }
 .beatme.is-big { transform: translate(-50%, -100%) rotate(-3deg) scale(1.15); }
+/* phones: the tag sits on the card's lower edge (the band above is the talon) */
+.beatme--m::after { display: none; }
 .table-stage.is-dragging .status { opacity: .55; }
 .dropslot .cref { font-size: 26px; margin-top: 4px; background: transparent; box-shadow: none; }
 .dstage--m .dropslot { font-size: 11px; }
@@ -230,6 +215,8 @@ button.fc__lift { pointer-events: auto; cursor: default; touch-action: none; -we
 .skipbtn { z-index: 65; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 16px; font: 800 12px/1 var(--text); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2);
   background: rgba(255, 252, 244, .94); box-shadow: inset 0 0 0 1.5px rgba(168,109,18,.4), var(--sh-1); }
 .skipbtn svg { width: 15px; height: 15px; }
+.dstage--m .skipbtn { height: 30px; padding: 0 9px; gap: 4px; font-size: 10px; letter-spacing: .03em; max-width: 104px; }
+.dstage--m .skipbtn svg { width: 13px; height: 13px; }
 
 /* ---------- actions ---------- */
 .actions { right: 40px; bottom: 36px; width: 300px; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: stretch; z-index: 50; }

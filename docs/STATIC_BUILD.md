@@ -2,8 +2,6 @@
 
 **Play online: <https://thverg.github.io/DurakBot/>**
 
-> **Status: in progress.** The in-browser build is being completed. The overall design below is settled, but file names, commands, sizes and the remaining differences from the server version are **to be finalised** and may change before release.
-
 The regular web app needs the Python server: the server deals the cards, runs the bots and stores the statistics ([WEBAPP.md](WEBAPP.md)). The static build removes that dependency. The same React interface runs together with a complete game backend in the browser, so the site can be hosted as plain files on GitHub Pages, and nothing is sent to a server.
 
 ## How it works
@@ -40,15 +38,14 @@ The no-cheating guarantees carry over unchanged: bots receive determinized copie
 
 ## Differences from the server version
 
-*To be finalised.* Expected differences:
-
-- The Lab shows the training and evaluation data exported at build time, not live data, and the "your results" part comes from the games played in that browser.
-- Statistics and the "continue game" feature are per browser and device.
-- The search budget is scaled for a single-threaded worker, and the first move of a session waits for the network and solver to download.
+- **Same bots, browser budget.** Every bot gives the same moves as its Python original on the parity positions (the heuristic and the solver exactly; the network to within about 1e-5). The champion's search has a budget of 0.5 s per move (solver 0.3 s, 12 determinizations), tuned for one thread. Measured against the heuristic bot over 1,000 games, the in-browser champion is the durak in 12.1% of two-player games and 8.5% of four-player games, in line with the server version. Most moves take a few milliseconds; moves that run the search take 0.1–0.5 s.
+- **Different shuffles.** The browser deals with its own seeded random generator, so a given seed deals different cards than on the server. The search and the difficulty levels therefore match the server statistically, not move for move.
+- **Per-browser data.** Statistics, finished games and the last 30 resumable games are stored in that browser's IndexedDB. The analysis of a finished game is recomputed after a reload.
+- **Lab snapshot.** The Lab shows the training and evaluation data exported at build time (the `main` run), not live data.
+- **First load.** The first visit downloads about 17 MB: the app and card art, the 5.7 MB network and the 11 MB onnxruntime-web runtime (about 3 MB compressed). After that the files come from the browser cache. The default bot is preloaded while the title screen is showing.
+- **Slower devices.** The search budget is wall-clock time. On a slow device fewer rollouts finish and the champion falls back to its policy network, which is still `champion_fast` strength. Very large endgames can exceed the 0.3 s solver budget, in which case the move comes from the network.
 
 ## Building it
-
-*Provisional commands; to be finalised.*
 
 ```bash
 # 1. Export the data the static site serves (run after training or ladder updates)
@@ -86,8 +83,15 @@ cd web
 npm test          # vitest run
 ```
 
+End-to-end, `tests/test_static_e2e.py` drives the production static build in headless Chromium under `/DurakBot/`: full two-player (desktop, clicks, drags and hints) and five-player (phone, Russian) games, replay and analysis, statistics across reloads, resuming a game, the Lab, title and lobby, spectating and high-resolution card art. Every test also checks that no request leaves `/DurakBot/` or hits `/api`, that the bots run in the worker, that the main thread never stalls, and that hidden cards never reach the page.
+
+```bash
+cd web && npm run build:static && cd ..
+.venv/bin/python -m pytest -q tests/test_static_e2e.py
+```
+
 ## Deploying to GitHub Pages
 
-*To be finalised.* The workflow [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) runs on every push to `main` (or by hand): it installs the front end's dependencies, runs the tests, builds with `VITE_BACKEND=local` and `VITE_BASE=/<repository name>/`, and publishes `web/dist` to GitHub Pages. The generated static data and AI files are committed to the repository, so the workflow needs neither Python nor the training outputs. To enable it, choose **GitHub Actions** as the Pages source in the repository settings.
+The workflow [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) runs on every push to `main` (or by hand): it installs the front end's dependencies, runs the tests, builds with `VITE_BACKEND=local` and `VITE_BASE=/<repository name>/`, and publishes `web/dist` to GitHub Pages. The generated static data and AI files are committed to the repository, so the workflow needs neither Python nor the training outputs. It is enabled with **GitHub Actions** as the Pages source in the repository settings. A failing test blocks the deploy.
 
 After a new champion is promoted, refresh the browser model and the static data, commit the changed files under `web/public/ai/` and `web/public/static-data/`, and push.

@@ -166,13 +166,15 @@ export function geometry(view: GameState, layout: Layout, W: number, H: number):
     H,
     cx: W / 2,
     table: { x: W / 2 - 219, y: 58, w: 438, h: 628 },
-    talon: { x: W / 2 - 1, y: 261, w: 56 },
-    bito: { x: W / 2 + 113, y: 262, w: 52 },
-    battle: { x: W / 2, y: Math.max(396, (H - 33) / 2) },
+    // below the place-cards: a lane kept free for speech bubbles (y 203..262),
+    // then the talon / trump / bito band, then the battle area above the ribbon
+    talon: { x: W / 2 - 1, y: 304, w: 56 },
+    bito: { x: W / 2 + 104, y: 305, w: 52 },
+    battle: { x: W / 2, y: (347 + (H - 328)) / 2 },
     ribbonY: H - 302,
     handBottom: H - 108,
     seats,
-    bottom: { seat: bottom, x: W / 2, y: H - 302 + 27, w: 150, h: 30, fanX: 0, fanY: 0, fanStep: 0, fanW: 0, fanSpan: 0, side: "left" },
+    bottom: { seat: bottom, x: 10, y: H - 302 + 27, w: 150, h: 32, fanX: 0, fanY: 0, fanStep: 0, fanW: 0, fanSpan: 0, side: "left" },
     me: { x: W / 2, y: H - 160 },
   };
 }
@@ -194,9 +196,9 @@ export function computeLayout(inp: LayoutInput): { targets: CardTarget[]; geo: G
   const perRow = 3;
   const rows = Math.ceil(np / perRow) || 1;
   // card width / spacing by how many pairs there are
-  const cw = d ? (np <= 2 ? 128 : np === 3 ? 100 : 90) : np <= 2 ? 104 : np === 3 ? 84 : 58;
+  const cw = d ? (np <= 2 ? 128 : np === 3 ? 100 : 90) : np <= 2 ? 100 : np === 3 ? 84 : 58;
   const sx = d ? (np <= 2 ? 196 : np === 3 ? 132 : 122) : np <= 2 ? 146 : np === 3 ? 110 : 80;
-  const sy = d ? 136 : 100;
+  const sy = d ? 136 : 70; // phone rows overlap a little; the corner indices stay visible
   const dx = cw * 0.17;
   const dy = cw * 0.235;
   const by = d ? g.battle.y : g.battle.y + (two ? 0 : 0);
@@ -205,7 +207,7 @@ export function computeLayout(inp: LayoutInput): { targets: CardTarget[]; geo: G
     const inRow = Math.min(perRow, np - row * perRow);
     const col = i % perRow;
     const x = g.battle.x + (col - (inRow - 1) / 2) * sx - dx / 2;
-    const y = by + (row - (rows - 1) / 2) * sy - (two ? dy / 2 : 0);
+    const y = by + (row - (rows - 1) / 2) * sy - (two || !d ? dy / 2 : 0);
     const ja = (hash01(p.attack) - 0.5) * 6;
     out.push({ key: `c${p.attack}`, card: p.attack, x, y, rot: ja - 1, w: cw, faceUp: true, z: 300 + i * 2, zone: "table" });
     if (p.defense !== null) {
@@ -249,8 +251,8 @@ export function computeLayout(inp: LayoutInput): { targets: CardTarget[]; geo: G
       key: `c${c}`,
       card: c,
       x: b.x + (h - 0.5) * (d ? 20 : 12),
-      y: b.y + (hash01(c * 13) - 0.5) * (d ? 16 : 10),
-      rot: (h - 0.5) * 48,
+      y: b.y + (hash01(c * 13) - 0.5) * (d ? 16 : 6),
+      rot: (h - 0.5) * (d ? 48 : 28),
       w: b.w,
       faceUp: false,
       z: 150 + i,

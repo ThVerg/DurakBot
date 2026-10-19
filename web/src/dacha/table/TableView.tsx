@@ -10,6 +10,7 @@ import { backSrc, propUrl, useHiRes } from "../art";
 import { Icon, Suit } from "../Icons";
 import { displayName, type Bubble } from "../names";
 import { Medal, Stage, type StageDims } from "../Scene";
+import { type Anchor, type Box, bubbleSize, hit, placeBubble, textWidth, useBubbles } from "./bubbles";
 import { CardImg, FlyCard, type Settle } from "./CardLayer";
 import { tierOfAgent } from "../tiers";
 import { ASPECT, computeLayout, type CardTarget, type Geo, type SeatGeo } from "./layout";
@@ -113,18 +114,6 @@ function Tag({ p, view, short }: { p: Player; view: GameState; short?: boolean }
       </span>
     );
   return null;
-}
-
-function SpeechBubble({ b, className = "" }: { b?: Bubble | null; className?: string }) {
-  if (!b) return null;
-  return (
-    <div key={b.key} className={`bubble bubble--${b.tone} ${b.key >= 0 ? "is-fading" : "is-sticky"} ${className}`} role="status">
-      <span className="bubble__ru" lang="ru">
-        {b.ru}
-      </span>
-      {b.en && <span className="bubble__en">{b.en}</span>}
-    </div>
-  );
 }
 
 function Seat({
@@ -291,7 +280,7 @@ function Bito({ view, geo }: { view: GameState; geo: Geo }) {
   const b = geo.bito;
   const m = geo.layout === "m";
   return (
-    <div className={`bito__label ${m ? "bito__label--m" : ""}`} style={m ? { left: b.x + 4, top: b.y - 50 } : { left: b.x, top: b.y + 82 }}>
+    <div className={`bito__label ${m ? "bito__label--m" : ""}`} style={m ? { left: b.x + b.w / 2 + 6, top: b.y - 22 } : { left: b.x, top: b.y + 82 }}>
       <span className="ru" lang="ru">
         Бито
       </span>
@@ -466,6 +455,57 @@ export function TableView(p: TableViewProps) {
   const prim = PRIMARY[p.primary.kind];
   const primLabel = t(`d.${p.primary.kind}`);
   const passWin = hintMoves.get(PASS);
+  // ---- speech bubbles: anchors, HUD obstacles, queue
+  const showEn = lang === "en";
+  const anchors = useMemo(() => {
+    const out: Record<number, Anchor> = {};
+    for (const sg of Object.values(geo.seats))
+      out[sg.seat] = { seat: sg, kind: m ? "row" : sg.side === "top" ? "top" : "side", rhs: sg.x + sg.w / 2 > geo.W / 2 + 4 };
+    if (view.mode === "spectate") {
+      const name = displayName(me, t, "mid");
+      const pillW = m ? 3 + 26 + 6 + textWidth(name, `700 13px "Playfair Display", Georgia, serif`) + 6 + 70 + 10 : geo.bottom.w;
+      out[bottom] = m ? { seat: { ...geo.bottom, w: pillW }, kind: "pill", rhs: false } : { seat: geo.bottom, kind: "side", rhs: false };
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geo, m, view.mode, bottom, me.persona, lang]);
+  const obstacles = useMemo(() => {
+    const o: Box[] = [];
+    const W = geo.W;
+    const H = geo.H;
+    for (const a of Object.values(anchors)) o.push({ x: a.seat.x, y: a.seat.y, w: a.seat.w, h: a.seat.h });
+    const tl = geo.talon;
+    o.push(m ? { x: tl.x - 80, y: tl.y - 39, w: 153, h: 80 } : { x: tl.x - 62, y: tl.y - 67, w: 250, h: 190 });
+    // the discard pile's place is reserved even while it is empty
+    const bi = geo.bito;
+    o.push(m ? { x: bi.x - 42, y: bi.y - 44, w: 126, h: 90 } : { x: bi.x - 80, y: bi.y - 84, w: 160, h: 210 });
+    for (const tg of targets) {
+      if (tg.zone !== "table" && tg.zone !== "hand") continue;
+      const h = tg.w * ASPECT;
+      const lift = tg.zone === "hand" ? 36 : 0;
+      o.push({ x: tg.x - tg.w / 2 - 4, y: tg.y - h / 2 - 4 - lift, w: tg.w + 8, h: h + 8 + lift });
+    }
+    if (target && !m) o.push({ x: target.x - 70, y: target.y - (target.w * ASPECT) / 2 - 56, w: 140, h: 38 });
+    o.push(m ? { x: 0, y: geo.ribbonY - 26, w: W, h: 70 } : { x: geo.cx - 400, y: geo.ribbonY - 30, w: 800, h: 92 });
+    // top bar: the whole strip on phones; the brand pill and the tools on desktop
+    if (m) o.push({ x: 0, y: 0, w: W, h: 54 });
+    else o.push({ x: 50, y: 14, w: 350, h: 58 }, { x: W - 236, y: 14, w: 186, h: 58 });
+    o.push(m ? { x: 0, y: H - 80, w: W, h: 80 } : { x: W - 340, y: H - 212, w: 300, h: 176 });
+    o.push(m ? { x: 6, y: geo.talon.y - 18, w: 104, h: 36 } : { x: W - 160, y: 76, w: 120, h: 40 });
+    return o;
+  }, [geo, anchors, targets, target, m]);
+  const placed = useBubbles({
+    game: view.game_id,
+    bubbles: p.bubbles,
+    persistent: yourMove,
+    place: (b, shown) => {
+      const a = anchors[b.seat];
+      if (!a) return null;
+      return placeBubble(bubbleSize(b, m, showEn), a, obstacles, shown, geo.W, geo.H);
+    },
+    clear: (box) => !obstacles.some((o) => hit(box, o)),
+  });
+
   const stageCls = `${p.canAct ? "my-turn" : ""} ${p.readOnly ? "is-readonly" : ""} ${drag ? "is-dragging" : ""}`;
 
   return (
@@ -575,27 +615,27 @@ export function TableView(p: TableViewProps) {
         </header>
       )}
 
-      {/* speech bubbles, above the cards: ghost boxes at the place-cards */}
-      {view.players
-        .filter((pl) => (pl.seat !== bottom && geo.seats[pl.seat]) || (pl.seat === bottom && view.mode === "spectate" && !m))
-        .map((pl) => {
-          const sg = pl.seat === bottom ? geo.bottom : geo.seats[pl.seat];
-          const b = p.bubbles[pl.seat] ?? (yourMove && yourMove.seat === pl.seat ? yourMove : null);
-          if (!b) return null;
-          const k = Object.keys(geo.seats).length;
-          const cls = ["seatghost", m ? "seat--m" : "seat--d", `seat--${sg.side}`, sg.x + sg.w / 2 > geo.W / 2 + 4 ? "seat--rhs" : "seat--lhs", m && k >= 5 ? "seat--xs" : ""].join(" ");
-          return (
-            <div key={`b${pl.seat}`} className={cls} style={{ left: sg.x, top: sg.y, width: sg.w, height: sg.h }}>
-              <SpeechBubble b={b} />
-            </div>
-          );
-        })}
+      {/* speech bubbles: each next to its own place-card, never over the HUD */}
+      {placed.map((pl) => (
+        <div
+          key={pl.b.key}
+          className={`bubble bubble--${pl.b.tone} bubble--tail-${pl.tail} ${pl.tail !== "left" && pl.tailAt > pl.box.w / 2 ? "is-tail-r" : ""} ${m ? "bubble--m" : ""} ${pl.b.key >= 0 ? "is-fading" : "is-sticky"}`}
+          style={{ left: pl.box.x, top: pl.box.y, width: pl.box.w, height: pl.box.h, "--tail": `${pl.tailAt}px` } as CSSProperties}
+          data-seat={pl.b.seat}
+          data-testid="bubble"
+          role="status"
+        >
+          <span className="bubble__ru" lang="ru">
+            {pl.b.ru}
+          </span>
+          {showEn && pl.b.en && <span className="bubble__en">{pl.b.en}</span>}
+        </div>
+      ))}
       {view.mode === "spectate" && m && (
         <div className={`seatpill ${me.to_move && !view.done ? "to-move" : ""}`} style={{ left: geo.bottom.x, top: geo.bottom.y }} data-seat={bottom}>
           <Medal persona={me.persona} size={26} />
           <b>{displayName(me, t, "mid")}</b>
           <Tag p={me} view={view} short />
-          <SpeechBubble b={p.bubbles[bottom]} />
         </div>
       )}
       <TalonInfo view={view} geo={geo} />
@@ -603,7 +643,10 @@ export function TableView(p: TableViewProps) {
 
       {/* beat-this tag + drop-slot preview */}
       {target && (
-        <span className={`beatme ${drag ? "is-big" : ""}`} style={{ left: target.x, top: target.y - (target.w * ASPECT) / 2 - (m ? 14 : 20) }}>
+        <span
+          className={`beatme ${m ? "beatme--m" : ""} ${drag ? "is-big" : ""}`}
+          style={{ left: target.x, top: m ? target.y + (target.w * ASPECT) / 2 - 8 : target.y - (target.w * ASPECT) / 2 - 20 }}
+        >
           {t("d.beatThis")}
         </span>
       )}
@@ -685,7 +728,7 @@ export function TableView(p: TableViewProps) {
         </button>
       )}
       {p.busy && p.onSkip && p.speed > 0 && (
-        <button type="button" className="skipbtn" onClick={p.onSkip} style={m ? { left: 10, top: 210 } : { right: 40, top: 80 }}>
+        <button type="button" className="skipbtn" onClick={p.onSkip} style={m ? { left: 8, top: geo.talon.y - 16 } : { right: 40, top: 80 }}>
           {t("d.skip")} <Icon name="ff" />
         </button>
       )}

@@ -1,6 +1,7 @@
 // Optional premium assets under /assets (manifest.json). Everything degrades
 // gracefully to procedural placeholders when files are missing.
 
+import { ASSETS, publicUrl } from "./base"; // base-path aware (GitHub Pages)
 import { RANKS, SUITS } from "./cards";
 
 export interface Manifest {
@@ -18,7 +19,7 @@ let manifestPromise: Promise<Manifest | null> | null = null;
 
 export function loadManifest(): Promise<Manifest | null> {
   if (!manifestPromise) {
-    manifestPromise = fetch("/assets/manifest.json", { cache: "no-cache" })
+    manifestPromise = fetch(`${ASSETS}/manifest.json`, { cache: "no-cache" })
       .then((r) => (r.ok ? (r.json() as Promise<Manifest>) : null))
       .catch(() => null);
   }
@@ -68,7 +69,7 @@ const probe = new Map<string, Promise<boolean>>();
 function dirPresent(dir: string, sample: string): Promise<boolean> {
   let p = probe.get(dir);
   if (!p) {
-    p = urlExists(`/assets/${dir}/${sample}`);
+    p = urlExists(`${ASSETS}/${dir}/${sample}`);
     probe.set(dir, p);
   }
   return p;
@@ -76,7 +77,7 @@ function dirPresent(dir: string, sample: string): Promise<boolean> {
 
 export async function cardFaceUrl(c: number, fourColor: boolean, small = false): Promise<string | null> {
   const dir = fourColor ? "cards4" : small ? "cards_sm" : "cards";
-  if (await dirPresent(dir, "AS.webp")) return `/assets/${dir}/${cardCode(c)}.webp`;
+  if (await dirPresent(dir, "AS.webp")) return `${ASSETS}/${dir}/${cardCode(c)}.webp`;
   return fourColor ? cardFaceUrl(c, false, small) : null;
 }
 
@@ -88,13 +89,13 @@ export async function backUrl(id: string, small = false): Promise<string | null>
   if (!file) return null;
   const dir = small ? "backs_sm" : "backs";
   if (!(await dirPresent(dir, "red.webp"))) return null;
-  return `/assets/${dir}/${file}.webp`;
+  return `${ASSETS}/${dir}/${file}.webp`;
 }
 
 export async function avatarUrl(id: string): Promise<string | null> {
   const m = await loadManifest();
   if (!m || !m.avatars) return null;
-  const url = `/assets/avatars/${id}.webp`;
+  const url = `${ASSETS}/avatars/${id}.webp`;
   return (await urlExists(url)) ? url : null;
 }
 
@@ -102,7 +103,7 @@ export async function tableUrl(key: string): Promise<string | null> {
   const m = await loadManifest();
   if (!m || !m.table) return null;
   const v = (m.table as Record<string, unknown>)[key];
-  const candidates = typeof v === "string" ? [v.startsWith("/") ? v : `/assets/${v.startsWith("table/") ? v : `table/${v}`}`] : [`/assets/table/${key}.webp`];
+  const candidates = typeof v === "string" ? [v.startsWith("/") ? publicUrl(v) : `${ASSETS}/${v.startsWith("table/") ? v : `table/${v}`}`] : [`${ASSETS}/table/${key}.webp`];
   for (const u of candidates) if (await urlExists(u)) return u;
   return null;
 }
@@ -110,7 +111,7 @@ export async function tableUrl(key: string): Promise<string | null> {
 export async function envUrl(): Promise<string | null> {
   const m = await loadManifest();
   if (!m || !m.env) return null;
-  const url = typeof m.env === "string" ? `/assets/${m.env}` : "/assets/env/room.webp";
+  const url = typeof m.env === "string" ? `${ASSETS}/${m.env}` : `${ASSETS}/env/room.webp`;
   return (await urlExists(url)) ? url : null;
 }
 

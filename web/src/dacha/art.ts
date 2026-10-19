@@ -4,8 +4,9 @@
 // (1536) files; <img srcset> picks what the displayed size x DPR needs.
 import { useEffect, useState } from "react";
 import { cardCode } from "../assets";
+import { ASSETS, publicUrl } from "../base"; // base-path aware (GitHub Pages)
 
-const KIT = "/assets/dacha";
+const KIT = `${ASSETS}/dacha`;
 
 export const BACKS = ["gzhel", "khokhloma", "stitch"] as const;
 export type BackId = (typeof BACKS)[number];
@@ -18,7 +19,7 @@ const PORTRAITS = new Set(["kostya", "dasha", "misha", "lev", "zina", "sveta", "
 export function portraitUrl(persona: string | null | undefined): string | null {
   if (!persona) return null;
   if (PORTRAITS.has(persona)) return `${KIT}/portraits/${persona}.webp`;
-  return `/assets/avatars/${persona}.webp`;
+  return `${ASSETS}/avatars/${persona}.webp`;
 }
 
 export const frameUrl = () => `${KIT}/portraits/frame.svg`;
@@ -47,7 +48,7 @@ export function illustrationUrl(name: "durak" | "safe", lang: string): string {
 /** Thumbnail-only faces (cards_sm) are for tiny icons; table cards use faceUrl(c, four). */
 export function faceUrl(card: number, fourColor: boolean, small = false): string {
   const dir = fourColor ? "cards4" : small ? "cards_sm" : "cards";
-  return `/assets/${dir}/${cardCode(card)}.webp`;
+  return `${ASSETS}/${dir}/${cardCode(card)}.webp`;
 }
 
 // ---------------------------------------------------------------- hi-res art
@@ -59,7 +60,8 @@ const hiListeners = new Set<() => void>();
 
 export function probeHiRes(): Promise<void> {
   if (!hiPromise) {
-    hiPromise = fetch("/api/art/hires")
+    // static build (VITE_BACKEND=local): the same answer, exported at build time
+    hiPromise = fetch(import.meta.env.VITE_BACKEND === "local" ? publicUrl("static-data/art-hires.json") : "/api/art/hires")
       .then((r) => (r.ok ? r.json() : null))
       .then((d: Partial<Record<HiKey, [boolean, boolean]>> | null) => {
         if (!d) return;
@@ -99,7 +101,7 @@ function srcSet(base: string, key: HiKey): string | undefined {
  */
 export function faceSrc(card: number, fourColor: boolean, byDpr = false): { src: string; srcSet?: string; byDpr?: boolean } {
   const dir = fourColor ? "cards4" : "cards";
-  const base = `/assets/${dir}/${cardCode(card)}`;
+  const base = `${ASSETS}/${dir}/${cardCode(card)}`;
   if (byDpr) {
     const [two, three] = hi[dir];
     if (!two) return { src: `${base}.webp` };

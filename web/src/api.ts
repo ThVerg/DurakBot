@@ -288,7 +288,7 @@ async function retrying<T>(fn: () => Promise<T>, tries = 3): Promise<T> {
   throw last;
 }
 
-export const api = {
+const httpApi = {
   bots: () => request<BotsResponse>("GET", "/bots"),
   create: (req: CreateGameRequest) => request<StepsResponse>("POST", "/games", req),
   get: (id: string) => retrying(() => request<{ game_id: string; state: GameState; history: Step[] }>("GET", `/games/${id}`)),
@@ -305,3 +305,16 @@ export const api = {
   stats: () => request<StatsResponse>("GET", "/stats"),
   lab: (run?: string) => request<LabData>("GET", `/lab${run ? `?run=${encodeURIComponent(run)}` : ""}`),
 };
+
+/** VITE_BACKEND=local (static build, e.g. GitHub Pages): the same API, answered
+ * in the browser by src/local (game engine, bots and storage in a Web Worker). */
+function lazyLocalApi(): typeof httpApi {
+  const local = import("./local/localApi").then((m) => m.createLocalApi((status, msg) => new ApiError(status, msg)));
+  return new Proxy({} as typeof httpApi, {
+    get: (_t, key: string) =>
+      (...args: unknown[]) =>
+        local.then((a) => (a as unknown as Record<string, (...x: unknown[]) => Promise<unknown>>)[key](...args)),
+  });
+}
+
+export const api: typeof httpApi = import.meta.env.VITE_BACKEND === "local" ? lazyLocalApi() : httpApi;
