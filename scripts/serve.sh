@@ -8,7 +8,7 @@ PORT="${PORT:-8000}"
 
 needs_build() {
   [ ! -f web/dist/index.html ] && return 0
-  [ -n "$(find web/src web/index.html web/package.json web/vite.config.ts -newer web/dist/index.html -print -quit 2>/dev/null)" ]
+  [ -n "$(find web/src web/public web/index.html web/package.json web/vite.config.ts -newer web/dist/index.html -print -quit 2>/dev/null)" ]
 }
 
 if [ "${SKIP_BUILD:-0}" != "1" ] && needs_build; then

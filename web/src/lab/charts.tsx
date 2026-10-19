@@ -2,8 +2,8 @@
 // bands, reference lines, markers, crosshair tooltip, legend + end labels.
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
-// Categorical palette (validated for the dark surface, adjacent pairs).
-export const SERIES_COLORS = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#9085e9", "#e66767", "#008300"];
+// Categorical palette on warm paper (Dacha inks).
+export const SERIES_COLORS = ["#2350b4", "#c8361f", "#2f6b45", "#c98500", "#8a4fb0", "#4f78d2", "#e2563a", "#6f9e3a"];
 
 export interface Pt {
   x: number;

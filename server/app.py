@@ -69,6 +69,13 @@ class DebugIn(BaseModel):
     reveal: bool
 
 
+def _quiet(fn: Callable[[], object]) -> None:
+    try:
+        fn()
+    except Exception:  # pragma: no cover
+        log.exception("background task failed")
+
+
 def create_app(db_path: str | None = None) -> FastAPI:
     app = FastAPI(title="DurakBot", version="2.0")
     app.add_middleware(GZipMiddleware, minimum_size=1024)
@@ -77,6 +84,10 @@ def create_app(db_path: str | None = None) -> FastAPI:
     sessions_lock = threading.Lock()
     app.state.sessions = sessions
     app.state.storage = storage
+    # parse the (large, growing) training log in the background so the
+    # first Lab visit is quick; later calls only read the appended tail
+    if os.environ.get("DURAK_LAB_WARM", "1") == "1":
+        threading.Thread(target=lambda: _quiet(lab.lab_data), daemon=True, name="lab-warm").start()
 
     def get_session(gid: str) -> GameSession:
         with sessions_lock:
@@ -277,13 +288,35 @@ def create_app(db_path: str | None = None) -> FastAPI:
 
         return await anyio.to_thread.run_sync(build)
 
+    @app.get("/api/art/hires")
+    def art_hires():
+        """Which hi-res (@2x/@3x) card art exists, so the client only puts
+        files that are really there into <img srcset>."""
+        roots = [DIST / "assets", ROOT / "web" / "public" / "assets"]
+        probes = {"cards": "cards/AS", "cards4": "cards4/AS", "backs": "dacha/backs/gzhel"}
+
+        def has(rel: str) -> bool:
+            return any((r / rel).is_file() for r in roots)
+
+        out = {}
+        for k, base in probes.items():
+            two = has(f"{base}@2x.webp")
+            out[k] = [two, two and has(f"{base}@3x.webp")]
+        return out
+
     # ------------------------------------------------------------ frontend
     @app.get("/api/{rest:path}")
     def api_404(rest: str):
         raise HTTPException(404, "unknown API endpoint")
 
     if (DIST / "assets").is_dir():
-        app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
+        static = StaticFiles(directory=DIST / "assets")
+        # art that landed in web/public after the last build (e.g. @2x/@3x
+        # card faces) is served too, so srcset picks it up without a rebuild
+        public = ROOT / "web" / "public" / "assets"
+        if public.is_dir() and public.resolve() != (DIST / "assets").resolve():
+            static.all_directories.append(public)
+        app.mount("/assets", static, name="assets")
 
     @app.get("/{rest:path}", include_in_schema=False)
     def spa(rest: str):

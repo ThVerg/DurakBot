@@ -132,6 +132,16 @@ def test_bots_endpoint(client):
     assert "random" in names and data["default"] in names
 
 
+def test_art_hires_endpoint(client):
+    r = client.get("/api/art/hires")
+    assert r.status_code == 200
+    d = r.json()
+    assert set(d) == {"cards", "cards4", "backs"}
+    for two, three in d.values():
+        assert isinstance(two, bool) and isinstance(three, bool)
+        assert two or not three  # @3x is only advertised together with @2x
+
+
 def test_illegal_actions_rejected(client):
     r = client.post("/api/games", json={"num_players": 3, "human_seat": 0, "seed": 5, "bot": "random"})
     data = r.json()

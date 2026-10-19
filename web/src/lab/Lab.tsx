@@ -162,7 +162,7 @@ export default function Lab({ onBack, botLabelOf }: { onBack: () => void; botLab
           <button type="button" className="chip" onClick={() => setTables((x) => !x)} aria-pressed={tables}>
             {tables ? t("lab.chart") : t("lab.table")}
           </button>
-          <button type="button" className="btn primary small" onClick={onBack}>
+          <button type="button" className="btn btn--sm" onClick={onBack}>
             {t("lab.back")}
           </button>
         </div>
@@ -389,7 +389,7 @@ export default function Lab({ onBack, botLabelOf }: { onBack: () => void; botLab
                     yDomain={[0, 1]}
                     series={[
                       { key: "you", label: t("lab.rolling"), color: SERIES_COLORS[1], points: rolling },
-                      { key: "fair", label: t("stats.fair"), color: "#8fa398", points: fair, dashed: true },
+                      { key: "fair", label: t("stats.fair"), color: "#8a6d4e", points: fair, dashed: true },
                     ]}
                   />
                   <div className="table-wrap">

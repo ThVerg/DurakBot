@@ -9,6 +9,7 @@ import json
 import math
 import os
 import threading
+from array import array
 from pathlib import Path
 from typing import Any, Callable
 
@@ -56,18 +57,87 @@ def _num(x: Any) -> float | None:
     return v if math.isfinite(v) else None
 
 
+class _TrainTail:
+    """Incremental reader for a growing train.csv: only the bytes appended
+    since the last call are parsed; kept columns are stored as float arrays."""
+
+    def __init__(self) -> None:
+        self.ino: tuple[int, int] | None = None
+        self.offset = 0
+        self.header: list[str] | None = None
+        self.keep: list[str] = []
+        self.idx: list[int] = []
+        self.cols: dict[str, array] = {}
+        self.rows = 0
+
+    def _reset(self, ino: tuple[int, int]) -> None:
+        self.__init__()
+        self.ino = ino
+
+    def update(self, path: Path) -> None:
+        st = path.stat()
+        ino = (st.st_dev, st.st_ino)
+        if ino != self.ino or st.st_size < self.offset:
+            self._reset(ino)
+        if st.st_size == self.offset:
+            return
+        with open(path, "rb") as f:
+            f.seek(self.offset)
+            chunk = f.read(st.st_size - self.offset)
+        end = chunk.rfind(b"\n")
+        if end < 0:
+            return  # no complete line yet
+        self.offset += end + 1
+        lines = chunk[: end + 1].decode("utf-8", "replace").splitlines()
+        reader = csv.reader(lines)
+        if self.header is None:
+            try:
+                self.header = next(reader)
+            except StopIteration:
+                return
+            durak = sorted(c for c in self.header if c.startswith("durak_"))
+            self.keep = [c for c in TRAIN_COLS if c in self.header] + durak
+            self.idx = [self.header.index(c) for c in self.keep]
+            self.cols = {c: array("d") for c in self.keep}
+        nan = float("nan")
+        for row in reader:
+            if len(row) < len(self.header):
+                continue
+            for c, i in zip(self.keep, self.idx):
+                v = _num(row[i])
+                self.cols[c].append(nan if v is None else v)
+            self.rows += 1
+
+    def snapshot(self) -> dict:
+        total = self.rows
+        picks = list(range(total))
+        if total > MAX_POINTS:
+            stride = math.ceil(total / MAX_POINTS)
+            picks = picks[::stride] + ([total - 1] if (total - 1) % stride else [])
+        series = {c: [None if math.isnan(a[i]) else a[i] for i in picks] for c, a in self.cols.items()}
+        return {"rows": total, "columns": list(self.keep), "series": series}
+
+
+_tails: dict[str, _TrainTail] = {}
+
+
+def _train_data(path: Path) -> dict | None:
+    """Training curves (incrementally parsed; safe while the file grows)."""
+    if not path.is_file():
+        return None
+    with _lock:
+        tail = _tails.setdefault(str(path), _TrainTail())
+        try:
+            tail.update(path)
+        except Exception as e:  # half-written file etc.
+            return {"error": f"{type(e).__name__}: {e}"}
+        return tail.snapshot()
+
+
 def _parse_train(path: Path) -> dict:
-    with open(path, newline="") as f:
-        rows = list(csv.DictReader(f))
-    total = len(rows)
-    if total > MAX_POINTS:
-        stride = math.ceil(total / MAX_POINTS)
-        rows = rows[::stride] + ([rows[-1]] if (total - 1) % stride else [])
-    cols = rows[0].keys() if rows else []
-    durak_cols = sorted(c for c in cols if c.startswith("durak_"))
-    keep = [c for c in TRAIN_COLS if c in cols] + durak_cols
-    series = {c: [_num(r.get(c)) for r in rows] for c in keep}
-    return {"rows": total, "columns": keep, "series": series}
+    tail = _TrainTail()
+    tail.update(path)
+    return tail.snapshot()
 
 
 def _parse_jsonl(path: Path) -> list[dict]:
@@ -182,14 +252,18 @@ def list_runs() -> list[str]:
     return sorted(p.name for p in RUNS.iterdir() if (p / "train.csv").is_file())
 
 
+def _parse_slim_jsonl(path: Path) -> list[dict]:
+    return [_slim_eval(e) for e in _parse_jsonl(path)]
+
+
 def lab_data(run: str = "main") -> dict:
     runs = list_runs()
     if run not in runs and runs:
         run = "main" if "main" in runs else runs[0]
     rdir = RUNS / run
-    train = _cached(rdir / "train.csv", _parse_train)
-    evals = _cached(rdir / "eval.jsonl", _parse_jsonl)
-    history = _cached(CKPT / "champion_history.jsonl", _parse_jsonl)
+    train = _train_data(rdir / "train.csv")
+    evals = _cached(rdir / "eval.jsonl", _parse_slim_jsonl)
+    history = _cached(CKPT / "champion_history.jsonl", _parse_slim_jsonl)
     current = _cached(CKPT / "champion.json", _parse_json)
     summary = _cached(RUNS / "eval_summary.json", _parse_json)
     ladder = _cached(RUNS / "ladder.json", _parse_json)
@@ -205,8 +279,8 @@ def lab_data(run: str = "main") -> dict:
         "runs": runs,
         "training_active": pid_running,
         "train": train,
-        "evals": [_slim_eval(e) for e in evals] if isinstance(evals, list) else None,
-        "promotions": [_slim_eval(e) for e in history] if isinstance(history, list) else None,
+        "evals": evals if isinstance(evals, list) else None,
+        "promotions": history if isinstance(history, list) else None,
         "champion": _slim_eval(current) if isinstance(current, dict) and "error" not in current else None,
         "eval_summary": summary,
         "ladder": _normalize_ladder(ladder) if ladder is not None else None,

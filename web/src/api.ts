@@ -163,6 +163,9 @@ export interface StatsResponse {
   human_games: number;
   spectated_games: number;
   human_durak: number;
+  human_safe?: number;
+  streak_best?: number;
+  streak_current?: number;
   human_durak_rate: number | null;
   by_players: {
     num_players: number;

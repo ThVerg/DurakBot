@@ -142,11 +142,22 @@ class Storage:
             })
 
         human_durak = sum(r["human_result"] == "durak" for r in play)
+        human_safe = sum(r["human_result"] == "safe" for r in play)
+        best = cur = 0
+        for r in reversed(play):  # oldest first
+            if r["human_result"] == "safe":
+                cur += 1
+                best = max(best, cur)
+            elif r["human_result"] == "durak":
+                cur = 0
         return {
             "total_games": len(rows),
             "human_games": len(play),
             "spectated_games": len(rows) - len(play),
             "human_durak": human_durak,
+            "human_safe": human_safe,
+            "streak_best": best,
+            "streak_current": cur,
             "human_durak_rate": rate(human_durak, len(play)),
             "by_players": by_n,
             "by_bot": by_bot,
