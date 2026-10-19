@@ -2,7 +2,7 @@
 
 Our player occupies one seat (rotated over games), the opponent spec controls
 all other seats. Metric: durak rate of our seat vs the 1/N baseline (for 2p:
-win rate = 1 - durak rate). 95% Wilson intervals.
+win rate = 1 - durak rate). 95% deal-clustered intervals (Wilson for degenerate cases).
 
 Controller specs:
   ``nn:<path>``        greedy policy of a checkpoint (batched, no search)

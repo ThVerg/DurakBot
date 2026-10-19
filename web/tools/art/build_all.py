@@ -141,7 +141,9 @@ same terms as the DurakBot project.
   and navy back.
 - **P052** (URW++, base35): AGPL-3.0 with font exception. Used only for rasterised card indices.
 
-No font files are distributed with the assets.
+The Dacha kit (`dacha/fonts/`) ships **Playfair Display** and **Lato** as WOFF2 files under the
+SIL Open Font License 1.1; their licence texts are included next to the font files. No other font
+files are distributed with the assets.
 """
 
 

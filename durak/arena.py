@@ -69,9 +69,9 @@ def play_game(agents: list[Agent], deal_seed: int, num_players: int, rng: random
     return game
 
 
-def _run_deals(args) -> list[tuple[int, int, int | None, int]]:
+def _run_deals(args) -> list[tuple[int, int, int | None, int, bool]]:
     """Worker: play every deal in ``deal_ids`` with A rotated through all seats.
-    Returns tuples ``(deal_id, a_seat, loser, steps)``."""
+    Returns tuples ``(deal_id, a_seat, loser, steps, stalled)``."""
     fa, fb, num_players, base_seed, deal_ids = args
     agent_a = _make(fa)
     agents_b = [_make(fb) for _ in range(num_players - 1)]

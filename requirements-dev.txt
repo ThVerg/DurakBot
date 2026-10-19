@@ -1,0 +1,13 @@
+# Optional tooling on top of requirements.txt.
+-r requirements.txt
+
+# Browser end-to-end tests (then: python -m playwright install chromium)
+playwright==1.64.0
+
+# Exporting the champion network for the in-browser build
+onnx==1.23.2
+onnxruntime==1.31.0
+
+# Art pipeline (web/tools/art, concepts/dacha/tools)
+pillow==12.3.0
+fonttools==4.66.1

@@ -56,7 +56,7 @@ P_NO_THROW = 18  # 5 planes
 NUM_PLANES = 23
 
 # -------------------------------------------------------------------- scalars
-SEAT_FEATS = 9  # present, active, hand/6, attacker, defender, cothrower, takes, took_last, to_draw_rank
+SEAT_FEATS = 9  # present, active, hand/6, attacker, defender, cothrower, takes, took_last, finish_place
 NUM_SCALARS_V1 = MAX_PLAYERS * SEAT_FEATS + 3 + 4 + 4 + 5 + 5 + 5 + 3
 NUM_SCALARS = NUM_SCALARS_V1 + 1 + 5 + 1  # + stall, unknown counts (5 opp seats, talon)
 OBS_DIM_V1 = NUM_PLANES * NUM_CARDS + NUM_SCALARS_V1  # 911 (models before round 2)

@@ -71,7 +71,7 @@ or a determinized view.
 - value: the expected `returns()` of the acting seat
 - durak logit: BCE against "this seat ended as durak", which gives calibrated win probabilities for the website
 
-The model has about 1.26M parameters.
+The model has about 1.4M parameters (1,424,511 for the current champion).
 
 **Belief head (v2).** For each of the 36 canonical cards it gives logits over 6
 locations (opponent relative seat 1..5, or the talon). Locations with no unknown

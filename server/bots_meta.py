@@ -19,7 +19,7 @@ BOT_META: dict[str, dict[str, Any]] = {
     },
     "intermediate": {
         "label": {"en": "Intermediate", "ru": "Любитель"},
-        "desc": {"en": "Solid club player: saves trumps, sheds low cards.", "ru": "Крепкий любитель: бережёт козыри, сбрасывает мелочь."},
+        "desc": {"en": "Casual player: often finds the good move, but plays many decisions on instinct.", "ru": "Любитель: часто находит хороший ход, но многое играет на интуиции."},
         "tier": 2,
     },
     "heuristic": {
