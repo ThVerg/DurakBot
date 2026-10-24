@@ -228,7 +228,7 @@ The reference machine is a 16-thread desktop CPU (Intel Core i5-12600K) with 31 
 
 ## Current results
 
-*As of 2026-10-24.* The main run has completed about 380,000 iterations: roughly 12.8 billion trained decisions from 293 million self-play games in 244 hours of training. The current champion is the network from iteration 367,400, promoted on 2026-10-24.
+*As of 2026-10-24.* The main run was stopped on 2026-10-24 after about 380,000 iterations: roughly 12.8 billion trained decisions from 293 million self-play games in 244 hours of training. The current champion is the network from iteration 367,400, promoted on 2026-10-24.
 
 The champion's durak rate as one seat against a field of opponents (policy plus exact endgame solver, without search; running estimate over 61 gates; lower is better):
 

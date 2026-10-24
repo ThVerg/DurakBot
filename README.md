@@ -167,7 +167,7 @@ Training runs write to `runs/`, which, like most of `checkpoints/`, is not track
 | [ART.md](docs/ART.md) | Asset inventory, pipelines, rebuilding, licences |
 | [DEVELOPMENT.md](docs/DEVELOPMENT.md) | Environment, tests, scripts, code style |
 
-The research log of the training rounds, with A/B experiments and throughput measurements, is in [durak/rl/README.md](durak/rl/README.md). Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+The research log of the training rounds, with A/B experiments and throughput measurements, is in [durak/rl/README.md](durak/rl/README.md). Ideas for the next round of work are collected in [FUTURE_IMPROVEMENTS_TO_TRY.md](FUTURE_IMPROVEMENTS_TO_TRY.md). Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Licence
 
