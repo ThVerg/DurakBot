@@ -39,20 +39,20 @@ The full rules as implemented, with worked examples, are in [docs/RULES.md](docs
 
 ### Champion strength
 
-*Champion: network iteration 197,800, promoted on 2026-10-19. Source: `runs/eval_summary.json` (updated 2026-10-19), a running estimate over the six gate evaluations since that promotion.*
+*Champion: network iteration 367,400, promoted on 2026-10-24. Source: `runs/eval_summary.json` (updated 2026-10-24), a running estimate over the 61 gate evaluations since that promotion.*
 
 The table shows how often one champion seat ended up as the durak against a field of the given opponent. Each deal is played once from every seat, so luck of the deal cancels out. Lower is better, and the fair share is 1/N. The champion here uses its policy network and the exact endgame solver, without search; the deployed `champion` and `grandmaster` add search on top.
 
 | Opponents in the other seats | 2 players | 3 players | 4 players | 5 players | 6 players |
 |---|---|---|---|---|---|
 | *Fair share (1/N)* | *50.0%* | *33.3%* | *25.0%* | *20.0%* | *16.7%* |
-| `heuristic` bot | **15.1%** | **9.8%** | **8.5%** | **7.2%** | **6.1%** |
-| `heuristic` with perfect endgames (≈ `solver` bot) | **23.9%** | **14.5%** | **12.9%** | **10.8%** | **8.4%** |
-| Frozen network from iteration 1,500 | 33.9% | 22.4% | 18.0% | 14.5% | 12.5% |
-| Frozen network from iteration 100,000 | 45.0% | 30.0% | 23.2% | 19.0% | 16.0% |
+| `heuristic` bot | **13.4%** | **9.2%** | **8.6%** | **7.3%** | **6.0%** |
+| `heuristic` with perfect endgames (≈ `solver` bot) | **21.9%** | **13.8%** | **12.3%** | **10.1%** | **8.1%** |
+| Frozen network from iteration 1,500 | 31.5% | 20.8% | 16.2% | 13.8% | 12.0% |
+| Frozen network from iteration 100,000 | 42.1% | 28.7% | 22.4% | 17.8% | 15.1% |
 | `random` | 0.0% | 0.0% | 0.0% | 0.0% | 0.0% |
 
-The heuristic and solver rows are 9,600 games per cell (95% intervals about ±0.5 to ±0.9 points), the frozen networks 2,400 and `random` 200. In two-player terms the champion avoids being the durak in 84.9% of games against the heuristic bot and in 76.1% against an opponent that plays every endgame perfectly. [docs/EVALUATION.md](docs/EVALUATION.md) explains the protocol and how to read these numbers.
+The heuristic and solver rows are 75,600 games per cell (95% intervals about ±0.2 to ±0.3 points), the frozen networks 18,900 (about ±0.5 to ±0.7) and `random` 200. In two-player terms the champion avoids being the durak in 86.6% of games against the heuristic bot and in 78.1% against an opponent that plays every endgame perfectly. [docs/EVALUATION.md](docs/EVALUATION.md) explains the protocol and how to read these numbers.
 
 ### Rating ladder and difficulty levels
 

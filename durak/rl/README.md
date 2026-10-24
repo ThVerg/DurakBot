@@ -333,3 +333,14 @@ All rates have 95% CIs of about ±.010 (2p) and ±.008 (4p); the full per-N tabl
 - **Symmetric round-robin** (mean z): it199000 +0.96, it200000 +0.07, it190000 −0.12, champion −0.91. Champion vs it199000 was z −2.39.
 - **Confirmation on fresh deals** (`--seed-offset 500000`): it199000 vs the champion gave fixed_z +0.05 and round-robin z +0.86 (2p .469 vs .472). The earlier edge was selection noise.
 - **Verdict.** Since about iteration 190k the network has plateaued against fixed opponents; it150000 is significantly worse, so it did improve up to then. No newer network is significantly better, so **it197800 remains the champion**.
+
+### Gate v3 promotions (2026-10-19 to 2026-10-24)
+
+From it197800 to iteration 380k the gate tested 864 candidates. 48 passed stage 1, and 5 were confirmed: it219400, it223300, it274200, it332800 and it367400 (stage-2 fixed_z 1.67–2.68). On their own these are near the gate's chance rate: candidates averaged fixed_z1 −0.18 against the champion of the day, and the 48 confirmation runs averaged about 0. The running estimates (`runs/eval_summary.json`), however, show a real gain at small N:
+
+| champion | games per cell | heuristic durak 2p / 3p / 4p | solver durak 2p / 3p / 4p |
+|---|---|---|---|
+| it197800 | 14,400 | .147 / .098 / .086 | .238 / .145 / .128 |
+| it367400 | 75,600 | .134 / .092 / .086 | .219 / .138 / .123 |
+
+The 2p differences are about 4.2 (heuristic) and 5.0 (solver) standard errors, and 3p about 2. 4–6p differ by less than 2 standard errors. The network still improves, slowly, in 2–3-player play; it367400 is the deployed champion (server and browser).

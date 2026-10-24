@@ -141,12 +141,12 @@ Two earlier designs failed in instructive ways:
 
 ```json
 {
-  "updated": "2026-10-19T14:39:13+02:00",
-  "iteration": 197800,
+  "updated": "2026-10-24T14:19:38+02:00",
+  "iteration": 367400,
   "suite_version": 3,
-  "gates_accumulated": 6,
+  "gates_accumulated": 61,
   "results": {
-    "heuristic": {"2": {"rate": 0.1509, "ci": [0.1439, 0.1582], "games": 9600}, "...": {}},
+    "heuristic": {"2": {"rate": 0.1339, "ci": [0.1315, 0.1363], "games": 75600}, "...": {}},
     "solver": {"...": {}},
     "anchor:frozen_it1500": {"...": {}},
     "random": {"...": {}}
@@ -168,7 +168,7 @@ Two earlier designs failed in instructive ways:
 
 Each candidate plays the heuristic (4,800 games per N by default), the solver family (4,800), each population network (1,200) and the reference head-to-head (2,400). The ranking criterion is `fixed_z` against the reference (positive means better); the head-to-head is reported but not used. Raw per-deal results are stored in `--out`, and the run resumes where it stopped. `--round-robin` adds a symmetric round-robin among chosen checkpoints, and `--seed-offset` draws fresh deals for a confirmation run.
 
-The tournament of 2026-10-19 compared the champion (iteration 197,800) with seven other networks from iterations 150,000 to 201,100. None of the newer networks was significantly better; the best candidate's apparent edge vanished on fresh deals, while iteration 150,000 was significantly worse (fixed_z −2.29). The results are recorded in [`durak/rl/README.md`](../durak/rl/README.md#champion-tournament-2026-10-19-runstournament).
+The tournament of 2026-10-19 compared the champion (iteration 197,800) with seven other networks from iterations 150,000 to 201,100. None of the newer networks was significantly better; the best candidate's apparent edge vanished on fresh deals, while iteration 150,000 was significantly worse (fixed_z −2.29). The results are recorded in [`durak/rl/README.md`](../durak/rl/README.md#champion-tournament-2026-10-19-runstournament). Gate v3 has since promoted five later networks; the current champion is iteration 367,400 ([docs/TRAINING.md](TRAINING.md#current-results)).
 
 ## The rating ladder
 

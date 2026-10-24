@@ -228,18 +228,18 @@ The reference machine is a 16-thread desktop CPU (Intel Core i5-12600K) with 31 
 
 ## Current results
 
-*As of 2026-10-19.* The main run has completed about 203,000 iterations: roughly 6.8 billion trained decisions from 158 million self-play games in 124 hours of training. The current champion is the network from iteration 197,800, promoted on 2026-10-19.
+*As of 2026-10-24.* The main run has completed about 380,000 iterations: roughly 12.8 billion trained decisions from 293 million self-play games in 244 hours of training. The current champion is the network from iteration 367,400, promoted on 2026-10-24.
 
-The champion's durak rate as one seat against a field of opponents (policy plus exact endgame solver, without search; running estimate over 6 gates; lower is better):
+The champion's durak rate as one seat against a field of opponents (policy plus exact endgame solver, without search; running estimate over 61 gates; lower is better):
 
 | Opponents | 2p | 3p | 4p | 5p | 6p |
 |---|---|---|---|---|---|
 | *Fair share (1/N)* | *.500* | *.333* | *.250* | *.200* | *.167* |
-| `heuristic` (9,600 games per cell) | .151 | .098 | .085 | .072 | .061 |
-| `heuristic` with perfect endgames (9,600) | .239 | .145 | .129 | .108 | .084 |
-| frozen network, iteration 1,500 (2,400) | .339 | .224 | .180 | .145 | .125 |
-| frozen network, iteration 50,000 (2,400) | .430 | .288 | .209 | .177 | .145 |
-| frozen network, iteration 100,000 (2,400) | .450 | .300 | .232 | .190 | .160 |
+| `heuristic` (75,600 games per cell) | .134 | .092 | .086 | .073 | .060 |
+| `heuristic` with perfect endgames (75,600) | .219 | .138 | .123 | .101 | .081 |
+| frozen network, iteration 1,500 (18,900) | .315 | .208 | .162 | .138 | .120 |
+| frozen network, iteration 50,000 (18,900) | .409 | .275 | .209 | .176 | .144 |
+| frozen network, iteration 100,000 (18,900) | .421 | .287 | .224 | .178 | .151 |
 
 Progress against the heuristic bot, measured the same way (paired deals, policy plus own-seat solver), in two-player games:
 
@@ -247,9 +247,12 @@ Progress against the heuristic bot, measured the same way (paired deals, policy 
 |---|---|---|
 | iteration 300 (first round) | .288 | .387 |
 | iteration 1,500 (about 4 hours) | .222 | .322 |
-| iteration 197,800 (current champion) | .151 | .239 |
+| iteration 197,800 (champion until 2026-10-20) | .147 | .238 |
+| iteration 367,400 (current champion) | .134 | .219 |
 
-**Plateau.** A tournament on 2026-10-19 (4,800 paired games per player count against the heuristic and solver families, 1,200 against each of four frozen networks, plus a symmetric round-robin) found no network newer than the champion that is significantly better, while iteration 150,000 is significantly worse. Against fixed opponents the network has plateaued since about iteration 190,000; the details are in [`durak/rl/README.md`](../durak/rl/README.md#champion-tournament-2026-10-19-runstournament).
+**Plateau.** A tournament on 2026-10-19 (4,800 paired games per player count against the heuristic and solver families, 1,200 against each of four frozen networks, plus a symmetric round-robin) found no network newer than the champion that is significantly better, while iteration 150,000 is significantly worse. The details are in [`durak/rl/README.md`](../durak/rl/README.md#champion-tournament-2026-10-19-runstournament).
+
+**Slow gains since.** From iteration 197,800 to 380,000 the gate tested 864 candidates and promoted five (iterations 219,400, 223,300, 274,200, 332,800 and 367,400), each by a small margin. Individually these are close to what chance alone would let through, but the running estimates add up to a real gain in small games. Against the heuristic bot, the two-player durak rate fell from .147 (iteration 197,800, 14,400 games) to .134 (iteration 367,400, 75,600 games), about 4 standard errors; against the perfect-endgame heuristic it fell from .238 to .219, about 5 standard errors. Three-player games improved slightly, and 4–6 players stayed level. Progress is now a few tenths of a point per day of training.
 
 The full deployed agent adds search on top: at iteration 1,500 it had a two-player durak rate of .292 against the real `solver` bot (600 paired games), where the network alone scored .322 against the perfect-endgame heuristic. The belief head itself predicts the location of an unseen card correctly 56% of the time, a gain of about 0.10 nats per card over the count-based prior.
 
